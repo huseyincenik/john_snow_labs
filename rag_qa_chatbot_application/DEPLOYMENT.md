@@ -1,0 +1,371 @@
+# Deployment Guide
+
+Complete deployment instructions for different environments.
+
+## Development Deployment
+
+### Local Development with Docker
+
+```bash
+# Clone repository
+git clone <repository-url>
+cd rag_qa_chatbot_application
+
+# Start services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Access application
+open http://localhost:8501
+```
+
+### Local Development without Docker
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Install and start Ollama (separate terminal)
+ollama serve
+ollama pull qwen2.5:7b
+ollama pull llama3
+
+# Run application
+streamlit run enhanced_app.py
+```
+
+## Production Deployment
+
+### Option 1: Docker Compose (Recommended)
+
+```bash
+# Set environment variables
+export OPENAI_API_KEY=your-key-here  # Optional
+
+# Start in production mode
+docker-compose -f docker-compose.yml up -d
+
+# Enable auto-restart
+docker-compose -f docker-compose.yml up -d --restart=always
+```
+
+### Option 2: Kubernetes
+
+```yaml
+# deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rag-chatbot
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: rag-chatbot
+  template:
+    metadata:
+      labels:
+        app: rag-chatbot
+    spec:
+      containers:
+      - name: ollama
+        image: ollama/ollama:latest
+        ports:
+        - containerPort: 11434
+        resources:
+          limits:
+            memory: "8Gi"
+            cpu: "4"
+      - name: chatbot
+        image: rag-qa-chatbot:latest
+        ports:
+        - containerPort: 8501
+        env:
+        - name: OLLAMA_BASE_URL
+          value: "http://localhost:11434"
+        resources:
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rag-chatbot-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: rag-chatbot
+  ports:
+  - port: 80
+    targetPort: 8501
+```
+
+Apply:
+```bash
+kubectl apply -f deployment.yaml
+```
+
+### Option 3: Cloud Deployment
+
+#### AWS ECS
+
+```bash
+# Build and push to ECR
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <account-id>.dkr.ecr.us-east-1.amazonaws.com
+
+docker build -t rag-chatbot .
+docker tag rag-chatbot:latest <account-id>.dkr.ecr.us-east-1.amazonaws.com/rag-chatbot:latest
+docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/rag-chatbot:latest
+
+# Create ECS task definition and service
+aws ecs create-service --service-name rag-chatbot --task-definition rag-chatbot:1 --desired-count 2
+```
+
+#### Google Cloud Run
+
+```bash
+# Build and deploy
+gcloud builds submit --tag gcr.io/PROJECT-ID/rag-chatbot
+gcloud run deploy rag-chatbot \
+  --image gcr.io/PROJECT-ID/rag-chatbot \
+  --platform managed \
+  --memory 8Gi \
+  --cpu 4
+```
+
+#### Azure Container Instances
+
+```bash
+# Create container group
+az container create \
+  --resource-group myResourceGroup \
+  --name rag-chatbot \
+  --image rag-chatbot:latest \
+  --cpu 4 \
+  --memory 8 \
+  --ports 8501 \
+  --environment-variables OLLAMA_BASE_URL=http://ollama:11434
+```
+
+## Environment Configuration
+
+### Required Environment Variables
+
+```bash
+# Application settings
+PYTHONPATH=/app
+STREAMLIT_SERVER_PORT=8501
+STREAMLIT_SERVER_ADDRESS=0.0.0.0
+
+# Ollama configuration
+OLLAMA_BASE_URL=http://ollama:11434
+
+# Optional: OpenAI API
+OPENAI_API_KEY=sk-...
+```
+
+### Optional Environment Variables
+
+```bash
+# Cache settings
+CACHE_ENABLED=true
+CACHE_TTL_SECONDS=3600
+CACHE_MAX_SIZE=100
+
+# Model settings
+DEFAULT_CHUNK_SIZE=800
+DEFAULT_CHUNK_OVERLAP=100
+DEFAULT_SEARCH_K=5
+DEFAULT_SIMILARITY_THRESHOLD=0.75
+```
+
+## Security Checklist
+
+- [ ] Use HTTPS in production (reverse proxy)
+- [ ] Set strong API keys
+- [ ] Enable authentication (Streamlit auth)
+- [ ] Implement rate limiting
+- [ ] Set up firewall rules
+- [ ] Enable logging and monitoring
+- [ ] Regular security updates
+
+## Monitoring
+
+### Health Checks
+
+```bash
+# Application health
+curl http://localhost:8501/_stcore/health
+
+# Ollama health
+curl http://localhost:11434/api/tags
+```
+
+### Logging
+
+```bash
+# Docker Compose logs
+docker-compose logs -f
+
+# Application logs
+tail -f logs/app.log
+
+# Export logs
+docker-compose logs > deployment-logs.txt
+```
+
+### Metrics to Monitor
+
+- Response time
+- Cache hit rate
+- Document processing time
+- Memory usage
+- CPU usage
+- Disk space (for vector store)
+
+## Backup and Recovery
+
+### Backup Vector Store
+
+```bash
+# Backup data
+tar -czf backup-$(date +%Y%m%d).tar.gz data/
+
+# Upload to S3
+aws s3 cp backup-*.tar.gz s3://my-bucket/backups/
+```
+
+### Restore Vector Store
+
+```bash
+# Download from S3
+aws s3 cp s3://my-bucket/backups/backup-20240101.tar.gz .
+
+# Restore
+tar -xzf backup-20240101.tar.gz
+docker-compose restart rag-chatbot
+```
+
+## Scaling
+
+### Horizontal Scaling
+
+```yaml
+# docker-compose.yml
+services:
+  rag-chatbot:
+    deploy:
+      replicas: 3
+    # ... rest of config
+```
+
+### Load Balancing
+
+```nginx
+# nginx.conf
+upstream rag_chatbot {
+    server chatbot1:8501;
+    server chatbot2:8501;
+    server chatbot3:8501;
+}
+
+server {
+    listen 80;
+    location / {
+        proxy_pass http://rag_chatbot;
+    }
+}
+```
+
+## Performance Optimization
+
+### Resource Limits
+
+```yaml
+# docker-compose.yml
+services:
+  ollama:
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '2'
+          memory: 4G
+```
+
+### Caching Strategy
+
+- Enable semantic caching
+- Set appropriate TTL (3600s recommended)
+- Monitor cache hit rate
+- Clear cache periodically
+
+## Troubleshooting Production Issues
+
+### High Memory Usage
+```bash
+# Check memory
+docker stats
+
+# Restart service
+docker-compose restart rag-chatbot
+
+# Increase limits in docker-compose.yml
+```
+
+### Slow Responses
+```bash
+# Check cache stats in UI
+# Increase similarity threshold
+# Reduce number of sources
+# Use OpenAI instead of Ollama
+```
+
+### Service Not Starting
+```bash
+# Check logs
+docker-compose logs rag-chatbot
+
+# Verify ports
+netstat -tulpn | grep 8501
+
+# Reset everything
+docker-compose down -v
+docker-compose up -d
+```
+
+## Maintenance
+
+### Regular Tasks
+
+- [ ] Weekly: Check logs for errors
+- [ ] Weekly: Review cache performance
+- [ ] Monthly: Update Docker images
+- [ ] Monthly: Backup vector store
+- [ ] Quarterly: Security audit
+- [ ] Quarterly: Dependency updates
+
+### Update Procedure
+
+```bash
+# Pull latest code
+git pull origin main
+
+# Rebuild and restart
+docker-compose down
+docker-compose build --no-cache
+docker-compose up -d
+
+# Verify health
+curl http://localhost:8501/_stcore/health
+```
+
+---
+
+**For detailed feature documentation, see [README.md](README.md)**
+
