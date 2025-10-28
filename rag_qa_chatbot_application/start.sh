@@ -18,12 +18,57 @@ if [ $? -ne 0 ]; then
 fi
 
 echo ""
-echo "[2/3] Waiting for application to be ready..."
-echo "This may take 30-60 seconds..."
-sleep 30
+echo "[2/4] Waiting for Ollama to download models and become healthy..."
+echo "This may take 5-10 minutes for first time setup..."
+echo ""
+
+max_wait_time=900  # 15 minutes maximum
+elapsed=0
+check_interval=10
+
+while [ $elapsed -lt $max_wait_time ]; do
+    ollama_health=$(docker inspect --format='{{.State.Health.Status}}' rag-ollama 2>/dev/null)
+    
+    if [ "$ollama_health" = "healthy" ]; then
+        echo "✅ Ollama is ready!"
+        break
+    fi
+    
+    # Show progress
+    minutes=$((elapsed / 60))
+    seconds=$((elapsed % 60))
+    echo "⏳ Waiting for Ollama... (${minutes}m ${seconds}s elapsed)"
+    
+    sleep $check_interval
+    elapsed=$((elapsed + check_interval))
+done
+
+if [ $elapsed -ge $max_wait_time ]; then
+    echo "⚠️  Timeout waiting for Ollama. Check logs with: docker-compose logs ollama"
+fi
 
 echo ""
-echo "[3/3] Opening browser..."
+echo "[3/4] Waiting for RAG Chatbot to be ready..."
+
+max_wait_time=60  # 1 minute for chatbot
+elapsed=0
+
+while [ $elapsed -lt $max_wait_time ]; do
+    chatbot_health=$(docker inspect --format='{{.State.Health.Status}}' rag-qa-chatbot 2>/dev/null)
+    
+    if [ "$chatbot_health" = "healthy" ]; then
+        echo "✅ RAG Chatbot is ready!"
+        break
+    fi
+    
+    echo "⏳ Waiting for chatbot... (${elapsed}s elapsed)"
+    sleep 5
+    elapsed=$((elapsed + 5))
+done
+
+echo ""
+echo "[4/4] Opening browser..."
+sleep 2
 
 # Detect OS and open browser accordingly
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -44,7 +89,7 @@ fi
 
 echo ""
 echo "========================================"
-echo " Application is starting!"
+echo " ✅ Application is Ready!"
 echo "========================================"
 echo ""
 echo "- Web UI: http://localhost:8501"

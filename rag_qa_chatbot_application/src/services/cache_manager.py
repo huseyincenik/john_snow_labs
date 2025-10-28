@@ -3,6 +3,7 @@ Cache manager service for RAG QA Chatbot Application
 Implements semantic caching with similarity matching for question-answer pairs
 Uses pure semantic (embedding-based) similarity for accurate matching
 """
+
 import time
 import hashlib
 import pickle
@@ -21,7 +22,12 @@ from ..utils import app_logger
 class CacheEntry:
     """Cache entry containing question, answer, and metadata with semantic embedding"""
 
-    def __init__(self, question: str, answer: Dict[str, Any], embedding: Optional[np.ndarray] = None):
+    def __init__(
+        self,
+        question: str,
+        answer: Dict[str, Any],
+        embedding: Optional[np.ndarray] = None,
+    ):
         self.question = question
         self.answer = answer
         self.embedding = embedding  # Semantic embedding for similarity matching
@@ -63,22 +69,19 @@ class CacheManager:
         # Semantic similarity threshold for cache matching
         # Higher threshold (0.92 = 92%) means more strict matching
         # Only questions with very similar meaning will be matched
-        self.similarity_threshold = 0.95
+        self.similarity_threshold = 0.85
 
         # Statistics
-        self.stats = {
-            'hits': 0,
-            'misses': 0,
-            'total_queries': 0,
-            'cache_saves': 0
-        }
+        self.stats = {"hits": 0, "misses": 0, "total_queries": 0, "cache_saves": 0}
 
         # Load existing cache if available
         self._load_cache()
 
-        self.logger.info(f"Cache Manager initialized (enabled={self.enable_cache}, "
-                         f"ttl={self.cache_ttl}s, max_size={self.max_cache_size}, "
-                         f"similarity_threshold={self.similarity_threshold:.1%})")
+        self.logger.info(
+            f"Cache Manager initialized (enabled={self.enable_cache}, "
+            f"ttl={self.cache_ttl}s, max_size={self.max_cache_size}, "
+            f"similarity_threshold={self.similarity_threshold:.1%})"
+        )
 
     def set_embeddings(self, embeddings):
         """Set embeddings model for semantic similarity"""
@@ -89,7 +92,9 @@ class CacheManager:
         """Generate cache key from question"""
         return hashlib.md5(question.lower().strip().encode()).hexdigest()
 
-    def _compute_similarity(self, embedding1: np.ndarray, embedding2: np.ndarray) -> float:
+    def _compute_similarity(
+        self, embedding1: np.ndarray, embedding2: np.ndarray
+    ) -> float:
         """
         Compute cosine similarity between two semantic embeddings
 
@@ -126,8 +131,7 @@ class CacheManager:
             return float(max(0.0, min(1.0, normalized_similarity)))
 
         except Exception as e:
-            self.logger.error(
-                f"Error computing semantic similarity: {str(e)}")
+            self.logger.error(f"Error computing semantic similarity: {str(e)}")
             return 0.0
 
     def _get_question_embedding(self, question: str) -> Optional[np.ndarray]:
@@ -138,23 +142,25 @@ class CacheManager:
         try:
             # Generate embedding using the embeddings model
             # Check if it's OpenAI or Ollama embeddings
-            if hasattr(self.embeddings, 'embed_query'):
+            if hasattr(self.embeddings, "embed_query"):
                 embedding = self.embeddings.embed_query(question)
-            elif hasattr(self.embeddings, 'embed_documents'):
+            elif hasattr(self.embeddings, "embed_documents"):
                 # Fallback to embed_documents with a list
                 embedding = self.embeddings.embed_documents([question])[0]
             else:
                 self.logger.error(
-                    "Embeddings model does not have embed_query or embed_documents method")
+                    "Embeddings model does not have embed_query or embed_documents method"
+                )
                 return None
 
             return np.array(embedding)
         except Exception as e:
-            self.logger.error(
-                f"Error generating embedding for question: {str(e)}")
+            self.logger.error(f"Error generating embedding for question: {str(e)}")
             return None
 
-    def _find_similar_question(self, question: str, question_embedding: Optional[np.ndarray]) -> Optional[Tuple[str, CacheEntry, float]]:
+    def _find_similar_question(
+        self, question: str, question_embedding: Optional[np.ndarray]
+    ) -> Optional[Tuple[str, CacheEntry, float]]:
         """
         Find most similar question in cache using pure semantic similarity
 
@@ -188,8 +194,7 @@ class CacheManager:
                 continue
 
             # Compute semantic similarity between question embeddings
-            similarity = self._compute_similarity(
-                question_embedding, entry.embedding)
+            similarity = self._compute_similarity(question_embedding, entry.embedding)
 
             # Update best match if this is better and meets the threshold
             if similarity > best_similarity and similarity >= self.similarity_threshold:
@@ -205,7 +210,9 @@ class CacheManager:
 
         return best_match
 
-    def get(self, question: str, k: int = 5, similarity_threshold: float = 0.9) -> Optional[Dict[str, Any]]:
+    def get(
+        self, question: str, k: int = 5, similarity_threshold: float = 0.9
+    ) -> Optional[Dict[str, Any]]:
         """
         Get cached answer for a question or similar question using semantic similarity
 
@@ -220,7 +227,7 @@ class CacheManager:
         if not self.enable_cache:
             return None
 
-        self.stats['total_queries'] += 1
+        self.stats["total_queries"] += 1
 
         try:
             # Generate semantic embedding for the question
@@ -238,30 +245,31 @@ class CacheManager:
                 # Move to end (most recently used)
                 self.cache.move_to_end(cache_key)
 
-                self.stats['hits'] += 1
+                self.stats["hits"] += 1
 
                 self.logger.info(
-                    f"Cache HIT (semantic similarity={similarity:.2%}, hits={entry.hit_count}): '{question[:50]}...'")
+                    f"Cache HIT (semantic similarity={similarity:.2%}, hits={entry.hit_count}): '{question[:50]}...'"
+                )
 
                 # Return cached answer with metadata about cache hit
                 cached_answer = copy.deepcopy(entry.answer)
 
                 # Ensure metadata exists and is a dictionary
-                if 'metadata' not in cached_answer:
-                    cached_answer['metadata'] = {}
-                elif not isinstance(cached_answer['metadata'], dict):
-                    cached_answer['metadata'] = {}
+                if "metadata" not in cached_answer:
+                    cached_answer["metadata"] = {}
+                elif not isinstance(cached_answer["metadata"], dict):
+                    cached_answer["metadata"] = {}
 
                 # Add cache metadata without overwriting existing data
-                cached_answer['metadata']['cached'] = True
-                cached_answer['metadata']['cache_similarity'] = similarity
-                cached_answer['metadata']['cache_hit_count'] = entry.hit_count
-                cached_answer['metadata']['original_question'] = entry.question
+                cached_answer["metadata"]["cached"] = True
+                cached_answer["metadata"]["cache_similarity"] = similarity
+                cached_answer["metadata"]["cache_hit_count"] = entry.hit_count
+                cached_answer["metadata"]["original_question"] = entry.question
 
                 return cached_answer
 
             # Cache miss
-            self.stats['misses'] += 1
+            self.stats["misses"] += 1
             self.logger.debug(f"Cache MISS: '{question[:50]}...'")
             return None
 
@@ -289,9 +297,7 @@ class CacheManager:
 
             # Create cache entry with embedding
             entry = CacheEntry(
-                question=question,
-                answer=answer,
-                embedding=question_embedding
+                question=question, answer=answer, embedding=question_embedding
             )
 
             # Check if cache is full (LRU eviction)
@@ -301,17 +307,19 @@ class CacheManager:
                 removed_entry = self.cache.pop(removed_key)
 
                 self.logger.debug(
-                    f"Cache full, removed LRU entry: '{removed_entry.question[:50]}...'")
+                    f"Cache full, removed LRU entry: '{removed_entry.question[:50]}...'"
+                )
 
             # Add to cache
             self.cache[cache_key] = entry
-            self.stats['cache_saves'] += 1
+            self.stats["cache_saves"] += 1
 
             self.logger.debug(
-                f"Cached question-answer pair with semantic embedding: '{question[:50]}...'")
+                f"Cached question-answer pair with semantic embedding: '{question[:50]}...'"
+            )
 
             # Periodically save cache to disk (every 10 entries)
-            if self.stats['cache_saves'] % 10 == 0:
+            if self.stats["cache_saves"] % 10 == 0:
                 self._save_cache()
 
         except Exception as e:
@@ -320,12 +328,7 @@ class CacheManager:
     def clear(self) -> None:
         """Clear all cache entries"""
         self.cache.clear()
-        self.stats = {
-            'hits': 0,
-            'misses': 0,
-            'total_queries': 0,
-            'cache_saves': 0
-        }
+        self.stats = {"hits": 0, "misses": 0, "total_queries": 0, "cache_saves": 0}
         self._save_cache()
         self.logger.info("Cache cleared")
 
@@ -337,16 +340,14 @@ class CacheManager:
             Number of entries removed
         """
         expired_keys = [
-            key for key, entry in self.cache.items()
-            if entry.is_expired(self.cache_ttl)
+            key for key, entry in self.cache.items() if entry.is_expired(self.cache_ttl)
         ]
 
         for key in expired_keys:
             del self.cache[key]
 
         if expired_keys:
-            self.logger.info(
-                f"Removed {len(expired_keys)} expired cache entries")
+            self.logger.info(f"Removed {len(expired_keys)} expired cache entries")
 
         return len(expired_keys)
 
@@ -355,19 +356,22 @@ class CacheManager:
         # Remove expired entries before calculating stats
         self.remove_expired()
 
-        hit_rate = (self.stats['hits'] / self.stats['total_queries']
-                    * 100) if self.stats['total_queries'] > 0 else 0.0
+        hit_rate = (
+            (self.stats["hits"] / self.stats["total_queries"] * 100)
+            if self.stats["total_queries"] > 0
+            else 0.0
+        )
 
         return {
-            'enabled': self.enable_cache,
-            'total_entries': len(self.cache),
-            'max_size': self.max_cache_size,
-            'hits': self.stats['hits'],
-            'misses': self.stats['misses'],
-            'total_queries': self.stats['total_queries'],
-            'hit_rate': hit_rate,
-            'cache_saves': self.stats['cache_saves'],
-            'ttl_seconds': self.cache_ttl
+            "enabled": self.enable_cache,
+            "total_entries": len(self.cache),
+            "max_size": self.max_cache_size,
+            "hits": self.stats["hits"],
+            "misses": self.stats["misses"],
+            "total_queries": self.stats["total_queries"],
+            "hit_rate": hit_rate,
+            "cache_saves": self.stats["cache_saves"],
+            "ttl_seconds": self.cache_ttl,
         }
 
     def _save_cache(self) -> None:
@@ -377,16 +381,17 @@ class CacheManager:
             self.remove_expired()
 
             cache_data = {
-                'cache': dict(self.cache),
-                'stats': self.stats,
-                'timestamp': datetime.now()
+                "cache": dict(self.cache),
+                "stats": self.stats,
+                "timestamp": datetime.now(),
             }
 
-            with open(self.cache_file, 'wb') as f:
+            with open(self.cache_file, "wb") as f:
                 pickle.dump(cache_data, f)
 
             self.logger.debug(
-                f"Cache saved to disk ({len(self.cache)} entries with semantic embeddings)")
+                f"Cache saved to disk ({len(self.cache)} entries with semantic embeddings)"
+            )
 
         except Exception as e:
             self.logger.error(f"Error saving cache: {str(e)}")
@@ -398,17 +403,19 @@ class CacheManager:
             return
 
         try:
-            with open(self.cache_file, 'rb') as f:
+            with open(self.cache_file, "rb") as f:
                 cache_data = pickle.load(f)
 
-            self.cache = OrderedDict(cache_data.get('cache', {}))
-            self.stats = cache_data.get('stats', self.stats)
+            self.cache = OrderedDict(cache_data.get("cache", {}))
+            self.stats = cache_data.get("stats", self.stats)
 
             # Remove expired entries
             expired_count = self.remove_expired()
 
-            self.logger.info(f"Cache loaded from disk ({len(self.cache)} active entries, "
-                             f"{expired_count} expired entries removed)")
+            self.logger.info(
+                f"Cache loaded from disk ({len(self.cache)} active entries, "
+                f"{expired_count} expired entries removed)"
+            )
 
         except Exception as e:
             self.logger.error(f"Error loading cache: {str(e)}")

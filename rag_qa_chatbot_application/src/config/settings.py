@@ -1,6 +1,7 @@
 """
 Configuration settings for RAG QA Chatbot Application
 """
+
 import os
 from pathlib import Path
 from dataclasses import dataclass
@@ -21,6 +22,7 @@ LOGS_DIR.mkdir(exist_ok=True)
 @dataclass
 class ModelConfig:
     """Model configuration settings"""
+
     # OpenAI API settings
     openai_model: str = "gpt-4o-mini"
     openai_temperature: float = 0.7
@@ -41,12 +43,14 @@ class ModelConfig:
         # Use environment variable for Docker compatibility (ollama for Docker, localhost for local)
         if self.ollama_base_url is None:
             self.ollama_base_url = os.getenv(
-                "OLLAMA_BASE_URL", "http://localhost:11434/v1")
+                "OLLAMA_BASE_URL", "http://localhost:11434/v1"
+            )
 
 
 @dataclass
 class DocumentConfig:
     """Document processing configuration"""
+
     chunk_size: int = 1000
     chunk_overlap: int = 200
     max_file_size_mb: int = 50
@@ -61,8 +65,9 @@ class DocumentConfig:
 @dataclass
 class VectorStoreConfig:
     """Vector store configuration"""
+
     faiss_index_type: str = "HNSW"
-    similarity_threshold: float = 0.7
+    similarity_threshold: float = 0.50
     max_retrieved_docs: int = 5
     index_path: str = str(VECTORSTORE_DIR / "faiss_index")
 
@@ -70,6 +75,7 @@ class VectorStoreConfig:
 @dataclass
 class UIConfig:
     """UI configuration"""
+
     page_title: str = "RAG QA Chatbot"
     page_icon: str = "🤖"
     sidebar_width: int = 300
@@ -79,6 +85,7 @@ class UIConfig:
 @dataclass
 class LoggingConfig:
     """Logging configuration"""
+
     log_level: str = "DEBUG"  # Changed to DEBUG for detailed logging
     log_format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     log_file: str = str(LOGS_DIR / "app.log")
@@ -89,6 +96,7 @@ class LoggingConfig:
 @dataclass
 class CacheConfig:
     """Cache configuration"""
+
     enable_cache: bool = True
     cache_ttl: int = 3600  # 1 hour in seconds
     max_cache_size: int = 100
@@ -97,6 +105,7 @@ class CacheConfig:
 @dataclass
 class SecurityConfig:
     """Security configuration"""
+
     enable_auth: bool = False
     session_timeout: int = 3600  # 1 hour
     max_file_uploads: int = 10
