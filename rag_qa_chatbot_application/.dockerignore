@@ -124,7 +124,6 @@ dmypy.json
 
 # Application specific
 logs/*
-data/
 data/*
 *.faiss
 *.pkl
