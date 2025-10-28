@@ -123,8 +123,9 @@ dmypy.json
 .pyre/
 
 # Application specific
-logs/
-data/vectorstore/
+logs/*
+data/
+data/*
 *.faiss
 *.pkl
 .streamlit/

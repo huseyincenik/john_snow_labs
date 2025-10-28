@@ -300,27 +300,49 @@ class LLMService:
                     # Check Ollama health endpoint
                     ollama_url = config.model.ollama_base_url.replace(
                         '/v1', '')
+                    self.logger.info(f"Checking Ollama service at: {ollama_url}")
+                    
+                    # Try to connect with longer timeout for Docker environments
                     health_response = requests.get(
-                        f"{ollama_url}/api/tags", timeout=5)
+                        f"{ollama_url}/api/tags", timeout=30)
+                    
                     if health_response.status_code != 200:
                         self.logger.error(
-                            f"Ollama service not ready: {health_response.status_code}")
+                            f"Ollama service not ready: HTTP {health_response.status_code}")
                         return False
 
                     # Check if qwen2.5:7b model is available
                     models = health_response.json().get('models', [])
                     model_names = [m.get('name', '') for m in models]
+                    
+                    self.logger.info(f"Available Ollama models: {model_names}")
+                    
                     if not any('qwen2.5:7b' in name for name in model_names):
-                        self.logger.error(
-                            "Qwen2.5:7b model not found. Still downloading...")
+                        self.logger.warning(
+                            "⚠️ Qwen2.5:7b model not found in Ollama. Available models: " + 
+                            ", ".join(model_names) + ". The model might still be downloading. " +
+                            "Please wait a few minutes and try again.")
                         return False
 
                     self.logger.info(
                         "✅ Ollama service and qwen2.5:7b model are ready!")
                     return True  # Return immediately for Ollama
 
+                except requests.exceptions.Timeout:
+                    self.logger.error(
+                        "❌ Timeout connecting to Ollama service. " +
+                        "Please make sure Ollama container is running and fully started. " +
+                        f"URL: {ollama_url}")
+                    return False
+                except requests.exceptions.ConnectionError as e:
+                    self.logger.error(
+                        f"❌ Cannot connect to Ollama service at {ollama_url}. " +
+                        "Please make sure the Ollama container is running. " +
+                        f"Error: {str(e)}")
+                    return False
                 except requests.exceptions.RequestException as e:
-                    self.logger.error(f"Cannot reach Ollama service: {str(e)}")
+                    self.logger.error(
+                        f"❌ Error connecting to Ollama service: {str(e)}")
                     return False
 
             # For OpenAI, test with a simple prompt

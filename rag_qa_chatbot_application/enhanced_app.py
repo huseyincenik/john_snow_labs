@@ -808,7 +808,19 @@ class ChatbotApp:
                         f"✅ {model_provider} LLM initialized successfully!")
                     self.logger.info(f"LLM initialized: {model_provider}")
                 else:
-                    st.error("❌ Failed to validate API connection")
+                    if model_provider == "Local LLM (Qwen)":
+                        st.error(
+                            "❌ Failed to connect to Ollama service.\n\n"
+                            "**Possible reasons:**\n"
+                            "- Ollama container is still starting up (wait 1-2 minutes)\n"
+                            "- Qwen2.5:7b model is still being downloaded (can take 5-10 minutes)\n"
+                            "- Ollama service is not running\n\n"
+                            "**To check status:**\n"
+                            "Run: `docker-compose logs ollama`"
+                        )
+                    else:
+                        st.error(
+                            "❌ Failed to validate API connection. Please check your API key.")
 
         except Exception as e:
             st.error(f"❌ Failed to initialize LLM: {str(e)}")

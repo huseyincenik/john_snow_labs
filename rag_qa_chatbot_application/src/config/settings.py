@@ -38,7 +38,7 @@ class ModelConfig:
 
     def __post_init__(self):
         """Initialize environment-dependent settings"""
-        # Use environment variable for Docker compatibility (rag-ollama for Docker, localhost for local)
+        # Use environment variable for Docker compatibility (ollama for Docker, localhost for local)
         if self.ollama_base_url is None:
             self.ollama_base_url = os.getenv(
                 "OLLAMA_BASE_URL", "http://localhost:11434/v1")

@@ -307,6 +307,41 @@ services:
 
 ## Troubleshooting Production Issues
 
+### Qwen2.5 API Connection Error
+
+**Problem:** "Failed to connect to Ollama service" when initializing Qwen2.5
+
+**Solutions:**
+
+```bash
+# 1. Check if Ollama container is running and healthy
+docker-compose ps
+
+# 2. Check Ollama logs to see if models are still downloading
+docker-compose logs ollama
+
+# 3. Verify Ollama service is responding
+curl http://localhost:11434/api/tags
+
+# 4. Check if qwen2.5:7b model is available
+docker exec rag-ollama ollama list
+
+# 5. Wait for model download (can take 5-10 minutes on first start)
+# Monitor progress with:
+docker-compose logs -f ollama
+
+# 6. If model download failed, manually pull it
+docker exec rag-ollama ollama pull qwen2.5:7b
+
+# 7. Restart both services after model is ready
+docker-compose restart
+```
+
+**Important Notes:**
+- First startup can take 5-10 minutes to download Qwen2.5:7b model (4.7GB)
+- Wait for the message "✅ All models downloaded and ready!" in logs
+- The RAG chatbot container waits for Ollama to be healthy before starting
+
 ### High Memory Usage
 ```bash
 # Check memory
@@ -316,6 +351,11 @@ docker stats
 docker-compose restart rag-chatbot
 
 # Increase limits in docker-compose.yml
+# Add under ollama service:
+#   deploy:
+#     resources:
+#       limits:
+#         memory: 8G
 ```
 
 ### Slow Responses
@@ -324,18 +364,58 @@ docker-compose restart rag-chatbot
 # Increase similarity threshold
 # Reduce number of sources
 # Use OpenAI instead of Ollama
+
+# For Qwen performance issues:
+# 1. First query is always slow (model loading)
+# 2. Subsequent queries should be faster
+# 3. Consider using OpenAI for production
 ```
 
 ### Service Not Starting
 ```bash
 # Check logs
 docker-compose logs rag-chatbot
+docker-compose logs ollama
 
-# Verify ports
+# Verify ports are not in use
 netstat -tulpn | grep 8501
+netstat -tulpn | grep 11434
 
-# Reset everything
+# Reset everything (WARNING: This deletes all data)
 docker-compose down -v
+docker-compose up -d
+
+# Check health status
+docker-compose ps
+curl http://localhost:8501/_stcore/health
+curl http://localhost:11434/api/tags
+```
+
+### Data and Logs Folder Issues
+
+**Problem:** Old data or logs being included in Docker image
+
+**Solution:**
+The `.dockerignore` file is configured to exclude `data/` and `logs/` folders from the Docker image.
+These folders are mounted as volumes from your host machine:
+
+```yaml
+volumes:
+  - ./data:/app/data      # Your local data persists here
+  - ./logs:/app/logs      # Your local logs persist here
+```
+
+If you need to start fresh:
+```bash
+# Clear local data (WARNING: Deletes vector store)
+rm -rf data/vectorstore/*
+rm -rf data/cache/*
+
+# Clear logs
+rm -rf logs/*
+
+# Rebuild without cache
+docker-compose build --no-cache
 docker-compose up -d
 ```
 

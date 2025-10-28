@@ -11,11 +11,11 @@ services:
       - OLLAMA_HOST=0.0.0.0
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/"]
+      test: ["CMD", "sh", "-c", "curl -f http://localhost:11434/api/tags && ollama list | grep -q qwen2.5:7b"]
       interval: 30s
       timeout: 30s
-      retries: 20
-      start_period: 600s
+      retries: 30
+      start_period: 900s
     networks:
       - rag-network
     # Pull models on startup
@@ -24,11 +24,17 @@ services:
       - |
         /bin/ollama serve &
         sleep 10
-        echo "Pulling Qwen2.5:7b model..."
+        echo "=========================================="
+        echo "Pulling Qwen2.5:7b model (this may take 5-10 minutes)..."
+        echo "=========================================="
         ollama pull qwen2.5:7b
+        echo "=========================================="
         echo "Pulling all-minilm embedding model..."
+        echo "=========================================="
         ollama pull all-minilm
-        echo "Models ready!"
+        echo "=========================================="
+        echo "✅ All models downloaded and ready!"
+        echo "=========================================="
         wait
 
   # RAG Chatbot Application
@@ -36,7 +42,8 @@ services:
     build: .
     container_name: rag-qa-chatbot
     depends_on:
-      - ollama
+      ollama:
+        condition: service_healthy
     ports:
       - "8501:8501"
     volumes:
