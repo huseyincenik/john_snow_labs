@@ -47,12 +47,11 @@ Our application implements state-of-the-art retrieval techniques:
    ```
    User Query → Vector Search (k*3 candidates)
               → LLM Compression (relevance filtering)
-              → Similarity Threshold (accuracy filtering)
               → Top k Results
    ```
 
 3. **Benefits**
-   - Eliminates irrelevant content with high similarity scores
+   - Eliminates irrelevant content through LLM filtering
    - Provides semantically accurate answers
    - Reduces hallucinations and off-topic responses
 
@@ -69,7 +68,6 @@ Our application implements state-of-the-art retrieval techniques:
 - **Chunk Size**: 200-2000 characters (default: 800)
 - **Chunk Overlap**: 0-500 characters (default: 100)
 - **Number of Sources (k)**: 1-10 documents (default: 5)
-- **Similarity Threshold**: 0%-100% (default: 75%)
 - **Model Temperature**: 0.0-1.0 (default: 0.7 for OpenAI, 0.3 for Qwen)
 
 #### 📈 Real-Time Monitoring
@@ -106,7 +104,7 @@ Our application implements state-of-the-art retrieval techniques:
 │  2. FAISS Vector Storage                              │
 │  3. Contextual Compression Retrieval                  │
 │  4. LLM-based Relevance Filtering                     │
-│  5. Similarity Threshold Application                  │
+│  5. Answer Generation with Sources                    │
 │  6. Answer Generation with Sources                    │
 │  7. Semantic Cache Layer                              │
 └────────────────────────────────────────────────────────┘
@@ -132,8 +130,6 @@ Semantic Cache Check (95% similarity)
 Vector Similarity Search (k*3 candidates)
     ↓
 Contextual Compression (LLM filters irrelevant content)
-    ↓
-Similarity Threshold Filter (user-defined threshold)
     ↓
 Top k Selection (user-defined count)
     ↓
@@ -525,10 +521,6 @@ services:
 1. **Retrieval Parameters**
 
    - **Number of Sources (k=5)**: How many document chunks to retrieve
-   - **Similarity Threshold (75%)**: Minimum accuracy score for sources
-     - 90-100%: Very strict (only highly relevant content)
-     - 70-90%: Balanced (recommended)
-     - 50-70%: Permissive (may include tangential content)
 
 2. **Model Parameters**
 
@@ -598,7 +590,7 @@ compression_retriever = ContextualCompressionRetriever(
 # Result: Only query-relevant content reaches answer generation
 ```
 
-### Similarity Score Calculation
+### Document Retrieval Process
 
 We use **similarity_search_with_score** to retrieve documents with their similarity scores:
 
@@ -607,7 +599,7 @@ We use **similarity_search_with_score** to retrieve documents with their similar
 docs_with_scores = vector_store.similarity_search_with_score(query, k=k)
 
 # The system uses all retrieved sources for comprehensive answers
-# No threshold filtering is applied - LLM determines relevance
+# LLM determines relevance and filters content appropriately
 ```
 
 ### Semantic Caching Algorithm
@@ -748,7 +740,7 @@ curl http://localhost:11434/api/tags
 
 1. **Use Caching**: Enable for 10x faster repeated queries
 2. **Adjust Chunk Size**: Smaller chunks = faster but less context
-3. **Similarity Threshold**: Higher threshold = fewer sources = faster
+3. **Number of Sources**: Fewer sources = faster responses
 4. **Model Choice**: Qwen is slower but free, OpenAI is faster but paid
 
 ---
