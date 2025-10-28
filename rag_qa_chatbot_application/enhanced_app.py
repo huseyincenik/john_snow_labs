@@ -59,7 +59,7 @@ class ChatbotApp:
             st.session_state.chunk_overlap = 100
 
         if "search_k" not in st.session_state:
-            st.session_state.search_k = 5
+            st.session_state.search_k = 7
 
         if "similarity_threshold" not in st.session_state:
             st.session_state.similarity_threshold = 0.50
@@ -317,32 +317,36 @@ class ChatbotApp:
             search_k = st.slider(
                 "Number of Sources (k)",
                 min_value=1,
-                max_value=10,
-                value=5,
+                max_value=15,
+                value=7,
                 step=1,
-                help="Number of document chunks to retrieve for each query",
+                help="Number of document chunks to retrieve (more = better coverage but slower)",
             )
             similarity_threshold = st.slider(
                 "Similarity Threshold (%)",
                 min_value=0.0,
                 max_value=1.0,
-                value=0.50,  # Default to 0.50 (50%) for balanced results
+                value=0.40,  # Default to 0.40 (40%) for good recall with adaptive threshold
                 step=0.05,
                 help="Minimum cosine similarity score for source inclusion. "
-                + "Scores are based on true cosine similarity between embeddings. "
-                + "Recommended: 0.50-0.60 for balanced results, 0.40-0.50 for broader searches.",
+                + "Adaptive threshold ensures you always get at least 3 sources! "
+                + "Recommended: 0.30-0.45 for broad search, 0.45-0.60 for balanced, 0.60+ for precise.",
             )
             st.session_state.search_k = search_k
             st.session_state.similarity_threshold = similarity_threshold
 
             st.info(
-                "💡 Cosine Similarity Scores (mathematically accurate):\n"
-                + "- 0.90-1.00 = Nearly identical content (excellent)\n"
-                + "- 0.75-0.90 = Highly relevant (very good match)\n"
-                + "- 0.60-0.75 = Relevant (good match)\n"
-                + "- 0.50-0.60 = Moderately relevant (recommended for most queries) ✅\n"
-                + "- 0.40-0.50 = Somewhat related (good for broad/short queries)\n"
-                + "- Below 0.40 = Low relevance (may include tangential content)"
+                "💡 **Cosine Similarity Guide (Direct Matching):**\n\n"
+                + "**High Precision (Narrow Search):**\n"
+                + "- **0.85-1.00** = Nearly identical content (very strict)\n"
+                + "- **0.70-0.85** = Highly relevant (strict)\n\n"
+                + "**Balanced (Recommended):**\n"
+                + "- **0.50-0.70** = Relevant content (balanced) ✅\n"
+                + "- **0.40-0.50** = Moderately relevant (good recall)\n\n"
+                + "**High Recall (Broad Search):**\n"
+                + "- **0.30-0.40** = Potentially relevant (comprehensive)\n"
+                + "- **Below 0.30** = Weakly related (too broad)\n\n"
+                + "⚙️ **Note:** Accuracy scores now directly match your threshold selection!"
             )
 
         # Model parameters section

@@ -68,7 +68,7 @@ class VectorStoreConfig:
 
     faiss_index_type: str = "HNSW"
     similarity_threshold: float = 0.50
-    max_retrieved_docs: int = 5
+    max_retrieved_docs: int = 7
     index_path: str = str(VECTORSTORE_DIR / "faiss_index")
 
 
