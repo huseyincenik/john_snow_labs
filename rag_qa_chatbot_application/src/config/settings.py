@@ -27,14 +27,21 @@ class ModelConfig:
     openai_max_tokens: int = 1000
 
     # Local LLM (Qwen via Ollama) settings
-    local_model: str = "qwen2.5:3b"
+    local_model: str = "qwen2.5:7b"
     local_temperature: float = 0.3
     local_max_tokens: int = 1000
-    ollama_base_url: str = "http://localhost:11434/v1"
+    ollama_base_url: str = None  # Will be set in __post_init__
 
     # Embedding settings
     openai_embedding_model: str = "text-embedding-ada-002"
     local_embedding_model: str = "all-minilm"  # Ollama embedding model
+
+    def __post_init__(self):
+        """Initialize environment-dependent settings"""
+        # Use environment variable for Docker compatibility (rag-ollama for Docker, localhost for local)
+        if self.ollama_base_url is None:
+            self.ollama_base_url = os.getenv(
+                "OLLAMA_BASE_URL", "http://localhost:11434/v1")
 
 
 @dataclass

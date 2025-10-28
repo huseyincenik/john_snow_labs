@@ -56,7 +56,8 @@ class LLMService:
                     temperature=config.model.local_temperature,
                     max_tokens=config.model.local_max_tokens,
                     openai_api_key='ollama',
-                    openai_api_base=config.model.ollama_base_url
+                    openai_api_base=config.model.ollama_base_url,
+                    request_timeout=120  # 2 minutes timeout for Ollama
                 )
 
                 # Initialize memory for conversation
@@ -291,14 +292,41 @@ class LLMService:
             return False
 
         try:
-            test_prompt = "Hello, this is a test message. Please respond with 'Test successful.'"
+            # For Ollama, only check if the service is reachable
+            # Skip LLM test call as it can be very slow for first load
+            if self.current_provider == "Local LLM (Qwen)":
+                import requests
+                try:
+                    # Check Ollama health endpoint
+                    ollama_url = config.model.ollama_base_url.replace(
+                        '/v1', '')
+                    health_response = requests.get(
+                        f"{ollama_url}/api/tags", timeout=5)
+                    if health_response.status_code != 200:
+                        self.logger.error(
+                            f"Ollama service not ready: {health_response.status_code}")
+                        return False
 
-            if self.current_provider == "OpenAI (API)":
-                response = self.llm.predict(test_prompt)
-            elif self.current_provider == "Local LLM (Qwen)":
-                response = self.llm.predict(test_prompt)
-            else:
-                return False
+                    # Check if qwen2.5:7b model is available
+                    models = health_response.json().get('models', [])
+                    model_names = [m.get('name', '') for m in models]
+                    if not any('qwen2.5:7b' in name for name in model_names):
+                        self.logger.error(
+                            "Qwen2.5:7b model not found. Still downloading...")
+                        return False
+
+                    self.logger.info(
+                        "✅ Ollama service and qwen2.5:7b model are ready!")
+                    return True  # Return immediately for Ollama
+
+                except requests.exceptions.RequestException as e:
+                    self.logger.error(f"Cannot reach Ollama service: {str(e)}")
+                    return False
+
+            # For OpenAI, test with a simple prompt
+            test_prompt = "Hi"
+
+            response = self.llm.predict(test_prompt)
 
             self.logger.debug(f"API validation successful: {response[:50]}...")
             return True

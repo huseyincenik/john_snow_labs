@@ -147,9 +147,11 @@ class VectorStoreManager:
             elif model_provider == "Local LLM (Qwen)":
                 # For local LLM, use Ollama embeddings
                 self.embeddings = OllamaEmbeddings(
-                    model=config.model.local_embedding_model,  # Use llama3
+                    model=config.model.local_embedding_model,  # Use all-minilm
                     base_url=config.model.ollama_base_url.replace(
-                        '/v1', '')  # Remove /v1 for Ollama
+                        '/v1', ''),  # Remove /v1 for Ollama
+                    # Increase context window for embeddings (default 512 is too small)
+                    num_ctx=2048
                 )
             else:
                 raise ValueError(
@@ -211,12 +213,44 @@ class VectorStoreManager:
 
             # Create FAISS vector store
             if texts:
-                self.vector_store = FAISS.from_texts(
-                    texts=texts,
-                    embedding=self.embeddings,
-                    metadatas=metadatas,
-                    normalize_L2=True
-                )
+                # Process in batches to avoid context length issues with Ollama embeddings
+                batch_size = 32  # Process 32 chunks at a time
+
+                if len(texts) <= batch_size:
+                    # Small batch, process all at once
+                    self.vector_store = FAISS.from_texts(
+                        texts=texts,
+                        embedding=self.embeddings,
+                        metadatas=metadatas,
+                        normalize_L2=True
+                    )
+                else:
+                    # Large batch, process incrementally
+                    self.logger.info(
+                        f"Processing {len(texts)} texts in batches of {batch_size}")
+
+                    # Create initial vector store with first batch
+                    first_batch_texts = texts[:batch_size]
+                    first_batch_metas = metadatas[:batch_size]
+
+                    self.vector_store = FAISS.from_texts(
+                        texts=first_batch_texts,
+                        embedding=self.embeddings,
+                        metadatas=first_batch_metas,
+                        normalize_L2=True
+                    )
+
+                    # Add remaining batches
+                    for i in range(batch_size, len(texts), batch_size):
+                        batch_texts = texts[i:i + batch_size]
+                        batch_metas = metadatas[i:i + batch_size]
+
+                        self.logger.info(
+                            f"Processing batch {i//batch_size + 1}/{(len(texts) + batch_size - 1)//batch_size}")
+                        self.vector_store.add_texts(
+                            texts=batch_texts,
+                            metadatas=batch_metas
+                        )
 
                 # Save vector store
                 self._save_vector_store()
@@ -448,25 +482,33 @@ Helpful Answer (based on context):"""
                 }
             )
 
-            # Step 2: Create LLM Chain Extractor for contextual compression
-            # Use default extractor which is optimized for relevance filtering
-            # Our improved QA prompt will handle the rest
-            compressor = LLMChainExtractor.from_llm(llm)
+            # TEMPORARY: Disable Contextual Compression for Ollama (too slow on CPU)
+            # Use basic retriever for faster responses
+            use_compression = self.current_model_provider != "Local LLM (Qwen)"
 
-            # Step 3: Create Contextual Compression Retriever
-            # This combines embedding search with LLM-based relevance filtering
-            compression_retriever = ContextualCompressionRetriever(
-                base_compressor=compressor,
-                base_retriever=base_retriever
-            )
+            if use_compression:
+                # Step 2: Create LLM Chain Extractor for contextual compression
+                compressor = LLMChainExtractor.from_llm(llm)
 
-            self.logger.info(
-                f"Using Contextual Compression Retriever with LLM filtering for query: '{query[:50]}...'")
+                # Step 3: Create Contextual Compression Retriever
+                compression_retriever = ContextualCompressionRetriever(
+                    base_compressor=compressor,
+                    base_retriever=base_retriever
+                )
 
-            # Create conversational retrieval chain with compressed retriever
+                self.logger.info(
+                    f"Using Contextual Compression Retriever with LLM filtering for query: '{query[:50]}...'")
+
+                retriever_to_use = compression_retriever
+            else:
+                self.logger.info(
+                    f"Using basic retriever (Compression disabled for Ollama/CPU) for query: '{query[:50]}...'")
+                retriever_to_use = base_retriever
+
+            # Create conversational retrieval chain
             conversation_chain = ConversationalRetrievalChain.from_llm(
                 llm=llm,
-                retriever=compression_retriever,  # Use compression retriever instead of base
+                retriever=retriever_to_use,
                 memory=memory,
                 return_source_documents=True,
                 combine_docs_chain_kwargs={"prompt": qa_prompt}
