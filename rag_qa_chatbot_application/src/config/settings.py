@@ -24,9 +24,9 @@ class ModelConfig:
     """Model configuration settings"""
 
     # OpenAI API settings
-    openai_model: str = "gpt-4o-mini"
+    openai_model: str = "gpt-4o"
     openai_temperature: float = 0.7
-    openai_max_tokens: int = 1000
+    openai_max_tokens: int = 2000
 
     # Local LLM (Qwen via Ollama) settings
     local_model: str = "qwen2.5:7b"

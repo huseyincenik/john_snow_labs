@@ -23,7 +23,7 @@ A production-ready **Retrieval-Augmented Generation (RAG)** chatbot application 
 ### Core Functionality
 - **📄 Multi-Format Document Upload**: Support for PDF, DOCX, and TXT files
 - **🤖 Dual LLM Support**: 
-  - OpenAI API (GPT-4o-mini)
+  - OpenAI API (GPT-4o)
   - Local LLM via Ollama (Qwen2.5:7b)
 - **🔍 Advanced Semantic Search**: FAISS vector store with cosine similarity
 - **💬 Conversational Interface**: Real-time chat with document-based responses
@@ -154,7 +154,7 @@ Response to User
 - **Ollama Embeddings**: all-minilm
 
 ### LLM Models
-- **OpenAI**: GPT-4o-mini (API-based)
+- **OpenAI**: GPT-4o (API-based)
 - **Qwen**: Qwen2.5:7b (local via Ollama)
 
 ### Document Processing
@@ -501,7 +501,7 @@ Each response includes:
 
 ```
 📊 Response Information
-├─ Model: OpenAI gpt-4o-mini (or Qwen2.5:7b)
+├─ Model: OpenAI gpt-4o (or Qwen2.5:7b)
 ├─ Sources Used: 3 documents
 ├─ Method: Contextual Compression + LLM Filtering
 ├─ ⚡ Cached Response (if applicable)

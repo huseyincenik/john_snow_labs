@@ -478,11 +478,11 @@ class VectorStoreManager:
                 # Fallback to OpenAI format
                 llm = ChatOpenAI(
                     api_key=api_key,
-                    model_name="gpt-4o-mini",
+                    model_name="gpt-4o",
                     temperature=temperature if temperature is not None else 0.7,
-                    max_tokens=max_tokens if max_tokens is not None else 1000,
+                    max_tokens=max_tokens if max_tokens is not None else 2000,
                 )
-                model_display_name = "gpt-4o-mini"
+                model_display_name = "gpt-4o"
 
             # Initialize memory for conversation
             memory = ConversationBufferMemory(
