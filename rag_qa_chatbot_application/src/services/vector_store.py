@@ -131,7 +131,8 @@ class VectorStoreManager:
         filtered_docs = []
 
         for doc, distance_score in docs_with_scores:
-            similarity_score = self._convert_distance_to_similarity(distance_score)
+            similarity_score = self._convert_distance_to_similarity(
+                distance_score)
 
             # Only include documents that meet the similarity threshold
             if similarity_score >= similarity_threshold:
@@ -164,7 +165,8 @@ class VectorStoreManager:
                     num_ctx=2048,
                 )
             else:
-                raise ValueError(f"Unsupported model provider: {model_provider}")
+                raise ValueError(
+                    f"Unsupported model provider: {model_provider}")
 
             self.current_model_provider = model_provider
             self.logger.info(f"Initialized embeddings for {model_provider}")
@@ -205,7 +207,8 @@ class VectorStoreManager:
                 texts.append(chunk.content)
 
                 # Find corresponding document
-                doc = next((d for d in documents if d.id == chunk.document_id), None)
+                doc = next((d for d in documents if d.id ==
+                           chunk.document_id), None)
                 doc_name = doc.name if doc else "Unknown"
 
                 metadata = {
@@ -254,8 +257,8 @@ class VectorStoreManager:
 
                     # Add remaining batches
                     for i in range(batch_size, len(texts), batch_size):
-                        batch_texts = texts[i : i + batch_size]
-                        batch_metas = metadatas[i : i + batch_size]
+                        batch_texts = texts[i: i + batch_size]
+                        batch_metas = metadatas[i: i + batch_size]
 
                         self.logger.info(
                             f"Processing batch {i//batch_size + 1}/{(len(texts) + batch_size - 1)//batch_size}"
@@ -389,7 +392,6 @@ class VectorStoreManager:
         query: str,
         api_key: str,
         k: int = 5,
-        similarity_threshold: float = 0.70,
         temperature: float = None,
         max_tokens: int = None,
     ) -> Dict[str, Any]:
@@ -399,13 +401,12 @@ class VectorStoreManager:
         This method uses:
         1. Contextual Compression: Filters irrelevant content using LLM
         2. LLMChainExtractor: Extracts only query-relevant parts from documents
-        3. Multi-stage filtering: Embedding similarity + LLM relevance check
+        3. similarity_search_with_score: Returns documents with their similarity scores
 
         Args:
             query: User query
             api_key: OpenAI API key
             k: Number of documents to retrieve
-            similarity_threshold: Minimum similarity score (0.0 to 1.0)
             temperature: LLM temperature
             max_tokens: Maximum tokens for LLM response
 
@@ -414,10 +415,11 @@ class VectorStoreManager:
         """
         # Check cache first
         cached_result = self.cache_manager.get(
-            query, k=k, similarity_threshold=similarity_threshold
+            query, k=k
         )
         if cached_result:
-            self.logger.info(f"Returning cached result for query: '{query[:50]}...'")
+            self.logger.info(
+                f"Returning cached result for query: '{query[:50]}...'")
             return cached_result
 
         if not self.vector_store:
@@ -514,7 +516,8 @@ QUESTION: {question}
 ANSWER:"""
 
             qa_prompt = PromptTemplate(
-                template=qa_prompt_template, input_variables=["context", "question"]
+                template=qa_prompt_template, input_variables=[
+                    "context", "question"]
             )
 
             # Step 1: Create base retriever with MMR for diversity and better recall
@@ -604,7 +607,8 @@ ANSWER:"""
                         similarity_score = self._convert_distance_to_similarity(
                             distance_score
                         )
-                        doc_scores_map[chunk_id] = (distance_score, similarity_score)
+                        doc_scores_map[chunk_id] = (
+                            distance_score, similarity_score)
                         self.logger.debug(
                             f"  Original doc chunk_id={chunk_id}: distance={distance_score:.4f}, accuracy={similarity_score:.2%}"
                         )
@@ -638,7 +642,7 @@ ANSWER:"""
                     chain_sources = chain_sources[:k]
 
             self.logger.info(
-                f"Final source count: {len(chain_sources)} (threshold={similarity_threshold:.2%}, k={k})"
+                f"Final source count: {len(chain_sources)} (k={k})"
             )
 
             if not chain_sources:
@@ -719,7 +723,8 @@ ANSWER:"""
                 if hasattr(self.embeddings, "embed_query"):
                     answer_embedding = self.embeddings.embed_query(answer_text)
                 else:
-                    answer_embedding = self.embeddings.embed_documents([answer_text])[0]
+                    answer_embedding = self.embeddings.embed_documents([answer_text])[
+                        0]
 
                 answer_vec = np.array(answer_embedding)
                 answer_norm = np.linalg.norm(answer_vec)
@@ -730,7 +735,8 @@ ANSWER:"""
 
                     # Get content embedding
                     if hasattr(self.embeddings, "embed_query"):
-                        content_embedding = self.embeddings.embed_query(content)
+                        content_embedding = self.embeddings.embed_query(
+                            content)
                     else:
                         content_embedding = self.embeddings.embed_documents([content])[
                             0
@@ -761,7 +767,8 @@ ANSWER:"""
 
                 # Re-calculate metrics with answer-based scores
                 total_accuracy = sum(s["accuracy_score"] for s in sources)
-                avg_accuracy = total_accuracy / len(sources) if sources else 0.0
+                avg_accuracy = total_accuracy / \
+                    len(sources) if sources else 0.0
 
                 # Re-assign chunk IDs after sorting
                 for idx, source in enumerate(sources):
@@ -780,7 +787,8 @@ ANSWER:"""
                     f"Using default scores."
                 )
                 # Keep original scores if answer-based scoring fails
-                avg_accuracy = total_accuracy / len(sources) if sources else 0.0
+                avg_accuracy = total_accuracy / \
+                    len(sources) if sources else 0.0
 
             # Check if LLM indicates insufficient information (more strict detection)
             # Only trigger if LLM explicitly states lack of info in specific patterns
@@ -844,15 +852,16 @@ ANSWER:"""
                 }
 
             # Store in cache for future queries with retrieval parameters
-            # This ensures same question with different k/threshold gets separate cache entries
+            # This ensures same question with different k gets separate cache entries
             self.cache_manager.put(
-                query, result, k=k, similarity_threshold=similarity_threshold
+                query, result, k=k
             )
 
             return result
 
         except Exception as e:
-            self.logger.error(f"Failed to search documents with OpenAI: {str(e)}")
+            self.logger.error(
+                f"Failed to search documents with OpenAI: {str(e)}")
             return {
                 "response": f"Error during search: {str(e)}",
                 "sources": [],
@@ -879,7 +888,8 @@ ANSWER:"""
                         if has_path_separator
                         else self.index_path
                     )
-                    self.logger.info(f"Saving vector store with name: {index_name}")
+                    self.logger.info(
+                        f"Saving vector store with name: {index_name}")
 
                     self.vector_store.save_local(index_name)
 
@@ -896,7 +906,8 @@ ANSWER:"""
 
                 finally:
                     os.chdir(original_cwd)
-                    self.logger.info(f"Restored working directory: {os.getcwd()}")
+                    self.logger.info(
+                        f"Restored working directory: {os.getcwd()}")
 
                 self.logger.info(
                     f"Successfully saved vector store: {Path(self.index_path).name if ('/' in self.index_path or os.sep in self.index_path) else self.index_path}"
@@ -910,7 +921,8 @@ ANSWER:"""
         try:
             # Extract index name from path
             path_separators = ["/", os.sep]
-            has_path_separator = any(sep in self.index_path for sep in path_separators)
+            has_path_separator = any(
+                sep in self.index_path for sep in path_separators)
             index_name = (
                 Path(self.index_path).name if has_path_separator else self.index_path
             )
@@ -928,17 +940,25 @@ ANSWER:"""
                 self.logger.info(
                     f"Attempting to load vector store with name: {index_name}"
                 )
-                self.logger.info(f"Vector store directory: {self.vectorstore_dir}")
-                self.logger.info(f"Looking for files: {faiss_file}, {pkl_file}")
-                self.logger.info(f"FAISS file exists: {os.path.exists(faiss_file)}")
-                self.logger.info(f"PKL file exists: {os.path.exists(pkl_file)}")
-                self.logger.info(f"Embeddings available: {self.embeddings is not None}")
+                self.logger.info(
+                    f"Vector store directory: {self.vectorstore_dir}")
+                self.logger.info(
+                    f"Looking for files: {faiss_file}, {pkl_file}")
+                self.logger.info(
+                    f"FAISS file exists: {os.path.exists(faiss_file)}")
+                self.logger.info(
+                    f"PKL file exists: {os.path.exists(pkl_file)}")
+                self.logger.info(
+                    f"Embeddings available: {self.embeddings is not None}")
 
                 # Debug logs to verify state
                 self.logger.debug(f"Embeddings object: {self.embeddings}")
-                self.logger.debug(f"Vector store directory: {self.vectorstore_dir}")
-                self.logger.debug(f"FAISS file exists: {os.path.exists(faiss_file)}")
-                self.logger.debug(f"PKL file exists: {os.path.exists(pkl_file)}")
+                self.logger.debug(
+                    f"Vector store directory: {self.vectorstore_dir}")
+                self.logger.debug(
+                    f"FAISS file exists: {os.path.exists(faiss_file)}")
+                self.logger.debug(
+                    f"PKL file exists: {os.path.exists(pkl_file)}")
 
                 if os.path.exists(faiss_file) and os.path.exists(pkl_file):
                     # Check if embeddings are initialized
@@ -954,10 +974,12 @@ ANSWER:"""
                         self.embeddings,
                         allow_dangerous_deserialization=True,
                     )
-                    self.logger.info(f"Successfully loaded vector store: {index_name}")
+                    self.logger.info(
+                        f"Successfully loaded vector store: {index_name}")
                     return True
                 else:
-                    self.logger.debug(f"Vector store files not found: {index_name}")
+                    self.logger.debug(
+                        f"Vector store files not found: {index_name}")
 
             finally:
                 os.chdir(original_cwd)
@@ -989,7 +1011,8 @@ ANSWER:"""
         with open(metadata_file, "wb") as f:
             pickle.dump(doc_metadata, f)
 
-        self.logger.debug(f"Saved document metadata for {len(documents)} documents")
+        self.logger.debug(
+            f"Saved document metadata for {len(documents)} documents")
 
     def _update_document_metadata(self, new_documents: List[Document]) -> None:
         """Update document metadata with new documents"""
@@ -1001,7 +1024,8 @@ ANSWER:"""
                 with open(metadata_file, "rb") as f:
                     self.document_metadata = pickle.load(f)
             except Exception as e:
-                self.logger.warning(f"Failed to load existing metadata: {str(e)}")
+                self.logger.warning(
+                    f"Failed to load existing metadata: {str(e)}")
                 self.document_metadata = {}
 
         # Add new documents
@@ -1027,7 +1051,8 @@ ANSWER:"""
     def _get_store_stats(self) -> Tuple[int, int]:
         """Get total documents and chunks count"""
         if not self.document_metadata:
-            metadata_file = Path(self.vectorstore_dir) / "document_metadata.pkl"
+            metadata_file = Path(self.vectorstore_dir) / \
+                "document_metadata.pkl"
             if metadata_file.exists():
                 try:
                     with open(metadata_file, "rb") as f:
@@ -1080,7 +1105,8 @@ ANSWER:"""
         try:
             # Check for FAISS files in directory format
             path_separators = ["/", os.sep]
-            has_path_separator = any(sep in self.index_path for sep in path_separators)
+            has_path_separator = any(
+                sep in self.index_path for sep in path_separators)
             index_name = (
                 Path(self.index_path).name if has_path_separator else self.index_path
             )
@@ -1114,7 +1140,8 @@ ANSWER:"""
 
         # Check for FAISS files in directory format
         path_separators = ["/", os.sep]
-        has_path_separator = any(sep in self.index_path for sep in path_separators)
+        has_path_separator = any(
+            sep in self.index_path for sep in path_separators)
         index_name = (
             Path(self.index_path).name if has_path_separator else self.index_path
         )
@@ -1143,7 +1170,8 @@ ANSWER:"""
                             f"Got chunk count from docstore: {total_chunks}"
                         )
                 except Exception as e:
-                    self.logger.warning(f"Could not get chunk count directly: {e}")
+                    self.logger.warning(
+                        f"Could not get chunk count directly: {e}")
 
             return VectorStoreInfo(
                 index_path=self.index_path,
@@ -1164,7 +1192,8 @@ ANSWER:"""
         try:
             # Remove index files in directory format
             path_separators = ["/", os.sep]
-            has_path_separator = any(sep in self.index_path for sep in path_separators)
+            has_path_separator = any(
+                sep in self.index_path for sep in path_separators)
             index_name = (
                 Path(self.index_path).name if has_path_separator else self.index_path
             )

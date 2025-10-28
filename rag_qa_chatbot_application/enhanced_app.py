@@ -61,9 +61,6 @@ class ChatbotApp:
         if "search_k" not in st.session_state:
             st.session_state.search_k = 7
 
-        if "similarity_threshold" not in st.session_state:
-            st.session_state.similarity_threshold = 0.50
-
         if "model_temperature" not in st.session_state:
             st.session_state.model_temperature = 0.7
 
@@ -158,7 +155,8 @@ class ChatbotApp:
             st.metric("📄 Documents", docs_count)
 
         with col2:
-            messages_count = len(st.session_state.current_conversation.messages)
+            messages_count = len(
+                st.session_state.current_conversation.messages)
             st.metric("💬 Messages", messages_count)
 
         with col3:
@@ -261,7 +259,8 @@ class ChatbotApp:
         if uploaded_files:
             st.write(f"📋 {len(uploaded_files)} file(s) selected:")
             for file in uploaded_files:
-                file_size = file.size if hasattr(file, "size") else len(file.getvalue())
+                file_size = file.size if hasattr(
+                    file, "size") else len(file.getvalue())
                 st.write(f"• {file.name} ({format_file_size(file_size)})")
 
             # Document processing parameters
@@ -322,31 +321,13 @@ class ChatbotApp:
                 step=1,
                 help="Number of document chunks to retrieve (more = better coverage but slower)",
             )
-            similarity_threshold = st.slider(
-                "Similarity Threshold (%)",
-                min_value=0.0,
-                max_value=1.0,
-                value=0.40,  # Default to 0.40 (40%) for good recall with adaptive threshold
-                step=0.05,
-                help="Minimum cosine similarity score for source inclusion. "
-                + "Adaptive threshold ensures you always get at least 3 sources! "
-                + "Recommended: 0.30-0.45 for broad search, 0.45-0.60 for balanced, 0.60+ for precise.",
-            )
             st.session_state.search_k = search_k
-            st.session_state.similarity_threshold = similarity_threshold
 
             st.info(
-                "💡 **Cosine Similarity Guide (Direct Matching):**\n\n"
-                + "**High Precision (Narrow Search):**\n"
-                + "- **0.85-1.00** = Nearly identical content (very strict)\n"
-                + "- **0.70-0.85** = Highly relevant (strict)\n\n"
-                + "**Balanced (Recommended):**\n"
-                + "- **0.50-0.70** = Relevant content (balanced) ✅\n"
-                + "- **0.40-0.50** = Moderately relevant (good recall)\n\n"
-                + "**High Recall (Broad Search):**\n"
-                + "- **0.30-0.40** = Potentially relevant (comprehensive)\n"
-                + "- **Below 0.30** = Weakly related (too broad)\n\n"
-                + "⚙️ **Note:** Accuracy scores now directly match your threshold selection!"
+                "💡 **Retrieval Information:**\n\n"
+                + "The system uses similarity search with scores to find the most relevant documents. "
+                + "All retrieved sources will be used by the AI model to generate comprehensive answers. "
+                + "The accuracy scores shown are calculated based on how well each source contributed to the final answer."
             )
 
         # Model parameters section
@@ -465,7 +446,8 @@ class ChatbotApp:
                     "total_chunks_cached", vector_info.total_chunks
                 )
                 st.write(f"🧩 Total Chunks: {cached_chunks}")
-            st.write(f"� Index Size: {format_file_size(vector_info.index_size_bytes)}")
+            st.write(
+                f"� Index Size: {format_file_size(vector_info.index_size_bytes)}")
         else:
             st.write("📭 No vector store found")
 
@@ -634,7 +616,8 @@ class ChatbotApp:
                     st.markdown("### 📊 Response Information")
 
                     # Model and source info
-                    model_name = assistant_message.metadata.get("model", "Unknown")
+                    model_name = assistant_message.metadata.get(
+                        "model", "Unknown")
                     retrieval_method = assistant_message.metadata.get(
                         "retrieval_method", "Unknown"
                     )
@@ -674,7 +657,8 @@ class ChatbotApp:
                             st.write(f"🎯 **Accuracy:** {accuracy_score:.2%}")
 
                             # Content preview - show full content with larger height
-                            content = source.get("content", "No content available")
+                            content = source.get(
+                                "content", "No content available")
                             st.text_area(
                                 f"Content Preview {i}",
                                 content,
@@ -690,7 +674,8 @@ class ChatbotApp:
                                     for key, value in metadata_info.items():
                                         # Don't repeat already shown info
                                         if key not in ["source", "page"]:
-                                            st.write(f"**{key.title()}:** {value}")
+                                            st.write(
+                                                f"**{key.title()}:** {value}")
 
                             st.divider()
                 elif insufficient_info:
@@ -745,7 +730,8 @@ class ChatbotApp:
                     st.success("📋 Response copied to clipboard!", icon="✅")
 
             if assistant_message.timestamp:
-                st.caption(f"🕒 {assistant_message.timestamp.strftime('%H:%M:%S')}")
+                st.caption(
+                    f"🕒 {assistant_message.timestamp.strftime('%H:%M:%S')}")
 
     def _render_message(self, message: ChatMessage):
         """Render a single message (legacy method, now replaced by _render_conversation)"""
@@ -763,9 +749,11 @@ class ChatbotApp:
                 if message.metadata:
                     with st.expander("ℹ️ Response Details"):
                         if message.response_time:
-                            st.write(f"⚡ Response Time: {message.response_time:.2f}s")
+                            st.write(
+                                f"⚡ Response Time: {message.response_time:.2f}s")
                         if message.model_provider:
-                            st.write(f"🤖 Model: {message.model_provider.value}")
+                            st.write(
+                                f"🤖 Model: {message.model_provider.value}")
                         if message.source_documents:
                             st.write(
                                 f"📚 Sources: {len(message.source_documents)} documents"
@@ -806,7 +794,8 @@ class ChatbotApp:
                             break
 
                     # Clear edit state
-                    edit_assistant_id = st.session_state.get("edit_assistant_id")
+                    edit_assistant_id = st.session_state.get(
+                        "edit_assistant_id")
                     del st.session_state.edit_message_id
                     del st.session_state.edit_query
                     if "edit_assistant_id" in st.session_state:
@@ -816,7 +805,8 @@ class ChatbotApp:
                     if edit_assistant_id:
                         st.session_state.replace_assistant_id = edit_assistant_id
 
-                    self._process_user_query(edited_query.strip(), is_edit=True)
+                    self._process_user_query(
+                        edited_query.strip(), is_edit=True)
                     return
 
                 if cancel_edit:
@@ -881,7 +871,8 @@ class ChatbotApp:
         try:
             with st.spinner("🔧 Initializing LLM..."):
                 # Initialize embeddings for vector store
-                self.vector_store_manager.initialize_embeddings(model_provider, api_key)
+                self.vector_store_manager.initialize_embeddings(
+                    model_provider, api_key)
 
                 # Initialize LLM
                 self.llm_service.initialize_llm(model_provider, api_key)
@@ -891,7 +882,8 @@ class ChatbotApp:
                     st.session_state.llm_initialized = True
                     st.session_state.current_model_provider = model_provider
                     st.session_state.api_key = api_key  # Store API key for later use
-                    st.success(f"✅ {model_provider} LLM initialized successfully!")
+                    st.success(
+                        f"✅ {model_provider} LLM initialized successfully!")
                     self.logger.info(f"LLM initialized: {model_provider}")
                 else:
                     if model_provider == "Local LLM (Qwen)":
@@ -918,7 +910,8 @@ class ChatbotApp:
         try:
             # Check if LLM is initialized first
             if not st.session_state.get("llm_initialized", False):
-                st.error("❌ Please initialize LLM first before processing documents!")
+                st.error(
+                    "❌ Please initialize LLM first before processing documents!")
                 st.info(
                     "💡 Select a model provider, enter your API key, and click 'Initialize LLM'"
                 )
@@ -960,10 +953,12 @@ class ChatbotApp:
                                 current_model_provider, api_key
                             )
                         else:
-                            st.error("❌ API key not found. Please re-initialize LLM.")
+                            st.error(
+                                "❌ API key not found. Please re-initialize LLM.")
                             return
                     except Exception as e:
-                        st.error(f"❌ Failed to initialize embeddings: {str(e)}")
+                        st.error(
+                            f"❌ Failed to initialize embeddings: {str(e)}")
                         return
 
                 # Update or create vector store
@@ -1060,17 +1055,12 @@ class ChatbotApp:
                                 )
                                 return
 
-                        # Use langchain-style search based on model provider
-                        search_k = st.session_state.get("search_k", 5)
-
                         # Get search parameters
                         search_k = st.session_state.get("search_k", 5)
-                        similarity_threshold = st.session_state.get(
-                            "similarity_threshold", 0.75
-                        )  # Default to 0.75 for high quality
 
                         # Get model parameters
-                        temperature = st.session_state.get("model_temperature", 0.7)
+                        temperature = st.session_state.get(
+                            "model_temperature", 0.7)
 
                         if current_model_provider == "OpenAI (API)":
                             search_result = (
@@ -1078,7 +1068,6 @@ class ChatbotApp:
                                     user_input,
                                     api_key,
                                     k=search_k,
-                                    similarity_threshold=similarity_threshold,
                                     temperature=temperature,
                                 )
                             )
@@ -1089,12 +1078,12 @@ class ChatbotApp:
                                     user_input,
                                     api_key,
                                     k=search_k,
-                                    similarity_threshold=similarity_threshold,
                                     temperature=temperature,
                                 )
                             )
                         else:
-                            search_result = {"response": "Unsupported model provider"}
+                            search_result = {
+                                "response": "Unsupported model provider"}
 
                         if not search_result or "Error" in search_result.get(
                             "response", ""
@@ -1124,7 +1113,8 @@ class ChatbotApp:
                                 content=search_result.get(
                                     "response", "No response generated"
                                 ),
-                                model_provider=ModelProvider(current_model_provider),
+                                model_provider=ModelProvider(
+                                    current_model_provider),
                                 response_time=0.0,
                                 tokens_used=0,
                                 source_documents=[
@@ -1149,7 +1139,8 @@ class ChatbotApp:
                         )
 
                         # Display response immediately
-                        self._display_assistant_response(assistant_message, user_input)
+                        self._display_assistant_response(
+                            assistant_message, user_input)
             else:
                 # For replacement, process without chat context and rerun
                 with st.spinner("🤔 Regenerating..."):
@@ -1172,12 +1163,10 @@ class ChatbotApp:
 
                     # Get search parameters
                     search_k = st.session_state.get("search_k", 5)
-                    similarity_threshold = st.session_state.get(
-                        "similarity_threshold", 0.75
-                    )  # Default to 0.75 for high quality
 
                     # Get model parameters
-                    temperature = st.session_state.get("model_temperature", 0.7)
+                    temperature = st.session_state.get(
+                        "model_temperature", 0.7)
 
                     if current_model_provider == "OpenAI (API)":
                         search_result = (
@@ -1185,7 +1174,6 @@ class ChatbotApp:
                                 user_input,
                                 api_key,
                                 k=search_k,
-                                similarity_threshold=similarity_threshold,
                                 temperature=temperature,
                             )
                         )
@@ -1196,12 +1184,12 @@ class ChatbotApp:
                                 user_input,
                                 api_key,
                                 k=search_k,
-                                similarity_threshold=similarity_threshold,
                                 temperature=temperature,
                             )
                         )
                     else:
-                        search_result = {"response": "Unsupported model provider"}
+                        search_result = {
+                            "response": "Unsupported model provider"}
 
                     if not search_result or "Error" in search_result.get(
                         "response", ""
@@ -1231,7 +1219,8 @@ class ChatbotApp:
                             content=search_result.get(
                                 "response", "No response generated"
                             ),
-                            model_provider=ModelProvider(current_model_provider),
+                            model_provider=ModelProvider(
+                                current_model_provider),
                             response_time=0.0,
                             tokens_used=0,
                             source_documents=[
@@ -1285,7 +1274,8 @@ class ChatbotApp:
 
                 # Model and source info
                 model_name = assistant_message.metadata.get("model", "Unknown")
-                source_count = assistant_message.metadata.get("source_count", 0)
+                source_count = assistant_message.metadata.get(
+                    "source_count", 0)
                 retrieval_method = assistant_message.metadata.get(
                     "retrieval_method", "Unknown"
                 )
@@ -1330,7 +1320,8 @@ class ChatbotApp:
                         st.divider()
             else:
                 st.markdown("### ℹ️ No Sources Available")
-                st.write("No source information could be extracted for this response.")
+                st.write(
+                    "No source information could be extracted for this response.")
 
         # Action buttons below the response (only show if not in edit mode)
         if "edit_message_id" not in st.session_state:
@@ -1448,7 +1439,8 @@ class ChatbotApp:
                 id=str(uuid.uuid4()), title="New Conversation"
             )
 
-            st.success("✅ All chunks deleted and system info cleared successfully!")
+            st.success(
+                "✅ All chunks deleted and system info cleared successfully!")
 
             # Force rerun to update UI
             st.rerun()

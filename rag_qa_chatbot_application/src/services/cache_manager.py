@@ -73,7 +73,8 @@ class CacheManager:
         self.similarity_threshold = 0.90
 
         # Statistics
-        self.stats = {"hits": 0, "misses": 0, "total_queries": 0, "cache_saves": 0}
+        self.stats = {"hits": 0, "misses": 0,
+                      "total_queries": 0, "cache_saves": 0}
 
         # Load existing cache if available
         self._load_cache()
@@ -90,19 +91,18 @@ class CacheManager:
         self.logger.info("Embeddings model set for cache manager")
 
     def _generate_cache_key(
-        self, question: str, k: int = None, similarity_threshold: float = None
+        self, question: str, k: int = None
     ) -> str:
         """
         Generate cache key from question and retrieval parameters
 
-        Including k and similarity_threshold in the key ensures that:
+        Including k in the key ensures that:
         - Same question with different retrieval settings gets separate cache entries
         - More precise cache matching and fewer false positives
 
         Args:
             question: Query question
             k: Number of documents to retrieve (optional)
-            similarity_threshold: Similarity threshold for retrieval (optional)
 
         Returns:
             MD5 hash of the normalized question and parameters
@@ -111,8 +111,8 @@ class CacheManager:
         normalized_q = question.lower().strip()
 
         # If parameters provided, include them in cache key for more precise matching
-        if k is not None or similarity_threshold is not None:
-            key_string = f"{normalized_q}|k={k}|threshold={similarity_threshold}"
+        if k is not None:
+            key_string = f"{normalized_q}|k={k}"
         else:
             key_string = normalized_q
 
@@ -179,7 +179,8 @@ class CacheManager:
 
             return np.array(embedding)
         except Exception as e:
-            self.logger.error(f"Error generating embedding for question: {str(e)}")
+            self.logger.error(
+                f"Error generating embedding for question: {str(e)}")
             return None
 
     def _find_similar_question(
@@ -187,7 +188,6 @@ class CacheManager:
         question: str,
         question_embedding: Optional[np.ndarray],
         k: int = None,
-        similarity_threshold: float = None,
     ) -> Optional[Tuple[str, CacheEntry, float]]:
         """
         Find most similar question in cache using pure semantic similarity
@@ -196,18 +196,18 @@ class CacheManager:
             question: Query question
             question_embedding: Semantic embedding of the query question
             k: Number of documents parameter (for matching)
-            similarity_threshold: Similarity threshold parameter (for matching)
 
         Returns:
             Tuple of (cache_key, cache_entry, similarity_score) or None
         """
         # First try exact match with parameters
-        exact_cache_key = self._generate_cache_key(question, k, similarity_threshold)
+        exact_cache_key = self._generate_cache_key(
+            question, k)
         if exact_cache_key in self.cache:
             entry = self.cache[exact_cache_key]
             if not entry.is_expired(self.cache_ttl):
                 self.logger.debug(
-                    f"Exact cache match found with parameters k={k}, threshold={similarity_threshold}"
+                    f"Exact cache match found with parameters k={k}"
                 )
                 return (exact_cache_key, entry, 1.0)
 
@@ -235,7 +235,8 @@ class CacheManager:
                 continue
 
             # Compute semantic similarity between question embeddings
-            similarity = self._compute_similarity(question_embedding, entry.embedding)
+            similarity = self._compute_similarity(
+                question_embedding, entry.embedding)
 
             # Track candidates for debugging
             if similarity >= self.similarity_threshold * 0.8:  # Log near-matches too
@@ -248,7 +249,8 @@ class CacheManager:
 
         # Enhanced logging for debugging cache behavior
         if candidates:
-            self.logger.debug(f"Cache similarity candidates for '{question[:60]}...':")
+            self.logger.debug(
+                f"Cache similarity candidates for '{question[:60]}...':")
             for cand_q, cand_sim in sorted(
                 candidates, key=lambda x: x[1], reverse=True
             )[:3]:
@@ -257,7 +259,8 @@ class CacheManager:
                     if cand_sim >= self.similarity_threshold
                     else "✗ Below threshold"
                 )
-                self.logger.debug(f"  - {cand_sim:.3f} {marker}: '{cand_q}...'")
+                self.logger.debug(
+                    f"  - {cand_sim:.3f} {marker}: '{cand_q}...'")
 
         # Log best match
         if best_match:
@@ -275,7 +278,7 @@ class CacheManager:
         return best_match
 
     def get(
-        self, question: str, k: int = 5, similarity_threshold: float = 0.9
+        self, question: str, k: int = 5
     ) -> Optional[Dict[str, Any]]:
         """
         Get cached answer for a question or similar question using semantic similarity
@@ -283,7 +286,6 @@ class CacheManager:
         Args:
             question: User question
             k: Number of documents parameter (for cache key uniqueness)
-            similarity_threshold: Similarity threshold parameter (for cache key uniqueness)
 
         Returns:
             Cached answer dictionary or None if not found
@@ -300,7 +302,7 @@ class CacheManager:
             # Find semantically similar question in cache
             # Pass retrieval parameters for more precise matching
             match = self._find_similar_question(
-                question, question_embedding, k, similarity_threshold
+                question, question_embedding, k
             )
 
             if match:
@@ -349,7 +351,6 @@ class CacheManager:
         question: str,
         answer: Dict[str, Any],
         k: int = None,
-        similarity_threshold: float = None,
     ) -> None:
         """
         Store question-answer pair in cache with semantic embedding
@@ -358,14 +359,13 @@ class CacheManager:
             question: User question
             answer: Answer dictionary from RAG system
             k: Number of documents parameter (for cache key uniqueness)
-            similarity_threshold: Similarity threshold parameter (for cache key uniqueness)
         """
         if not self.enable_cache:
             return
 
         try:
             # Generate cache key including retrieval parameters for precise matching
-            cache_key = self._generate_cache_key(question, k, similarity_threshold)
+            cache_key = self._generate_cache_key(question, k)
 
             # Generate semantic embedding for similarity matching
             question_embedding = self._get_question_embedding(question)
@@ -403,7 +403,8 @@ class CacheManager:
     def clear(self) -> None:
         """Clear all cache entries"""
         self.cache.clear()
-        self.stats = {"hits": 0, "misses": 0, "total_queries": 0, "cache_saves": 0}
+        self.stats = {"hits": 0, "misses": 0,
+                      "total_queries": 0, "cache_saves": 0}
         self._save_cache()
         self.logger.info("Cache cleared")
 
@@ -422,7 +423,8 @@ class CacheManager:
             del self.cache[key]
 
         if expired_keys:
-            self.logger.info(f"Removed {len(expired_keys)} expired cache entries")
+            self.logger.info(
+                f"Removed {len(expired_keys)} expired cache entries")
 
         return len(expired_keys)
 
