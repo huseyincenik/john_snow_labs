@@ -70,25 +70,25 @@ spec:
         app: rag-chatbot
     spec:
       containers:
-      - name: ollama
-        image: ollama/ollama:latest
-        ports:
-        - containerPort: 11434
-        resources:
-          limits:
-            memory: "8Gi"
-            cpu: "4"
-      - name: chatbot
-        image: rag-qa-chatbot:latest
-        ports:
-        - containerPort: 8501
-        env:
-        - name: OLLAMA_BASE_URL
-          value: "http://localhost:11434"
-        resources:
-          limits:
-            memory: "4Gi"
-            cpu: "2"
+        - name: ollama
+          image: ollama/ollama:latest
+          ports:
+            - containerPort: 11434
+          resources:
+            limits:
+              memory: "8Gi"
+              cpu: "4"
+        - name: chatbot
+          image: rag-qa-chatbot:latest
+          ports:
+            - containerPort: 8501
+          env:
+            - name: OLLAMA_BASE_URL
+              value: "http://localhost:11434"
+          resources:
+            limits:
+              memory: "4Gi"
+              cpu: "2"
 ---
 apiVersion: v1
 kind: Service
@@ -99,11 +99,12 @@ spec:
   selector:
     app: rag-chatbot
   ports:
-  - port: 80
-    targetPort: 8501
+    - port: 80
+      targetPort: 8501
 ```
 
 Apply:
+
 ```bash
 kubectl apply -f deployment.yaml
 ```
@@ -290,10 +291,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '4'
+          cpus: "4"
           memory: 8G
         reservations:
-          cpus: '2'
+          cpus: "2"
           memory: 4G
 ```
 
@@ -337,11 +338,13 @@ docker-compose restart
 ```
 
 **Important Notes:**
+
 - First startup can take 5-10 minutes to download Qwen2.5:7b model (4.7GB)
 - Wait for the message "✅ All models downloaded and ready!" in logs
 - The RAG chatbot container waits for Ollama to be healthy before starting
 
 ### High Memory Usage
+
 ```bash
 # Check memory
 docker stats
@@ -358,9 +361,9 @@ docker-compose restart rag-chatbot
 ```
 
 ### Slow Responses
+
 ```bash
 # Check cache stats in UI
-# Increase similarity threshold
 # Reduce number of sources
 # Use OpenAI instead of Ollama
 
@@ -371,6 +374,7 @@ docker-compose restart rag-chatbot
 ```
 
 ### Service Not Starting
+
 ```bash
 # Check logs
 docker-compose logs rag-chatbot
@@ -400,11 +404,12 @@ These folders are mounted as volumes from your host machine:
 
 ```yaml
 volumes:
-  - ./data:/app/data      # Your local data persists here
-  - ./logs:/app/logs      # Your local logs persist here
+  - ./data:/app/data # Your local data persists here
+  - ./logs:/app/logs # Your local logs persist here
 ```
 
 If you need to start fresh:
+
 ```bash
 # Clear local data (WARNING: Deletes vector store)
 rm -rf data/vectorstore/*
@@ -447,4 +452,3 @@ curl http://localhost:8501/_stcore/health
 ---
 
 **For detailed feature documentation, see [README.md](README.md)**
-

@@ -69,7 +69,7 @@ class CacheManager:
         # Semantic similarity threshold for cache matching
         # VERY HIGH threshold to avoid false matches between related but different topics
         # e.g., "Climeworks" vs "Carbon Capture" should NOT match (they're different companies)
-        # Set to 0.96 (96%) so only nearly identical questions match
+        # Set to 0.90 (90%) so only nearly identical questions match
         self.similarity_threshold = 0.90
 
         # Statistics

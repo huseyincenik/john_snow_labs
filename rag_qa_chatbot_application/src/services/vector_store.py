@@ -115,31 +115,6 @@ class VectorStoreManager:
 
         return result
 
-    def _filter_by_similarity_threshold(
-        self, docs_with_scores: List[Tuple], similarity_threshold: float
-    ) -> List[Tuple]:
-        """
-        Filter documents by similarity threshold
-
-        Args:
-            docs_with_scores: List of (document, distance_score) tuples
-            similarity_threshold: Minimum similarity score (0.0 to 1.0)
-
-        Returns:
-            Filtered list of (document, distance_score) tuples
-        """
-        filtered_docs = []
-
-        for doc, distance_score in docs_with_scores:
-            similarity_score = self._convert_distance_to_similarity(
-                distance_score)
-
-            # Only include documents that meet the similarity threshold
-            if similarity_score >= similarity_threshold:
-                filtered_docs.append((doc, distance_score))
-
-        return filtered_docs
-
     @measure_execution_time
     def initialize_embeddings(self, model_provider: str, api_key: str) -> None:
         """

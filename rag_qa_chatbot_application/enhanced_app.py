@@ -650,11 +650,9 @@ class ChatbotApp:
                             # Source file and page info
                             source_file = source.get("source", "Unknown")
                             page = source.get("page", "Unknown")
-                            accuracy_score = source.get("accuracy_score", 0.0)
 
                             st.write(f"📄 **File:** {source_file}")
                             st.write(f"📖 **Page:** {page}")
-                            st.write(f"🎯 **Accuracy:** {accuracy_score:.2%}")
 
                             # Content preview - show full content with larger height
                             content = source.get(
@@ -1292,11 +1290,9 @@ class ChatbotApp:
                         # Source file and page info
                         source_file = source.get("source", "Unknown")
                         page = source.get("page", "Unknown")
-                        accuracy_score = source.get("accuracy_score", 0.0)
 
                         st.write(f"📄 **File:** {source_file}")
                         st.write(f"📖 **Page:** {page}")
-                        st.write(f"🎯 **Accuracy:** {accuracy_score:.2%}")
 
                         # Content preview - show full content with larger height
                         content = source.get("content", "No content available")

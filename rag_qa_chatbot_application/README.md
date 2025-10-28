@@ -21,8 +21,9 @@ A production-ready **Retrieval-Augmented Generation (RAG)** chatbot application 
 ## ✨ Features
 
 ### Core Functionality
+
 - **📄 Multi-Format Document Upload**: Support for PDF, DOCX, and TXT files
-- **🤖 Dual LLM Support**: 
+- **🤖 Dual LLM Support**:
   - OpenAI API (GPT-4o)
   - Local LLM via Ollama (Qwen2.5:7b)
 - **🔍 Advanced Semantic Search**: FAISS vector store with cosine similarity
@@ -32,16 +33,19 @@ A production-ready **Retrieval-Augmented Generation (RAG)** chatbot application 
 ### Advanced Features
 
 #### 🎯 Contextual Compression & LLM Filtering
+
 Our application implements state-of-the-art retrieval techniques:
 
 1. **Contextual Compression Retriever**
+
    - Uses LLM to extract only query-relevant content from documents
    - Filters out irrelevant information before answer generation
    - Ensures high-quality, focused responses
 
 2. **Two-Stage Filtering Process**
+
    ```
-   User Query → Vector Search (k*3 candidates) 
+   User Query → Vector Search (k*3 candidates)
               → LLM Compression (relevance filtering)
               → Similarity Threshold (accuracy filtering)
               → Top k Results
@@ -53,6 +57,7 @@ Our application implements state-of-the-art retrieval techniques:
    - Reduces hallucinations and off-topic responses
 
 #### 💾 Intelligent Caching System
+
 - **Semantic Query Matching**: Finds similar previous queries using embeddings
 - **95% Similarity Threshold**: Smart cache hits for similar questions
 - **TTL-based Expiration**: Automatic cache cleanup (default: 1 hour)
@@ -60,6 +65,7 @@ Our application implements state-of-the-art retrieval techniques:
 - **Cache Statistics**: Real-time monitoring of hits, misses, and efficiency
 
 #### ⚙️ Customizable Parameters
+
 - **Chunk Size**: 200-2000 characters (default: 800)
 - **Chunk Overlap**: 0-500 characters (default: 100)
 - **Number of Sources (k)**: 1-10 documents (default: 5)
@@ -67,6 +73,7 @@ Our application implements state-of-the-art retrieval techniques:
 - **Model Temperature**: 0.0-1.0 (default: 0.7 for OpenAI, 0.3 for Qwen)
 
 #### 📈 Real-Time Monitoring
+
 - Vector store statistics (documents, chunks, index size)
 - Cache performance metrics
 - Response accuracy scores
@@ -144,29 +151,35 @@ Response to User
 ## 🛠️ Technology Stack
 
 ### Frontend
+
 - **Streamlit**: Interactive web interface
 - **Custom CSS**: Modern, responsive UI design
 
 ### Backend
+
 - **LangChain**: RAG pipeline orchestration
 - **FAISS**: Vector similarity search
 - **OpenAI Embeddings**: text-embedding-ada-002
 - **Ollama Embeddings**: all-minilm
 
 ### LLM Models
+
 - **OpenAI**: GPT-4o (API-based)
 - **Qwen**: Qwen2.5:7b (local via Ollama)
 
 ### Document Processing
+
 - **PyPDF2**: PDF parsing
 - **python-docx**: DOCX parsing
 - **LangChain Text Splitters**: Intelligent chunking
 
 ### Storage
+
 - **FAISS**: Vector database (in-memory/persistent)
 - **Pickle**: Metadata and cache storage
 
 ### Containerization
+
 - **Docker**: Application containerization
 - **Docker Compose**: Multi-container orchestration
 
@@ -225,14 +238,18 @@ rag_qa_chatbot_application/
 ### Key Components
 
 #### `enhanced_app.py`
+
 Main Streamlit application with:
+
 - UI rendering and user interactions
 - File upload handling
 - Chat interface management
 - Real-time metrics display
 
 #### `src/services/vector_store.py`
+
 Advanced RAG implementation:
+
 - FAISS vector store management
 - **Contextual Compression Retriever** integration
 - **LLM-based relevance filtering**
@@ -240,20 +257,26 @@ Advanced RAG implementation:
 - Semantic search with accuracy scoring
 
 #### `src/services/cache_manager.py`
+
 Intelligent caching system:
+
 - Semantic query similarity matching
 - TTL-based expiration
 - Pickle-based persistence
 - Performance monitoring
 
 #### `src/services/document_processor.py`
+
 Document handling:
+
 - Multi-format parsing (PDF, DOCX, TXT)
 - Intelligent text chunking
 - Metadata extraction
 
 #### `src/services/llm_service.py`
+
 LLM management:
+
 - Multi-provider support (OpenAI, Ollama)
 - API connection validation
 - Error handling
@@ -276,6 +299,7 @@ LLM management:
 Use the provided startup scripts that automatically open the browser:
 
 **Windows (Command Prompt):**
+
 ```bash
 git clone <repository-url>
 cd rag_qa_chatbot_application
@@ -283,6 +307,7 @@ start.bat
 ```
 
 **Windows (PowerShell):**
+
 ```powershell
 git clone <repository-url>
 cd rag_qa_chatbot_application
@@ -290,6 +315,7 @@ cd rag_qa_chatbot_application
 ```
 
 **Linux/Mac:**
+
 ```bash
 git clone <repository-url>
 cd rag_qa_chatbot_application
@@ -298,6 +324,7 @@ chmod +x start.sh
 ```
 
 The script will:
+
 - ✅ Start Docker containers
 - ✅ Wait for application to be ready
 - ✅ **Automatically open browser** at http://localhost:8501
@@ -306,17 +333,20 @@ The script will:
 #### 📋 Manual Start (Advanced)
 
 1. **Clone the Repository**
+
    ```bash
    git clone <repository-url>
    cd rag_qa_chatbot_application
    ```
 
 2. **Start the Application**
+
    ```bash
    docker-compose up -d
    ```
 
    This single command will:
+
    - ✅ Pull the Ollama image
    - ✅ Download Qwen2.5:7b model (~4.7GB)
    - ✅ Download all-minilm embedding model
@@ -325,11 +355,13 @@ The script will:
    - ✅ Configure networking
 
 3. **Monitor Startup Progress**
+
    ```bash
    docker-compose logs -f
    ```
 
    Wait for:
+
    ```
    ollama  | Pulling Qwen2.5:7b model...
    ollama  | Pulling all-minilm embedding model...
@@ -344,14 +376,17 @@ The script will:
 ### First-Time Setup (in UI)
 
 1. **Select Model Provider**
+
    - Option A: **Local LLM (Qwen)** - No API key needed!
    - Option B: **OpenAI (API)** - Enter your OpenAI API key
 
 2. **Initialize LLM**
+
    - Click "🔧 Initialize LLM" button
    - Wait for success message
 
 3. **Upload Documents**
+
    - Click "📁 Document Upload"
    - Select PDF, DOCX, or TXT files
    - Adjust chunking parameters (optional)
@@ -368,22 +403,26 @@ When you're done using the application:
 #### 🛑 Quick Stop (Automatic - RECOMMENDED)
 
 **Windows (Command Prompt):**
+
 ```bash
 stop.bat
 ```
 
 **Windows (PowerShell):**
+
 ```powershell
 .\stop.ps1
 ```
 
 **Linux/Mac:**
+
 ```bash
 chmod +x stop.sh
 ./stop.sh
 ```
 
 The script will:
+
 - ✅ Stop all Docker containers
 - ✅ Clean up resources
 - ✅ **Preserve your data** (documents, vector store, cache)
@@ -392,16 +431,19 @@ The script will:
 #### 📋 Manual Stop (Advanced)
 
 **Stop containers (data preserved):**
+
 ```bash
 docker-compose down
 ```
 
 **Stop and remove ALL data (complete cleanup):**
+
 ```bash
 docker-compose down -v
 ```
 
 **Note**: Using `-v` flag will delete:
+
 - ❌ Uploaded documents
 - ❌ Vector store index
 - ❌ Cached questions/answers
@@ -431,18 +473,20 @@ CACHE_MAX_SIZE=100
 ### Docker Compose Options
 
 #### Use OpenAI Only (without Ollama)
+
 ```yaml
 # In docker-compose.yml, comment out the ollama service
 services:
   # ollama:
   #   ...
-  
+
   rag-chatbot:
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
 ```
 
 #### Adjust Resource Limits
+
 ```yaml
 services:
   ollama:
@@ -461,11 +505,13 @@ services:
 ### Document Upload
 
 1. **Supported Formats**
+
    - PDF (`.pdf`)
    - Microsoft Word (`.docx`)
    - Plain Text (`.txt`)
 
 2. **Processing Parameters**
+
    - **Chunk Size** (800): Smaller = more precise, larger = more context
    - **Chunk Overlap** (100): Prevents information loss at chunk boundaries
 
@@ -477,6 +523,7 @@ services:
 ### Asking Questions
 
 1. **Retrieval Parameters**
+
    - **Number of Sources (k=5)**: How many document chunks to retrieve
    - **Similarity Threshold (75%)**: Minimum accuracy score for sources
      - 90-100%: Very strict (only highly relevant content)
@@ -484,6 +531,7 @@ services:
      - 50-70%: Permissive (may include tangential content)
 
 2. **Model Parameters**
+
    - **Temperature (0.7)**:
      - 0.0-0.3: Focused, deterministic (factual Q&A)
      - 0.4-0.7: Balanced (recommended)
@@ -552,18 +600,14 @@ compression_retriever = ContextualCompressionRetriever(
 
 ### Similarity Score Calculation
 
-We use **cosine similarity** for accuracy scores:
+We use **similarity_search_with_score** to retrieve documents with their similarity scores:
 
 ```python
-# L2 distance → Cosine similarity
-cosine_sim = 1.0 - (distance^2 / 2.0)
+# Get documents with similarity scores
+docs_with_scores = vector_store.similarity_search_with_score(query, k=k)
 
-# Accuracy interpretation:
-# 0.90-1.00 = Nearly identical (excellent)
-# 0.75-0.90 = Highly relevant (recommended threshold)
-# 0.60-0.75 = Moderately relevant
-# 0.50-0.60 = Somewhat related
-# <0.50 = Low relevance
+# The system uses all retrieved sources for comprehensive answers
+# No threshold filtering is applied - LLM determines relevance
 ```
 
 ### Semantic Caching Algorithm
@@ -575,7 +619,7 @@ query_embedding = embeddings.embed_query(user_query)
 # 2. Compare with cached queries
 for cached_query in cache:
     similarity = cosine_similarity(query_embedding, cached_embedding)
-    if similarity >= 0.95:  # 95% threshold
+    if similarity >= 0.90:  # 90% threshold for cache matching
         return cached_response
 
 # 3. If no match, execute RAG and cache result
@@ -588,6 +632,7 @@ for cached_query in cache:
 ### Common Issues
 
 #### 1. Ollama Models Not Loading
+
 ```bash
 # Check Ollama status
 docker-compose logs ollama
@@ -598,6 +643,7 @@ docker exec -it rag-ollama ollama pull all-minilm
 ```
 
 #### 2. Out of Memory
+
 ```bash
 # Increase Docker memory limit
 # Docker Desktop → Settings → Resources → Memory: 8GB+
@@ -606,6 +652,7 @@ docker exec -it rag-ollama ollama pull all-minilm
 ```
 
 #### 3. Port Already in Use
+
 ```bash
 # Change port in docker-compose.yml
 ports:
@@ -613,6 +660,7 @@ ports:
 ```
 
 #### 4. Vector Store Not Loading
+
 ```bash
 # Clear and rebuild
 docker-compose down -v
@@ -621,6 +669,7 @@ docker-compose up -d
 ```
 
 #### 5. Slow Response Times
+
 - **Solution 1**: Enable caching (check sidebar)
 - **Solution 2**: Reduce number of sources (k)
 - **Solution 3**: Increase similarity threshold
@@ -629,6 +678,7 @@ docker-compose up -d
 ### Logging
 
 View detailed logs:
+
 ```bash
 # All services
 docker-compose logs -f
@@ -734,6 +784,7 @@ This project is developed as part of an interview task for John Snow Labs.
 ## 📞 Support
 
 For issues, questions, or suggestions:
+
 - Open an issue on GitHub
 - Check the [Troubleshooting](#troubleshooting) section
 - Review logs in `logs/app.log`
@@ -741,4 +792,3 @@ For issues, questions, or suggestions:
 ---
 
 **Built with ❤️ using LangChain, FAISS, and Streamlit**
-
