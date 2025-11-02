@@ -26,9 +26,13 @@ A production-ready **Retrieval-Augmented Generation (RAG)** chatbot application 
 - **🤖 Dual LLM Support**:
   - OpenAI API (GPT-4o)
   - Local LLM via Ollama (Qwen2.5:7b)
+- **🗄️ Dual Database System**:
+  - **Current DB**: Pre-loaded PubMed database (persistent, comes with Docker)
+  - **New DB**: Temporary in-memory database for uploaded documents
+  - **Flexible Search Modes**: Choose to search in current DB, new DB, or both combined
 - **🔍 Advanced Semantic Search**: FAISS vector store with cosine similarity
 - **💬 Conversational Interface**: Real-time chat with document-based responses
-- **📊 Source Attribution**: Complete transparency with source documents and accuracy scores
+- **📊 Source Attribution**: Complete transparency with source documents, accuracy scores, and JSON metadata
 
 ### Advanced Features
 
@@ -70,12 +74,34 @@ Our application implements state-of-the-art retrieval techniques:
 - **Number of Sources (k)**: 1-10 documents (default: 5)
 - **Model Temperature**: 0.0-1.0 (default: 0.7 for OpenAI, 0.3 for Qwen)
 
+#### 🗄️ Dual Database Architecture
+
+The application supports two vector databases:
+
+1. **Current DB (Persistent)**
+   - Pre-loaded PubMed database shipped with Docker
+   - Persistent across container restarts
+   - Located in `current_db/` directory
+   - Separate indices for OpenAI and Qwen embeddings
+   - Read-only during runtime (changes don't persist when Docker stops)
+
+2. **New DB (Temporary)**
+   - In-memory database for user-uploaded documents
+   - Created when documents are processed
+   - Cleared when container stops
+   - Allows testing and experimentation without affecting persistent data
+
+**Database Selection Modes:**
+- **Current DB**: Search only in pre-loaded PubMed database
+- **New DB**: Search only in newly uploaded documents (temporary)
+- **Current + New DB**: Search in both databases combined (recommended for comprehensive results)
+
 #### 📈 Real-Time Monitoring
 
 - Vector store statistics (documents, chunks, index size)
 - Cache performance metrics
 - Response accuracy scores
-- Source document tracking
+- Source document tracking with JSON-structured metadata
 
 ---
 
@@ -217,8 +243,18 @@ rag_qa_chatbot_application/
 │       ├── logger.py           # Logging configuration
 │       └── helpers.py          # Helper functions
 │
-├── data/                       # Data storage (created at runtime)
-│   ├── vectorstore/            # FAISS index files
+├── current_db/                 # Persistent PubMed database (shipped with Docker)
+│   ├── openai/
+│   │   └── faiss_index/        # OpenAI embeddings index
+│   │       ├── index.faiss     # Vector index
+│   │       └── index.pkl       # Document mappings
+│   └── qwen/
+│       └── faiss_index/        # Qwen embeddings index
+│           ├── index.faiss     # Vector index
+│           └── index.pkl       # Document mappings
+│
+├── data/                       # Runtime data storage
+│   ├── vectorstore/            # Legacy/new document FAISS index files (optional)
 │   │   ├── faiss_index/
 │   │   │   ├── index.faiss     # Vector index
 │   │   │   └── index.pkl       # Document mappings
@@ -380,17 +416,26 @@ The script will:
 
    - Click "🔧 Initialize LLM" button
    - Wait for success message
+   - The system automatically loads the pre-configured PubMed database
 
-3. **Upload Documents**
+3. **Select Database Mode** (in Sidebar)
+
+   - **Current DB**: Search in pre-loaded PubMed database (default)
+   - **New DB**: Process and search only in uploaded documents (temporary)
+   - **Current + New DB**: Combine both databases for comprehensive search (recommended)
+
+4. **Upload Documents** (Optional)
 
    - Click "📁 Document Upload"
    - Select PDF, DOCX, or TXT files
    - Adjust chunking parameters (optional)
    - Click "🚀 Process Documents"
+   - Documents are added to "New DB" (temporary) - won't persist after container restart
 
-4. **Start Asking Questions!**
+5. **Start Asking Questions!**
    - Type your question in the chat input
-   - Get answers with source citations and accuracy scores
+   - Get answers with source citations, accuracy scores, and JSON-structured metadata
+   - The system searches based on your selected database mode
 
 ### Stopping the Application
 
@@ -511,10 +556,20 @@ services:
    - **Chunk Size** (800): Smaller = more precise, larger = more context
    - **Chunk Overlap** (100): Prevents information loss at chunk boundaries
 
-3. **Best Practices**
+3. **Database Selection**
+
+   - Use the sidebar radio buttons to select database mode:
+     - **Current DB**: Use pre-loaded PubMed database
+     - **New DB**: Process documents into temporary database
+     - **Current + New DB**: Combine both for comprehensive search
+   - Documents processed in "New DB" mode are temporary and won't persist after container restart
+   - "Current DB" remains unchanged when Docker is stopped
+
+4. **Best Practices**
    - Upload related documents together
    - Use descriptive filenames
    - Keep documents focused on specific topics
+   - Use "Current + New DB" mode for best search coverage
 
 ### Asking Questions
 
@@ -544,6 +599,7 @@ Each response includes:
 ├─ Model: OpenAI gpt-4o (or Qwen2.5:7b)
 ├─ Sources Used: 3 documents
 ├─ Method: Contextual Compression + LLM Filtering
+├─ Database Mode: Current + New DB
 ├─ ⚡ Cached Response (if applicable)
 │
 └─ 📚 View Sources (expandable)
@@ -551,11 +607,23 @@ Each response includes:
     │   ├─ File: document.pdf
     │   ├─ Page: 5
     │   ├─ Accuracy: 94.2%
-    │   └─ Content Preview: [full chunk text]
+    │   ├─ Content Preview: [full chunk text]
+    │   └─ Metadata (JSON):
+    │       ├─ Document_Id: uuid
+    │       ├─ Document_Name: document.pdf
+    │       ├─ Chunk_Index: 5
+    │       ├─ Start_Char: 1024
+    │       ├─ End_Char: 1824
+    │       ├─ Is_New_Doc: true/false
+    │       ├─ File_Type: pdf
+    │       ├─ Chunk_Size: 800
+    │       └─ Model_Provider: OpenAI (API)
     │
     └─ Source 2
         └─ ...
 ```
+
+**Note**: Metadata is now provided in structured JSON format, and Chunk_Id has been removed from the metadata structure.
 
 ### Cache Management
 
@@ -616,6 +684,30 @@ for cached_query in cache:
 
 # 3. If no match, execute RAG and cache result
 ```
+
+### Metadata Structure (JSON Format)
+
+The application now provides metadata in a structured JSON format:
+
+```json
+{
+  "Document_Id": "uuid-string",
+  "Document_Name": "document.pdf",
+  "Chunk_Index": 5,
+  "Start_Char": 1024,
+  "End_Char": 1824,
+  "Is_New_Doc": true,
+  "File_Type": "pdf",
+  "Chunk_Size": 800,
+  "Model_Provider": "OpenAI (API)"
+}
+```
+
+**Key Changes:**
+- Metadata is now provided as structured JSON in the `structured_metadata` field
+- `Chunk_Id` has been **removed** from the metadata structure
+- All metadata fields are consistently formatted
+- Source information includes both original metadata (for backward compatibility) and new structured metadata
 
 ---
 

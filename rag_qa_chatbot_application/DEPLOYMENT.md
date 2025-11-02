@@ -21,6 +21,8 @@ docker-compose logs -f
 open http://localhost:8501
 ```
 
+**Note**: The application comes with a pre-loaded PubMed database in `current_db/` directory. This database is persistent and includes separate FAISS indices for both OpenAI and Qwen embeddings. User-uploaded documents are stored in a temporary in-memory database that doesn't persist after container restart.
+
 ### Local Development without Docker
 
 ```bash
@@ -224,28 +226,38 @@ docker-compose logs > deployment-logs.txt
 - Document processing time
 - Memory usage
 - CPU usage
-- Disk space (for vector store)
+- Disk space (for persistent `current_db/` and temporary `data/` directories)
+- Database mode usage (Current DB, New DB, Current + New DB)
+- Metadata structure compliance (JSON format, Chunk_Id removal)
 
 ## Backup and Recovery
 
 ### Backup Vector Store
 
 ```bash
-# Backup data
-tar -czf backup-$(date +%Y%m%d).tar.gz data/
+# Backup persistent database (current_db)
+tar -czf backup-current-db-$(date +%Y%m%d).tar.gz current_db/
+
+# Backup runtime data (optional, contains temporary new DB data)
+tar -czf backup-data-$(date +%Y%m%d).tar.gz data/
 
 # Upload to S3
 aws s3 cp backup-*.tar.gz s3://my-bucket/backups/
 ```
 
+**Important Notes:**
+- `current_db/` contains the persistent PubMed database (should be backed up)
+- `data/` contains temporary in-memory databases and cache (optional to backup)
+- New DB data is ephemeral and doesn't need backup
+
 ### Restore Vector Store
 
 ```bash
 # Download from S3
-aws s3 cp s3://my-bucket/backups/backup-20240101.tar.gz .
+aws s3 cp s3://my-bucket/backups/backup-current-db-20240101.tar.gz .
 
-# Restore
-tar -xzf backup-20240101.tar.gz
+# Restore persistent database
+tar -xzf backup-current-db-20240101.tar.gz
 docker-compose restart rag-chatbot
 ```
 
@@ -399,29 +411,39 @@ curl http://localhost:11434/api/tags
 **Problem:** Old data or logs being included in Docker image
 
 **Solution:**
-The `.dockerignore` file is configured to exclude `data/` and `logs/` folders from the Docker image.
+The `.dockerignore` file is configured to exclude `data/`, `logs/`, and `current_db/` folders from the Docker image.
 These folders are mounted as volumes from your host machine:
 
 ```yaml
 volumes:
-  - ./data:/app/data # Your local data persists here
-  - ./logs:/app/logs # Your local logs persist here
+  - ./current_db:/app/current_db  # Persistent PubMed database
+  - ./data:/app/data              # Runtime data (temporary new DB, cache)
+  - ./logs:/app/logs              # Application logs
 ```
+
+**Database Structure:**
+- `current_db/`: Persistent PubMed database (separate indices for OpenAI and Qwen)
+- `data/`: Runtime data including temporary new DB (in-memory, not persisted)
+- `logs/`: Application logs
 
 If you need to start fresh:
 
 ```bash
-# Clear local data (WARNING: Deletes vector store)
+# Clear runtime data (WARNING: Deletes temporary new DB and cache)
 rm -rf data/vectorstore/*
 rm -rf data/cache/*
 
 # Clear logs
 rm -rf logs/*
 
+# NOTE: current_db/ is preserved (contains pre-loaded PubMed database)
+
 # Rebuild without cache
 docker-compose build --no-cache
 docker-compose up -d
 ```
+
+**Important**: The `current_db/` directory contains the persistent PubMed database and should NOT be deleted unless you want to rebuild it from scratch.
 
 ## Maintenance
 

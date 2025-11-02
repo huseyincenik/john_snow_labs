@@ -71,17 +71,31 @@ Manually open your browser: **http://localhost:8501**
 1. Select "**Local LLM (Qwen)**" (no API key needed!)
 2. Click "**🔧 Initialize LLM**"
 3. Wait for "✅ LLM initialized successfully!"
+4. The system automatically loads the pre-configured PubMed database
 
-### Step 2: Upload Documents
+### Step 2: Select Database Mode (in Sidebar)
+
+Choose how you want to search:
+
+- **Current DB**: Search in pre-loaded PubMed database (default, persistent)
+- **New DB**: Process and search only in uploaded documents (temporary)
+- **Current + New DB**: Combine both databases (recommended for comprehensive results)
+
+### Step 3: Upload Documents (Optional)
 
 1. Click "**📁 Document Upload**"
 2. Select PDF, DOCX, or TXT files
 3. Click "**🚀 Process Documents**"
 4. Wait for "✅ Successfully created knowledge base!"
+5. **Note**: Documents are added to "New DB" (temporary) and won't persist after container restart
 
-### Step 3: Ask Questions
+### Step 4: Ask Questions
 
-Type your question in the chat input and get instant answers with sources!
+Type your question in the chat input and get instant answers with:
+- Source citations
+- Accuracy scores
+- JSON-structured metadata (Chunk_Id removed)
+- Search results from your selected database mode
 
 ## Using OpenAI Instead
 
