@@ -499,7 +499,30 @@ class ChatbotApp:
         )
 
         if uploaded_files:
-            st.write(f"📋 {len(uploaded_files)} file(s) selected:")
+            # Remove duplicate files (same filename) - keep only the first occurrence
+            seen_filenames = {}
+            unique_files = []
+            duplicate_files = []
+            
+            for file in uploaded_files:
+                filename = file.name
+                if filename not in seen_filenames:
+                    seen_filenames[filename] = True
+                    unique_files.append(file)
+                else:
+                    duplicate_files.append(filename)
+            
+            # Show warning if duplicates were found
+            if duplicate_files:
+                st.warning(
+                    f"⚠️ **{len(duplicate_files)} duplicate file(s) removed:**\n\n" +
+                    "\n".join([f"• {name}" for name in duplicate_files])
+                )
+            
+            # Use unique files for processing
+            uploaded_files = unique_files
+            
+            st.write(f"📋 {len(uploaded_files)} unique file(s) selected:")
             for file in uploaded_files:
                 file_size = file.size if hasattr(file, "size") else len(file.getvalue())
                 st.write(f"• {file.name} ({format_file_size(file_size)})")
@@ -1117,12 +1140,63 @@ class ChatbotApp:
                                     
                                     # Try to find the file (check exact match and variations)
                                     pdf_content = None
-                                    for stored_name, content in pdf_contents.items():
-                                        if stored_name == selected_file or selected_file in stored_name or stored_name in selected_file:
-                                            pdf_content = content
-                                            break
+                                    from pathlib import Path
+                                    selected_file_path = Path(selected_file)
+                                    
+                                    # Try multiple matching strategies
+                                    # 1. Exact match
+                                    if selected_file in pdf_contents:
+                                        pdf_content = pdf_contents[selected_file]
+                                    
+                                    # 2. Try with .pdf extension (for DOCX files converted to PDF)
+                                    if not pdf_content:
+                                        pdf_variant = selected_file_path.with_suffix('.pdf')
+                                        if str(pdf_variant) in pdf_contents:
+                                            pdf_content = pdf_contents[str(pdf_variant)]
+                                    
+                                    # 3. Try with .docx extension (for files that might be stored with original extension)
+                                    if not pdf_content:
+                                        docx_variant = selected_file_path.with_suffix('.docx')
+                                        if str(docx_variant) in pdf_contents:
+                                            pdf_content = pdf_contents[str(docx_variant)]
+                                    
+                                    # 4. Try case-insensitive matching
+                                    if not pdf_content:
+                                        selected_lower = selected_file.lower()
+                                        for stored_name, content in pdf_contents.items():
+                                            if stored_name.lower() == selected_lower:
+                                                pdf_content = content
+                                                break
+                                    
+                                    # 5. Try stem-based matching (filename without extension)
+                                    if not pdf_content:
+                                        selected_stem = selected_file_path.stem.lower()
+                                        for stored_name, content in pdf_contents.items():
+                                            stored_stem = Path(stored_name).stem.lower()
+                                            if stored_stem == selected_stem:
+                                                pdf_content = content
+                                                break
+                                    
+                                    # 6. Try partial matching (as last resort)
+                                    if not pdf_content:
+                                        selected_stem = selected_file_path.stem.lower()
+                                        for stored_name, content in pdf_contents.items():
+                                            stored_stem = Path(stored_name).stem.lower()
+                                            if selected_stem in stored_stem or stored_stem in selected_stem:
+                                                pdf_content = content
+                                                break
                                     
                                     if pdf_content:
+                                        # Create a unique key for PDF display based on selection
+                                        # Use hash of selection to ensure uniqueness and force cache-busting
+                                        import hashlib
+                                        selection_hash = hashlib.md5(f"{selected_file}_{selected_page}".encode()).hexdigest()[:8]
+                                        pdf_display_key = f"pdf_display_{assistant_message.id}_{selected_file}_{selected_page}_{selection_hash}"
+                                        
+                                        # Track last selection to detect changes
+                                        last_selection_key = f"last_pdf_selection_{assistant_message.id}"
+                                        current_selection = f"{selected_file}_{selected_page}"
+                                        
                                         # Find ALL matching sources for this file and page (ID-based)
                                         # There can be multiple chunks on the same page that need to be highlighted
                                         matching_sources = []
@@ -1136,11 +1210,27 @@ class ChatbotApp:
                                             except:
                                                 pass
                                         
-                                        # Display PDF page with highlights
-                                        # Pass all matching sources so we can highlight all chunks on the page
-                                        self._display_pdf_page(pdf_content, selected_page, matching_sources)
+                                        # Use container to force re-render when selection changes
+                                        # Container key includes selection to force update
+                                        container_key = f"pdf_container_{assistant_message.id}_{selected_file}_{selected_page}"
+                                        with st.container():
+                                            # Display PDF page with highlights
+                                            # Unique display_key ensures immediate update when page changes
+                                            self._display_pdf_page(pdf_content, selected_page, matching_sources, display_key=pdf_display_key)
+                                        
+                                        # Update last selection for change detection
+                                        st.session_state[last_selection_key] = current_selection
                                     else:
-                                        st.info(f"PDF content not found for: {selected_file}")
+                                        # Debug: show available keys if PDF not found
+                                        available_keys = list(pdf_contents.keys())
+                                        if available_keys:
+                                            st.warning(
+                                                f"⚠️ PDF content not found for: **{selected_file}**\n\n"
+                                                f"Available files in cache: {', '.join(available_keys[:5])}"
+                                                + (f" (and {len(available_keys) - 5} more)" if len(available_keys) > 5 else "")
+                                            )
+                                        else:
+                                            st.info(f"PDF content not found for: {selected_file}. No PDF files available in cache.")
                             except Exception as e:
                                 st.error(f"Error displaying PDF: {str(e)}")
                     else:
@@ -1396,10 +1486,55 @@ class ChatbotApp:
                 )
                 return
 
+            # Check for duplicate files before processing
+            from src.utils import get_file_hash
+            
+            # Get existing document hashes from session state
+            existing_hashes = set()
+            existing_documents = st.session_state.get("documents", [])
+            for doc in existing_documents:
+                if doc.file_hash:
+                    existing_hashes.add(doc.file_hash)
+            
+            # Filter out duplicate files
+            filtered_files = []
+            duplicate_files = []
+            
+            for uploaded_file in uploaded_files:
+                # Read file content to calculate hash
+                file_content = uploaded_file.read()
+                uploaded_file.seek(0)  # Reset file pointer
+                
+                # Calculate hash of original file content (before any conversion)
+                file_hash = get_file_hash(file_content)
+                
+                # Check if this file was already processed
+                if file_hash in existing_hashes:
+                    # Find the existing document name for better error message
+                    existing_doc = next((d for d in existing_documents if d.file_hash == file_hash), None)
+                    existing_name = existing_doc.name if existing_doc else uploaded_file.name
+                    duplicate_files.append((uploaded_file.name, existing_name))
+                else:
+                    filtered_files.append(uploaded_file)
+            
+            # Show warnings for duplicate files
+            if duplicate_files:
+                duplicate_names = [name for name, _ in duplicate_files]
+                existing_names = [existing for _, existing in duplicate_files]
+                st.warning(
+                    f"⚠️ **{len(duplicate_files)} file(s) already processed and skipped:**\n\n" +
+                    "\n".join([f"• **{name}** (already processed as: {existing})" 
+                               for name, existing in zip(duplicate_names, existing_names)])
+                )
+            
+            if not filtered_files:
+                st.error("❌ All files have already been processed. Please upload new files.")
+                return
+
             with st.spinner("📄 Processing documents..."):
-                # Process documents
+                # Process only non-duplicate documents
                 documents = self.document_processor.process_uploaded_files(
-                    uploaded_files
+                    filtered_files
                 )
 
                 if not documents:
@@ -1496,6 +1631,20 @@ class ChatbotApp:
                     if doc.file_type.value == "pdf" or doc.metadata.get("converted_from_docx", False):
                         # Use document name as key, store PDF bytes
                         st.session_state.uploaded_pdf_contents[doc.name] = doc.content
+                        
+                        # For DOCX files converted to PDF, also store with .pdf extension for easier lookup
+                        if doc.metadata.get("converted_from_docx", False):
+                            from pathlib import Path
+                            # Create PDF version of filename (replace .docx with .pdf)
+                            pdf_name = str(Path(doc.name).with_suffix('.pdf'))
+                            st.session_state.uploaded_pdf_contents[pdf_name] = doc.content
+                            # Also store with original filename from metadata
+                            original_name = doc.metadata.get("original_name", doc.name)
+                            if original_name != doc.name:
+                                st.session_state.uploaded_pdf_contents[original_name] = doc.content
+                                # And PDF version of original name
+                                original_pdf_name = str(Path(original_name).with_suffix('.pdf'))
+                                st.session_state.uploaded_pdf_contents[original_pdf_name] = doc.content
 
                 # If using new or current+new mode, mark as initialized
                 if db_mode in ["new", "current+new"]:
@@ -1956,12 +2105,63 @@ class ChatbotApp:
                                     
                                     # Try to find the file (check exact match and variations)
                                     pdf_content = None
-                                    for stored_name, content in pdf_contents.items():
-                                        if stored_name == selected_file or selected_file in stored_name or stored_name in selected_file:
-                                            pdf_content = content
-                                            break
+                                    from pathlib import Path
+                                    selected_file_path = Path(selected_file)
+                                    
+                                    # Try multiple matching strategies
+                                    # 1. Exact match
+                                    if selected_file in pdf_contents:
+                                        pdf_content = pdf_contents[selected_file]
+                                    
+                                    # 2. Try with .pdf extension (for DOCX files converted to PDF)
+                                    if not pdf_content:
+                                        pdf_variant = selected_file_path.with_suffix('.pdf')
+                                        if str(pdf_variant) in pdf_contents:
+                                            pdf_content = pdf_contents[str(pdf_variant)]
+                                    
+                                    # 3. Try with .docx extension (for files that might be stored with original extension)
+                                    if not pdf_content:
+                                        docx_variant = selected_file_path.with_suffix('.docx')
+                                        if str(docx_variant) in pdf_contents:
+                                            pdf_content = pdf_contents[str(docx_variant)]
+                                    
+                                    # 4. Try case-insensitive matching
+                                    if not pdf_content:
+                                        selected_lower = selected_file.lower()
+                                        for stored_name, content in pdf_contents.items():
+                                            if stored_name.lower() == selected_lower:
+                                                pdf_content = content
+                                                break
+                                    
+                                    # 5. Try stem-based matching (filename without extension)
+                                    if not pdf_content:
+                                        selected_stem = selected_file_path.stem.lower()
+                                        for stored_name, content in pdf_contents.items():
+                                            stored_stem = Path(stored_name).stem.lower()
+                                            if stored_stem == selected_stem:
+                                                pdf_content = content
+                                                break
+                                    
+                                    # 6. Try partial matching (as last resort)
+                                    if not pdf_content:
+                                        selected_stem = selected_file_path.stem.lower()
+                                        for stored_name, content in pdf_contents.items():
+                                            stored_stem = Path(stored_name).stem.lower()
+                                            if selected_stem in stored_stem or stored_stem in selected_stem:
+                                                pdf_content = content
+                                                break
                                     
                                     if pdf_content:
+                                        # Create a unique key for PDF display based on selection
+                                        # Use hash of selection to ensure uniqueness and force cache-busting
+                                        import hashlib
+                                        selection_hash = hashlib.md5(f"{selected_file}_{selected_page}".encode()).hexdigest()[:8]
+                                        pdf_display_key = f"pdf_display_{assistant_message.id}_{selected_file}_{selected_page}_{selection_hash}"
+                                        
+                                        # Track last selection to detect changes
+                                        last_selection_key = f"last_pdf_selection_{assistant_message.id}"
+                                        current_selection = f"{selected_file}_{selected_page}"
+                                        
                                         # Find ALL matching sources for this file and page (ID-based)
                                         # There can be multiple chunks on the same page that need to be highlighted
                                         matching_sources = []
@@ -1975,11 +2175,27 @@ class ChatbotApp:
                                             except:
                                                 pass
                                         
-                                        # Display PDF page with highlights
-                                        # Pass all matching sources so we can highlight all chunks on the page
-                                        self._display_pdf_page(pdf_content, selected_page, matching_sources)
+                                        # Use container to force re-render when selection changes
+                                        # Container key includes selection to force update
+                                        container_key = f"pdf_container_{assistant_message.id}_{selected_file}_{selected_page}"
+                                        with st.container():
+                                            # Display PDF page with highlights
+                                            # Unique display_key ensures immediate update when page changes
+                                            self._display_pdf_page(pdf_content, selected_page, matching_sources, display_key=pdf_display_key)
+                                        
+                                        # Update last selection for change detection
+                                        st.session_state[last_selection_key] = current_selection
                                     else:
-                                        st.info(f"PDF content not found for: {selected_file}")
+                                        # Debug: show available keys if PDF not found
+                                        available_keys = list(pdf_contents.keys())
+                                        if available_keys:
+                                            st.warning(
+                                                f"⚠️ PDF content not found for: **{selected_file}**\n\n"
+                                                f"Available files in cache: {', '.join(available_keys[:5])}"
+                                                + (f" (and {len(available_keys) - 5} more)" if len(available_keys) > 5 else "")
+                                            )
+                                        else:
+                                            st.info(f"PDF content not found for: {selected_file}. No PDF files available in cache.")
                             except Exception as e:
                                 st.error(f"Error displaying PDF: {str(e)}")
                         else:
@@ -2025,7 +2241,7 @@ class ChatbotApp:
                     )
                     st.success("✅ Response copied to clipboard!", icon="📋")
 
-    def _display_pdf_page(self, pdf_content: bytes, page_number: int, highlight_sources: Optional[List[Dict]] = None):
+    def _display_pdf_page(self, pdf_content: bytes, page_number: int, highlight_sources: Optional[List[Dict]] = None, display_key: Optional[str] = None):
         """
         Display a specific page from a PDF document with optional text highlighting
         
@@ -2198,8 +2414,9 @@ class ChatbotApp:
                     images = convert_from_bytes(page_pdf_bytes, first_page=1, last_page=1, dpi=150)
                     
                     if images:
-                        # Display the highlighted image
-                        st.image(images[0], use_container_width=True)
+                        # Display the highlighted image with cache-busting key
+                        cache_buster = display_key if display_key else f"page_{page_number}_{hash(str(page_number))}"
+                        st.image(images[0], use_container_width=True, key=f"pdf_image_{cache_buster}")
                     else:
                         raise Exception("Image conversion failed")
                 
@@ -2219,13 +2436,26 @@ class ChatbotApp:
                     # Encode to base64
                     pdf_base64 = base64.b64encode(page_pdf_bytes).decode('utf-8')
                     
-                    # Display in iframe
+                    # Display in iframe with cache-busting
+                    # Use display_key for cache-busting to ensure immediate update on selection change
+                    cache_buster = display_key if display_key else f"page_{page_number}_{hash(pdf_base64[:100])}"
+                    # Use fragment with cache-buster and timestamp to force browser to reload
+                    import time
+                    timestamp = int(time.time() * 1000)
                     pdf_display = f'''
-                    <iframe src="data:application/pdf;base64,{pdf_base64}" 
+                    <iframe id="pdf_iframe_{cache_buster}_{timestamp}" 
+                            src="data:application/pdf;base64,{pdf_base64}#page={page_number}&v={cache_buster}&t={timestamp}" 
                             width="100%" 
                             height="600px" 
                             style="border: 1px solid #ccc;">
                     </iframe>
+                    <script>
+                        // Force iframe reload by removing and re-adding
+                        var iframe = document.getElementById('pdf_iframe_{cache_buster}_{timestamp}');
+                        if (iframe) {{
+                            iframe.src = iframe.src;
+                        }}
+                    </script>
                     '''
                     st.markdown(pdf_display, unsafe_allow_html=True)
                 
@@ -2241,12 +2471,24 @@ class ChatbotApp:
                             pdf_document.close()
                             
                             pdf_base64 = base64.b64encode(page_pdf_bytes).decode('utf-8')
+                            cache_buster = display_key if display_key else f"page_{page_number}_{hash(pdf_base64[:100])}"
+                            # Use fragment with cache-buster and timestamp to force browser to reload
+                            import time
+                            timestamp = int(time.time() * 1000)
                             pdf_display = f'''
-                            <iframe src="data:application/pdf;base64,{pdf_base64}" 
+                            <iframe id="pdf_iframe_{cache_buster}_{timestamp}" 
+                                    src="data:application/pdf;base64,{pdf_base64}#page={page_number}&v={cache_buster}&t={timestamp}" 
                                     width="100%" 
                                     height="600px" 
                                     style="border: 1px solid #ccc;">
                             </iframe>
+                            <script>
+                                // Force iframe reload by removing and re-adding
+                                var iframe = document.getElementById('pdf_iframe_{cache_buster}_{timestamp}');
+                                if (iframe) {{
+                                    iframe.src = iframe.src;
+                                }}
+                            </script>
                             '''
                             st.markdown(pdf_display, unsafe_allow_html=True)
                         except Exception as fallback_error:
@@ -2333,12 +2575,24 @@ class ChatbotApp:
                             pdf_document_reopen.close()
                             
                             pdf_base64 = base64.b64encode(page_pdf_bytes).decode('utf-8')
+                            cache_buster = display_key if display_key else f"page_{page_number}_{hash(pdf_base64[:100])}"
+                            # Use fragment with cache-buster and timestamp to force browser to reload
+                            import time
+                            timestamp = int(time.time() * 1000)
                             pdf_display = f'''
-                            <iframe src="data:application/pdf;base64,{pdf_base64}" 
+                            <iframe id="pdf_iframe_{cache_buster}_{timestamp}" 
+                                    src="data:application/pdf;base64,{pdf_base64}#page={page_number}&v={cache_buster}&t={timestamp}" 
                                     width="100%" 
                                     height="600px" 
                                     style="border: 1px solid #ccc;">
                             </iframe>
+                            <script>
+                                // Force iframe reload by removing and re-adding
+                                var iframe = document.getElementById('pdf_iframe_{cache_buster}_{timestamp}');
+                                if (iframe) {{
+                                    iframe.src = iframe.src;
+                                }}
+                            </script>
                             '''
                             st.markdown(pdf_display, unsafe_allow_html=True)
                         except Exception as reopen_error:
@@ -2361,7 +2615,8 @@ class ChatbotApp:
                     from pdf2image import convert_from_bytes
                     images = convert_from_bytes(pdf_content, first_page=page_number, last_page=page_number, dpi=150)
                     if images:
-                        st.image(images[0], use_container_width=True)
+                        cache_buster = display_key if display_key else f"page_{page_number}_{hash(str(page_number))}"
+                        st.image(images[0], use_container_width=True, key=f"pdf_image_pypdf2_{cache_buster}")
                     else:
                         raise Exception("Image conversion failed")
                 except (ImportError, Exception):
@@ -2372,14 +2627,15 @@ class ChatbotApp:
                     pdf_writer.write(output_pdf)
                     output_pdf.seek(0)
                     pdf_base64 = base64.b64encode(output_pdf.read()).decode('utf-8')
+                    cache_buster = display_key if display_key else f"page_{page_number}_{hash(pdf_base64[:100])}"
                     pdf_display = f'''
-                    <iframe src="data:application/pdf;base64,{pdf_base64}" 
+                    <iframe src="data:application/pdf;base64,{pdf_base64}#{cache_buster}" 
                             width="100%" 
                             height="600px" 
                             style="border: 1px solid #ccc;">
                     </iframe>
                     '''
-                    st.markdown(pdf_display, unsafe_allow_html=True)
+                    st.markdown(pdf_display, unsafe_allow_html=True, key=f"pdf_iframe_pypdf2_{cache_buster}")
             
         except Exception as e:
             st.error(f"Error displaying PDF page: {str(e)}")

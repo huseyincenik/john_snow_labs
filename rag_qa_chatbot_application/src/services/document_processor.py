@@ -89,6 +89,10 @@ class DocumentProcessor:
         file_content = uploaded_file.read()
         uploaded_file.seek(0)  # Reset file pointer
 
+        # Calculate hash of original file content (before any conversion)
+        # This ensures duplicate detection works even for DOCX files that get converted to PDF
+        original_file_hash = get_file_hash(file_content)
+
         # Special handling for DOCX files - convert to PDF first
         file_type = self._get_file_type(uploaded_file.name)
         if file_type == DocumentType.DOCX and DOCX2PDF_AVAILABLE:
@@ -121,10 +125,11 @@ class DocumentProcessor:
             content=file_content,  # Store raw bytes (might be converted PDF)
             file_type=file_type,   # This might be PDF if DOCX was converted
             file_size=len(file_content),
-            file_hash=get_file_hash(file_content),
+            file_hash=original_file_hash,  # Use original file hash for duplicate detection
             metadata={
                 'original_name': uploaded_file.name,
                 'original_file_type': original_file_type.value,  # Store original type
+                'original_file_hash': original_file_hash,  # Store original hash in metadata
                 'converted_from_docx': original_file_type == DocumentType.DOCX and file_type == DocumentType.PDF,
                 'character_count': len(text_content),
                 'word_count': len(text_content.split()),
