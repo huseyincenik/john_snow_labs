@@ -18,8 +18,8 @@ env/
 ENV/
 
 # Vector store data
-vectorstore/
-faiss_index/
+# vectorstore/
+# faiss_index/
 data/documents/
 data/processed/
 

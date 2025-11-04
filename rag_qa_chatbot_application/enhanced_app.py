@@ -6,12 +6,22 @@ import streamlit as st
 import uuid
 import pandas as pd
 import base64
+import os
+import json
+import io
+import re
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict
 import traceback
+import PyPDF2
 
 # Import our modules
-from src.config import config, SUPPORTED_MODELS
+from src.config import (
+    config,
+    SUPPORTED_MODELS,
+    CURRENT_DB_OPENAI_DIR,
+    CURRENT_DB_QWEN_DIR,
+)
 from src.models import (
     ModelProvider,
     ConversationSession,
@@ -20,8 +30,16 @@ from src.models import (
     Document,
     UserSession,
 )
-from src.services import DocumentProcessor, VectorStoreManager, LLMService
+from src.services import (
+    DocumentProcessor,
+    VectorStoreManager,
+    LLMService,
+    NewDBManager,
+    PubMedDBInitializer,
+)
 from src.utils import app_logger, format_file_size, truncate_text
+from pathlib import Path
+from langchain_community.vectorstores import FAISS
 
 
 class ChatbotApp:
@@ -32,6 +50,8 @@ class ChatbotApp:
         self.document_processor = DocumentProcessor()
         self.vector_store_manager = VectorStoreManager()
         self.llm_service = LLMService()
+        self.new_db_manager = NewDBManager()
+        self.pubmed_db_initializer = PubMedDBInitializer()
 
         # Initialize session state
         self._initialize_session_state()
@@ -72,6 +92,12 @@ class ChatbotApp:
 
         if "processing_status" not in st.session_state:
             st.session_state.processing_status = None
+
+        if "db_mode" not in st.session_state:
+            st.session_state.db_mode = "current"  # "current", "new", "current+new"
+
+        if "new_vector_store" not in st.session_state:
+            st.session_state.new_vector_store = None
 
     def run(self):
         """Main application entry point"""
@@ -137,10 +163,98 @@ class ChatbotApp:
             color: #ffc107;
             font-weight: bold;
         }
+        /* Word wrap for JSON code blocks */
+        .stCodeBlock {
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+        }
+        .stCodeBlock pre {
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+        }
         </style>
         """,
             unsafe_allow_html=True,
         )
+
+    def _is_vector_store_ready(self) -> bool:
+        """Check if vector store is ready based on db_mode"""
+        db_mode = st.session_state.get("db_mode", "current")
+
+        # For "new" mode, use existing vector_store_initialized flag
+        if db_mode == "new":
+            return st.session_state.vector_store_initialized
+
+        # For "current" mode, check if current_db exists
+        if db_mode == "current":
+            # Check if vector_store_initialized (for uploaded docs) OR current_db exists
+            if st.session_state.vector_store_initialized:
+                return True
+
+            # Check if current_db exists for the current model provider
+            current_model_provider = st.session_state.get("current_model_provider")
+            if current_model_provider == "OpenAI (API)":
+                faiss_index_path = CURRENT_DB_OPENAI_DIR / "faiss_index"
+                faiss_file = faiss_index_path / "index.faiss"
+                pkl_file = faiss_index_path / "index.pkl"
+                return faiss_file.exists() and pkl_file.exists()
+            elif current_model_provider == "Local LLM (Qwen)":
+                faiss_index_path = CURRENT_DB_QWEN_DIR / "faiss_index"
+                faiss_file = faiss_index_path / "index.faiss"
+                pkl_file = faiss_index_path / "index.pkl"
+                return faiss_file.exists() and pkl_file.exists()
+            else:
+                # Provider not set, check both
+                openai_path = CURRENT_DB_OPENAI_DIR / "faiss_index"
+                qwen_path = CURRENT_DB_QWEN_DIR / "faiss_index"
+
+                openai_exists = (openai_path / "index.faiss").exists() and (
+                    openai_path / "index.pkl"
+                ).exists()
+                qwen_exists = (qwen_path / "index.faiss").exists() and (
+                    qwen_path / "index.pkl"
+                ).exists()
+                return openai_exists or qwen_exists
+
+        # For "current+new" mode, check if current_db OR new_vector_store exists
+        if db_mode == "current+new":
+            # Check if new_db exists
+            if st.session_state.vector_store_initialized:
+                return True
+
+            new_vector_store = st.session_state.get("new_vector_store", None)
+            if new_vector_store:
+                return True
+
+            # Check if current_db exists
+            current_model_provider = st.session_state.get("current_model_provider")
+            if current_model_provider == "OpenAI (API)":
+                faiss_index_path = CURRENT_DB_OPENAI_DIR / "faiss_index"
+                faiss_file = faiss_index_path / "index.faiss"
+                pkl_file = faiss_index_path / "index.pkl"
+                return faiss_file.exists() and pkl_file.exists()
+            elif current_model_provider == "Local LLM (Qwen)":
+                faiss_index_path = CURRENT_DB_QWEN_DIR / "faiss_index"
+                faiss_file = faiss_index_path / "index.faiss"
+                pkl_file = faiss_index_path / "index.pkl"
+                return faiss_file.exists() and pkl_file.exists()
+            else:
+                # Provider not set, check both
+                openai_path = CURRENT_DB_OPENAI_DIR / "faiss_index"
+                qwen_path = CURRENT_DB_QWEN_DIR / "faiss_index"
+
+                openai_exists = (openai_path / "index.faiss").exists() and (
+                    openai_path / "index.pkl"
+                ).exists()
+                qwen_exists = (qwen_path / "index.faiss").exists() and (
+                    qwen_path / "index.pkl"
+                ).exists()
+                return openai_exists or qwen_exists
+
+        # Default fallback
+        return st.session_state.vector_store_initialized
 
     def _render_header(self):
         """Render application header"""
@@ -155,12 +269,11 @@ class ChatbotApp:
             st.metric("📄 Documents", docs_count)
 
         with col2:
-            messages_count = len(
-                st.session_state.current_conversation.messages)
+            messages_count = len(st.session_state.current_conversation.messages)
             st.metric("💬 Messages", messages_count)
 
         with col3:
-            if st.session_state.vector_store_initialized:
+            if self._is_vector_store_ready():
                 st.markdown(
                     '<p class="status-success">✅ Vector Store Ready</p>',
                     unsafe_allow_html=True,
@@ -206,6 +319,11 @@ class ChatbotApp:
 
             st.markdown("---")
 
+            # Database mode selection
+            self._render_db_mode_section()
+
+            st.markdown("---")
+
             # File upload section
             self._render_file_upload_section()
 
@@ -245,6 +363,130 @@ class ChatbotApp:
 
         return api_key
 
+    def _render_db_mode_section(self):
+        """Render database mode selection"""
+        st.subheader("🗄️ Database Mode")
+
+        db_mode = st.radio(
+            "Select Database Mode:",
+            ["current", "new", "current+new"],
+            index=(
+                ["current", "new", "current+new"].index(st.session_state.db_mode)
+                if st.session_state.db_mode in ["current", "new", "current+new"]
+                else 0
+            ),
+            help=(
+                "**Current DB**: Search in pre-loaded PubMed database\n"
+                "**New DB**: Search only in newly uploaded documents (temporary)\n"
+                "**Current + New DB**: Search in both databases combined"
+            ),
+        )
+
+        # Update session state and vector store manager
+        # CRITICAL: Always sync db_mode to ensure consistency
+        if db_mode != st.session_state.db_mode:
+            st.session_state.db_mode = db_mode
+        # Always set db_mode to ensure it's synced (even if session state already has it)
+        self.vector_store_manager.set_db_mode(db_mode)
+
+        # Show mode description
+        if db_mode == "current":
+            st.info("🔍 Searching in PubMed database (pre-loaded, persistent)")
+        elif db_mode == "new":
+            st.info(
+                "🔍 Searching only in newly uploaded documents (temporary, cleared on restart)"
+            )
+        else:
+            st.info("🔍 Searching in both PubMed database and newly uploaded documents")
+
+    def _ensure_empty_faiss_index(self, model_provider: str, api_key: str):
+        """
+        Ensure that FAISS index exists for the current model provider.
+        If index doesn't exist for OpenAI, creates it with PubMed data using OpenAI embeddings.
+        Similar to Qwen behavior where PubMed data is automatically loaded.
+
+        Args:
+            model_provider: The model provider name
+            api_key: API key for embeddings (if needed)
+        """
+        try:
+            if model_provider == "OpenAI (API)":
+                faiss_index_path = CURRENT_DB_OPENAI_DIR / "faiss_index"
+                faiss_file = faiss_index_path / "index.faiss"
+                pkl_file = faiss_index_path / "index.pkl"
+
+                # Check if index already exists
+                if faiss_file.exists() and pkl_file.exists():
+                    self.logger.info(
+                        f"OpenAI FAISS index already exists at {faiss_index_path}"
+                    )
+                    return
+
+                # Index doesn't exist - initialize with PubMed data using OpenAI embeddings
+                self.logger.info(
+                    f"OpenAI FAISS index not found at {faiss_index_path}. "
+                    f"Initializing with PubMed data using OpenAI embeddings..."
+                )
+
+                # Ensure embeddings are initialized
+                if not self.vector_store_manager.embeddings:
+                    self.vector_store_manager.initialize_embeddings(
+                        model_provider, api_key
+                    )
+
+                # Initialize PubMed database with OpenAI embeddings
+                # This will create the index with actual PubMed data (1000 documents)
+                results = self.pubmed_db_initializer.initialize_databases(
+                    openai_api_key=api_key if api_key and api_key != "ollama" else None
+                )
+
+                if results.get("openai"):
+                    self.logger.info(
+                        f"Successfully created OpenAI FAISS index with PubMed data at {faiss_index_path}"
+                    )
+                else:
+                    self.logger.warning(
+                        f"Failed to create OpenAI FAISS index with PubMed data. "
+                        f"Index may not be available."
+                    )
+
+        except Exception as e:
+            self.logger.warning(f"Failed to create OpenAI FAISS index: {str(e)}")
+            # Don't fail initialization if index creation fails
+
+    def _initialize_pubmed_databases(self, openai_api_key: Optional[str] = None):
+        """Initialize PubMed databases (called after LLM initialization)"""
+        try:
+            if "pubmed_db_initialized" in st.session_state:
+                return  # Already initialized
+
+            st.session_state.pubmed_db_initialized = True
+
+            # Initialize databases
+            results = self.pubmed_db_initializer.initialize_databases(
+                openai_api_key=(
+                    openai_api_key
+                    if openai_api_key and openai_api_key != "ollama"
+                    else None
+                )
+            )
+
+            if results.get("openai") or results.get("qwen"):
+                status_msg = []
+                if results.get("openai"):
+                    status_msg.append("✅ OpenAI database ready")
+                if results.get("qwen"):
+                    status_msg.append("✅ Qwen database ready")
+                self.logger.info(" | ".join(status_msg))
+            else:
+                self.logger.info("PubMed databases initialization skipped or failed")
+
+        except Exception as e:
+            self.logger.error(f"Failed to initialize PubMed databases: {str(e)}")
+            st.session_state.pubmed_db_initialized = (
+                True  # Mark as attempted to avoid retry loop
+            )
+
     def _render_file_upload_section(self):
         """Render file upload section"""
         st.subheader("📁 Document Upload")
@@ -259,8 +501,7 @@ class ChatbotApp:
         if uploaded_files:
             st.write(f"📋 {len(uploaded_files)} file(s) selected:")
             for file in uploaded_files:
-                file_size = file.size if hasattr(
-                    file, "size") else len(file.getvalue())
+                file_size = file.size if hasattr(file, "size") else len(file.getvalue())
                 st.write(f"• {file.name} ({format_file_size(file_size)})")
 
             # Document processing parameters
@@ -385,71 +626,194 @@ class ChatbotApp:
         """Render system information section"""
         st.subheader("📊 System Info")
 
-        # Vector store info
-        vector_info = self.vector_store_manager.get_store_info()
-        if vector_info:
-            st.write(f"📚 Total Documents: {vector_info.total_documents}")
-            # Get actual chunk count from vector store with better error handling
+        # Get current DB mode and new vector store
+        db_mode = st.session_state.get("db_mode", "current")
+        new_vector_store = st.session_state.get("new_vector_store", None)
+
+        # Helper function to get chunk count from vector store
+        def get_chunk_count(store):
+            """Get chunk count from a FAISS vector store"""
+            if not store:
+                return 0
             try:
-                if (
-                    hasattr(self.vector_store_manager, "vector_store")
-                    and self.vector_store_manager.vector_store
-                ):
-                    # Try multiple methods to get chunk count
-                    actual_chunks = 0
+                if hasattr(store, "docstore") and store.docstore:
+                    if hasattr(store.docstore, "_dict"):
+                        return len(store.docstore._dict)
+                if hasattr(store, "index") and hasattr(store.index, "ntotal"):
+                    return store.index.ntotal
+            except Exception:
+                pass
+            return 0
 
-                    if hasattr(self.vector_store_manager.vector_store, "docstore"):
-                        if self.vector_store_manager.vector_store.docstore:
-                            if hasattr(
-                                self.vector_store_manager.vector_store.docstore, "_dict"
-                            ):
-                                actual_chunks = len(
-                                    self.vector_store_manager.vector_store.docstore._dict
+        # Helper function to get document count from new vector store
+        def get_new_doc_count(store):
+            """Get unique document count from new DB vector store"""
+            if not store:
+                return 0
+            try:
+                if hasattr(store, "docstore") and store.docstore:
+                    if hasattr(store.docstore, "_dict"):
+                        unique_doc_sources = set()
+                        for doc_metadata in store.docstore._dict.values():
+                            if hasattr(doc_metadata, "metadata"):
+                                metadata = doc_metadata.metadata
+                                doc_source = (
+                                    metadata.get("source")
+                                    or metadata.get("document_name")
+                                    or metadata.get("filename")
+                                    or metadata.get("document_id")
                                 )
-
-                    if actual_chunks == 0 and hasattr(
-                        self.vector_store_manager.vector_store, "index"
-                    ):
-                        if hasattr(
-                            self.vector_store_manager.vector_store.index, "ntotal"
-                        ):
-                            actual_chunks = (
-                                self.vector_store_manager.vector_store.index.ntotal
-                            )
-
-                    # Fallback to vector_info if still 0
-                    if actual_chunks == 0:
-                        actual_chunks = vector_info.total_chunks
-
-                    # If we got a valid chunk count, save it to session state
-                    if actual_chunks > 0:
-                        # Only update if we got a new value (don't overwrite existing with 0)
-                        if (
-                            "total_chunks_cached" not in st.session_state
-                            or actual_chunks >= st.session_state.total_chunks_cached
-                        ):
-                            st.session_state.total_chunks_cached = actual_chunks
-
-                    st.write(
-                        f"🧩 Total Chunks: {st.session_state.get('total_chunks_cached', actual_chunks)}"
-                    )
-                else:
-                    # Use cached value if available, otherwise vector_info
-                    cached_chunks = st.session_state.get(
-                        "total_chunks_cached", vector_info.total_chunks
-                    )
-                    st.write(f"🧩 Total Chunks: {cached_chunks}")
+                                if doc_source:
+                                    unique_doc_sources.add(doc_source)
+                        return len(unique_doc_sources) if unique_doc_sources else 0
             except Exception as e:
-                self.logger.warning(f"Could not get chunk count: {e}")
-                # Use cached value if available, otherwise vector_info
-                cached_chunks = st.session_state.get(
-                    "total_chunks_cached", vector_info.total_chunks
+                self.logger.debug(f"Could not get new doc count: {e}")
+            return 0
+
+        # Helper function to calculate in-memory FAISS index size
+        def get_in_memory_index_size(store):
+            """Calculate approximate in-memory size of FAISS index"""
+            if not store:
+                return 0
+            try:
+                total_size = 0
+
+                # Get FAISS index size (vectors)
+                if hasattr(store, "index") and store.index:
+                    if hasattr(store.index, "ntotal") and hasattr(store.index, "d"):
+                        num_vectors = store.index.ntotal
+                        dimension = store.index.d
+                        # FAISS uses float32 (4 bytes per float) for vectors
+                        vector_size = num_vectors * dimension * 4
+                        total_size += vector_size
+
+                # Estimate docstore size (documents + metadata)
+                if hasattr(store, "docstore") and store.docstore:
+                    if hasattr(store.docstore, "_dict"):
+                        docstore_dict = store.docstore._dict
+                        # Rough estimate: each document with metadata ~500-2000 bytes
+                        # We'll calculate more accurately
+                        for doc in docstore_dict.values():
+                            if hasattr(doc, "page_content"):
+                                # Page content size
+                                total_size += len(doc.page_content.encode("utf-8"))
+                            if hasattr(doc, "metadata"):
+                                # Metadata size (rough estimate)
+                                metadata = doc.metadata
+                                if isinstance(metadata, dict):
+                                    for key, value in metadata.items():
+                                        total_size += len(str(key).encode("utf-8"))
+                                        total_size += len(str(value).encode("utf-8"))
+
+                return total_size
+            except Exception as e:
+                self.logger.debug(f"Could not calculate in-memory index size: {e}")
+                return 0
+
+        # Render based on DB mode
+        if db_mode == "current":
+            # Show only current DB
+            vector_info = self.vector_store_manager.get_store_info()
+            if vector_info:
+                # Use cached value if available, otherwise use vector_info
+                total_docs = (
+                    self.vector_store_manager._cached_total_documents
+                    if self.vector_store_manager._cached_total_documents is not None
+                    else vector_info.total_documents
                 )
-                st.write(f"🧩 Total Chunks: {cached_chunks}")
-            st.write(
-                f"� Index Size: {format_file_size(vector_info.index_size_bytes)}")
-        else:
-            st.write("📭 No vector store found")
+                st.write(f"📚 Total Documents: {total_docs}")
+
+                # Get chunk count
+                actual_chunks = get_chunk_count(self.vector_store_manager.vector_store)
+                if actual_chunks == 0:
+                    actual_chunks = vector_info.total_chunks
+
+                # Cache chunk count
+                if actual_chunks > 0:
+                    if (
+                        "total_chunks_cached" not in st.session_state
+                        or actual_chunks >= st.session_state.total_chunks_cached
+                    ):
+                        st.session_state.total_chunks_cached = actual_chunks
+
+                st.write(
+                    f"🧩 Total Chunks: {st.session_state.get('total_chunks_cached', actual_chunks)}"
+                )
+                st.write(
+                    f"💾 Index Size: {format_file_size(vector_info.index_size_bytes)}"
+                )
+            else:
+                st.write("📭 No vector store found")
+
+        elif db_mode == "new":
+            # Show only new DB
+            if new_vector_store:
+                new_chunks = get_chunk_count(new_vector_store)
+                new_docs = get_new_doc_count(new_vector_store)
+                new_index_size = get_in_memory_index_size(new_vector_store)
+
+                st.write(f"📚 Total Documents: {new_docs}")
+                st.write(f"🧩 Total Chunks: {new_chunks}")
+                st.write(
+                    f"💾 Index Size: {format_file_size(new_index_size)} (in-memory)"
+                )
+            else:
+                st.write("📭 No vector store found")
+
+        elif db_mode == "current+new":
+            # Show combined stats
+            vector_info = self.vector_store_manager.get_store_info()
+
+            current_docs = 0
+            current_chunks = 0
+            current_index_size = 0
+
+            if vector_info:
+                current_docs = (
+                    self.vector_store_manager._cached_total_documents
+                    if self.vector_store_manager._cached_total_documents is not None
+                    else vector_info.total_documents
+                )
+                current_chunks = get_chunk_count(self.vector_store_manager.vector_store)
+                if current_chunks == 0:
+                    current_chunks = vector_info.total_chunks
+                current_index_size = vector_info.index_size_bytes
+
+            new_docs = 0
+            new_chunks = 0
+            new_index_size = 0
+
+            if new_vector_store:
+                new_chunks = get_chunk_count(new_vector_store)
+                new_docs = get_new_doc_count(new_vector_store)
+                new_index_size = get_in_memory_index_size(new_vector_store)
+
+            total_docs = current_docs + new_docs
+            total_chunks = current_chunks + new_chunks
+            total_index_size = current_index_size + new_index_size
+
+            if total_docs > 0 or total_chunks > 0:
+                st.write(
+                    f"📚 Total Documents: {total_docs} (Current: {current_docs}, New: {new_docs})"
+                )
+                st.write(
+                    f"🧩 Total Chunks: {total_chunks} (Current: {current_chunks}, New: {new_chunks})"
+                )
+                if total_index_size > 0:
+                    size_info = f"💾 Index Size: {format_file_size(total_index_size)}"
+                    if current_index_size > 0 and new_index_size > 0:
+                        size_info += f" (Current: {format_file_size(current_index_size)}, New: {format_file_size(new_index_size)} in-memory)"
+                    elif current_index_size > 0:
+                        size_info += f" (Current: {format_file_size(current_index_size)}, New: {format_file_size(new_index_size)} in-memory)"
+                    elif new_index_size > 0:
+                        size_info += " (in-memory only)"
+                    st.write(size_info)
+                elif current_index_size > 0:
+                    st.write(
+                        f"💾 Index Size: {format_file_size(current_index_size)} (Current DB only)"
+                    )
+            else:
+                st.write("📭 No vector store found")
 
         # Cache statistics
         st.markdown("---")
@@ -576,7 +940,9 @@ class ChatbotApp:
                 # Orphaned assistant message (shouldn't happen normally)
                 if messages[i].role == MessageRole.ASSISTANT:
                     with st.chat_message("assistant"):
-                        st.write(messages[i].content)
+                        # Format content: replace literal \n with actual line breaks (blank lines)
+                        formatted_content = messages[i].content.replace('\\n', '\n\n') if isinstance(messages[i].content, str) else str(messages[i].content)
+                        st.markdown(formatted_content)
                 i += 1
 
     def _render_assistant_message_with_actions(
@@ -584,111 +950,214 @@ class ChatbotApp:
     ):
         """Render assistant message with action buttons"""
         with st.chat_message("assistant"):
-            # Display response in main area
-            col1, col2 = st.columns([2, 1])
+            # Display response in main area (no columns)
+            # Format content: replace literal \n with actual line breaks (blank lines)
+            formatted_content = assistant_message.content.replace('\\n', '\n\n') if isinstance(assistant_message.content, str) else str(assistant_message.content)
+            st.markdown(formatted_content)
+            
+            # Check if LLM indicated insufficient information
+            insufficient_info = (
+                assistant_message.metadata.get("insufficient_info", False)
+                if assistant_message.metadata
+                else False
+            )
+            source_count = (
+                assistant_message.metadata.get("source_count", 0)
+                if assistant_message.metadata
+                else 0
+            )
 
-            with col1:
-                st.write(assistant_message.content)
-
-            # Show source information in right column
-            with col2:
-                # Check if LLM indicated insufficient information
-                insufficient_info = (
-                    assistant_message.metadata.get("insufficient_info", False)
-                    if assistant_message.metadata
-                    else False
-                )
-                source_count = (
-                    assistant_message.metadata.get("source_count", 0)
-                    if assistant_message.metadata
-                    else 0
-                )
-
-                # Only show sources if we have valid sources and LLM didn't say "no info"
-                if (
-                    assistant_message.metadata
-                    and assistant_message.metadata.get("sources")
-                    and source_count > 0
-                    and not insufficient_info
-                ):
-                    sources = assistant_message.metadata["sources"]
-
-                    st.markdown("### 📊 Response Information")
-
-                    # Model and source info
-                    model_name = assistant_message.metadata.get(
-                        "model", "Unknown")
-                    retrieval_method = assistant_message.metadata.get(
-                        "retrieval_method", "Unknown"
-                    )
-
-                    # Check if response came from cache
-                    is_cached = assistant_message.metadata.get("cached", False)
-                    cache_similarity = assistant_message.metadata.get(
-                        "cache_similarity", None
-                    )
-
-                    st.metric("Model", model_name)
-                    st.metric("Sources Used", source_count)
-
-                    # Show cache indicator if applicable
-                    if is_cached:
-                        if cache_similarity:
-                            st.success(
-                                f"⚡ Cached Response (Similarity: {cache_similarity:.1%})"
-                            )
-                        else:
-                            st.success("⚡ Cached Response")
-
-                    st.caption(f"Method: {retrieval_method}")
-
-                    # Expandable source details
-                    with st.expander(f"📚 View {source_count} Sources", expanded=False):
-                        for i, source in enumerate(sources, 1):
-                            st.markdown(f"**Source {i}**")
-
-                            # Source file and page info
+            # Only show sources if we have valid sources and LLM didn't say "no info"
+            if (
+                assistant_message.metadata
+                and assistant_message.metadata.get("sources")
+                and source_count > 0
+                and not insufficient_info
+            ):
+                sources = assistant_message.metadata["sources"]
+                
+                # Create two columns: left for metadata+context, right for PDF preview
+                col_metadata, col_pdf = st.columns([1.2, 1])
+                
+                with col_metadata:
+                    # Metadata expander
+                    with st.expander("📊 Metadata", expanded=False):
+                        # Create JSON array in the format shown in image
+                        source_json_array = []
+                        for source in sources:
                             source_file = source.get("source", "Unknown")
                             page = source.get("page", "Unknown")
-
-                            st.write(f"📄 **File:** {source_file}")
-                            st.write(f"📖 **Page:** {page}")
-
-                            # Content preview - show full content with larger height
-                            content = source.get(
-                                "content", "No content available")
-                            st.text_area(
-                                f"Content Preview {i}",
-                                content,
-                                height=300,  # Increased height for better content viewing
-                                key=f"source_content_{assistant_message.id}_{i}",
-                                disabled=True,
-                            )
-
-                            # Additional metadata
-                            metadata_info = source.get("metadata", {})
-                            if metadata_info:
-                                with st.expander(f"📋 Metadata {i}"):
-                                    for key, value in metadata_info.items():
-                                        # Don't repeat already shown info
-                                        if key not in ["source", "page"]:
-                                            st.write(
-                                                f"**{key.title()}:** {value}")
-
-                            st.divider()
-                elif insufficient_info:
-                    # LLM indicated insufficient information
-                    st.markdown("### ℹ️ Insufficient Information")
-                    st.info(
-                        "The AI model indicated that the provided documents do not contain "
-                        "enough information to answer this question reliably."
-                    )
-                else:
-                    # No sources at all
-                    st.markdown("### ℹ️ No Sources Available")
-                    st.write(
-                        "No source information could be extracted for this response."
-                    )
+                            
+                            # Convert page to list if it's a single value
+                            if isinstance(page, (int, str)):
+                                page_numbers = [str(page)]
+                            elif isinstance(page, list):
+                                page_numbers = [str(p) for p in page]
+                            else:
+                                page_numbers = ["Unknown"]
+                            
+                            source_json = {
+                                "file_name": source_file,
+                                "page_numbers": page_numbers,
+                                "source_type": "internal"
+                            }
+                            source_json_array.append(source_json)
+                        
+                        # Display JSON with word wrap
+                        source_json_str = json.dumps(source_json_array, indent=2, ensure_ascii=False)
+                        # Use st.text_area with word wrap instead of st.code for better wrapping
+                        st.text_area(
+                            "Metadata JSON",
+                            source_json_str,
+                            height=200,
+                            key=f"metadata_json_hist_{assistant_message.id}_{uuid.uuid4()}",
+                            disabled=True,
+                            label_visibility="collapsed"
+                        )
+                    
+                    # Context expander
+                    with st.expander("📝 Context", expanded=False):
+                        # Create context JSON array with content from sources
+                        context_json_array = []
+                        for i, source in enumerate(sources, 1):
+                            source_file = source.get("source", "Unknown")
+                            page = source.get("page", "Unknown")
+                            content = source.get("content", "")
+                            
+                            # Format content: replace literal \n with actual line breaks
+                            if isinstance(content, str):
+                                # Replace literal \n (escaped newline) with actual newlines
+                                formatted_content = content.replace('\\n', '\n')
+                            else:
+                                formatted_content = str(content)
+                            
+                            context_json = {
+                                "source_index": i,
+                                "file_name": source_file,
+                                "page": str(page),
+                                "content": formatted_content
+                            }
+                            context_json_array.append(context_json)
+                        
+                        # Display context JSON with word wrap
+                        context_json_str = json.dumps(context_json_array, indent=2, ensure_ascii=False)
+                        # Replace escaped newlines (\\n) in JSON string with actual newlines (blank lines) for better readability
+                        # This makes the JSON more readable in the text area - each \n becomes a blank line
+                        context_json_str = context_json_str.replace('\\n', '\n\n')
+                        # Use st.text_area with word wrap instead of st.code for better wrapping
+                        st.text_area(
+                            "Context JSON",
+                            context_json_str,
+                            height=400,
+                            key=f"context_json_hist_{assistant_message.id}_{uuid.uuid4()}",
+                            disabled=True,
+                            label_visibility="collapsed"
+                        )
+                
+                with col_pdf:
+                    st.markdown("### 📄 See PDF Documents")
+                    
+                    # Get unique files from sources
+                    unique_files = {}
+                    for source in sources:
+                        source_file = source.get("source", "Unknown")
+                        page = source.get("page", "Unknown")
+                        
+                        # Convert page to int if possible
+                        try:
+                            if isinstance(page, str) and page.isdigit():
+                                page_num = int(page)
+                            elif isinstance(page, int):
+                                page_num = page
+                            else:
+                                page_num = 1
+                        except:
+                            page_num = 1
+                        
+                        if source_file not in unique_files:
+                            unique_files[source_file] = []
+                        if page_num not in unique_files[source_file]:
+                            unique_files[source_file].append(page_num)
+                    
+                    # Create dropdown for file selection
+                    if unique_files:
+                        file_options = []
+                        for file_name, pages in unique_files.items():
+                            for page in sorted(pages):
+                                file_options.append(f"{file_name} Page: {page}")
+                        
+                        # Use Streamlit's built-in key mechanism to preserve selection
+                        selectbox_key = f"pdf_select_hist_{assistant_message.id}"
+                        
+                        # Ensure current selection is valid, if not set to first option
+                        if selectbox_key not in st.session_state or st.session_state[selectbox_key] not in file_options:
+                            if file_options:
+                                st.session_state[selectbox_key] = file_options[0]
+                        
+                        # Use selectbox with key - Streamlit handles state automatically
+                        # When selection changes, it triggers rerun automatically
+                        # Get the selected value directly from the widget (always returns current value)
+                        selected_file_page = st.selectbox(
+                            "Choose PDF File",
+                            file_options,
+                            key=selectbox_key
+                        )
+                        
+                        # Extract filename and page from selection
+                        if selected_file_page:
+                            try:
+                                # Parse "filename.pdf Page: X"
+                                parts = selected_file_page.rsplit(" Page: ", 1)
+                                if len(parts) == 2:
+                                    selected_file = parts[0]
+                                    selected_page = int(parts[1])
+                                    
+                                    # Get PDF content from session state
+                                    pdf_contents = st.session_state.get("uploaded_pdf_contents", {})
+                                    
+                                    # Try to find the file (check exact match and variations)
+                                    pdf_content = None
+                                    for stored_name, content in pdf_contents.items():
+                                        if stored_name == selected_file or selected_file in stored_name or stored_name in selected_file:
+                                            pdf_content = content
+                                            break
+                                    
+                                    if pdf_content:
+                                        # Find ALL matching sources for this file and page (ID-based)
+                                        # There can be multiple chunks on the same page that need to be highlighted
+                                        matching_sources = []
+                                        for source in sources:
+                                            source_file = source.get("source", "Unknown")
+                                            source_page = source.get("page", "Unknown")
+                                            try:
+                                                source_page_num = int(source_page) if isinstance(source_page, (int, str)) and str(source_page).isdigit() else None
+                                                if source_file == selected_file and source_page_num == selected_page:
+                                                    matching_sources.append(source)
+                                            except:
+                                                pass
+                                        
+                                        # Display PDF page with highlights
+                                        # Pass all matching sources so we can highlight all chunks on the page
+                                        self._display_pdf_page(pdf_content, selected_page, matching_sources)
+                                    else:
+                                        st.info(f"PDF content not found for: {selected_file}")
+                            except Exception as e:
+                                st.error(f"Error displaying PDF: {str(e)}")
+                    else:
+                        st.info("No PDF files available for preview")
+            elif insufficient_info:
+                # LLM indicated insufficient information
+                st.markdown("### ℹ️ Insufficient Information")
+                st.info(
+                    "The AI model indicated that the provided documents do not contain "
+                    "enough information to answer this question reliably."
+                )
+            else:
+                # No sources at all
+                st.markdown("### ℹ️ No Sources Available")
+                st.write(
+                    "No source information could be extracted for this response."
+                )
 
             # Action buttons below the response
             st.markdown("---")
@@ -728,8 +1197,7 @@ class ChatbotApp:
                     st.success("📋 Response copied to clipboard!", icon="✅")
 
             if assistant_message.timestamp:
-                st.caption(
-                    f"🕒 {assistant_message.timestamp.strftime('%H:%M:%S')}")
+                st.caption(f"🕒 {assistant_message.timestamp.strftime('%H:%M:%S')}")
 
     def _render_message(self, message: ChatMessage):
         """Render a single message (legacy method, now replaced by _render_conversation)"""
@@ -747,11 +1215,9 @@ class ChatbotApp:
                 if message.metadata:
                     with st.expander("ℹ️ Response Details"):
                         if message.response_time:
-                            st.write(
-                                f"⚡ Response Time: {message.response_time:.2f}s")
+                            st.write(f"⚡ Response Time: {message.response_time:.2f}s")
                         if message.model_provider:
-                            st.write(
-                                f"🤖 Model: {message.model_provider.value}")
+                            st.write(f"🤖 Model: {message.model_provider.value}")
                         if message.source_documents:
                             st.write(
                                 f"📚 Sources: {len(message.source_documents)} documents"
@@ -792,8 +1258,7 @@ class ChatbotApp:
                             break
 
                     # Clear edit state
-                    edit_assistant_id = st.session_state.get(
-                        "edit_assistant_id")
+                    edit_assistant_id = st.session_state.get("edit_assistant_id")
                     del st.session_state.edit_message_id
                     del st.session_state.edit_query
                     if "edit_assistant_id" in st.session_state:
@@ -803,8 +1268,7 @@ class ChatbotApp:
                     if edit_assistant_id:
                         st.session_state.replace_assistant_id = edit_assistant_id
 
-                    self._process_user_query(
-                        edited_query.strip(), is_edit=True)
+                    self._process_user_query(edited_query.strip(), is_edit=True)
                     return
 
                 if cancel_edit:
@@ -844,8 +1308,16 @@ class ChatbotApp:
         user_input = st.chat_input("Ask a question about your documents...")
 
         if user_input:
-            if not st.session_state.vector_store_initialized:
+            # Check DB mode - "current" mode can work without uploaded docs
+            db_mode = st.session_state.get("db_mode", "current")
+            if db_mode == "new" and not st.session_state.vector_store_initialized:
                 st.error("❌ Please upload and process documents first!")
+                return
+            elif db_mode == "current" and not st.session_state.llm_initialized:
+                st.error("❌ Please initialize the LLM first!")
+                return
+            elif db_mode == "current+new" and not st.session_state.llm_initialized:
+                st.error("❌ Please initialize the LLM first!")
                 return
 
             if not st.session_state.llm_initialized:
@@ -869,8 +1341,7 @@ class ChatbotApp:
         try:
             with st.spinner("🔧 Initializing LLM..."):
                 # Initialize embeddings for vector store
-                self.vector_store_manager.initialize_embeddings(
-                    model_provider, api_key)
+                self.vector_store_manager.initialize_embeddings(model_provider, api_key)
 
                 # Initialize LLM
                 self.llm_service.initialize_llm(model_provider, api_key)
@@ -880,8 +1351,19 @@ class ChatbotApp:
                     st.session_state.llm_initialized = True
                     st.session_state.current_model_provider = model_provider
                     st.session_state.api_key = api_key  # Store API key for later use
-                    st.success(
-                        f"✅ {model_provider} LLM initialized successfully!")
+
+                    # Ensure empty FAISS index exists for OpenAI (like Qwen)
+                    if model_provider == "OpenAI (API)":
+                        self._ensure_empty_faiss_index(model_provider, api_key)
+
+                    # Initialize PubMed databases after LLM is ready
+                    self._initialize_pubmed_databases(
+                        openai_api_key=(
+                            api_key if model_provider == "OpenAI (API)" else None
+                        )
+                    )
+
+                    st.success(f"✅ {model_provider} LLM initialized successfully!")
                     self.logger.info(f"LLM initialized: {model_provider}")
                 else:
                     if model_provider == "Local LLM (Qwen)":
@@ -908,8 +1390,7 @@ class ChatbotApp:
         try:
             # Check if LLM is initialized first
             if not st.session_state.get("llm_initialized", False):
-                st.error(
-                    "❌ Please initialize LLM first before processing documents!")
+                st.error("❌ Please initialize LLM first before processing documents!")
                 st.info(
                     "💡 Select a model provider, enter your API key, and click 'Initialize LLM'"
                 )
@@ -951,39 +1432,94 @@ class ChatbotApp:
                                 current_model_provider, api_key
                             )
                         else:
-                            st.error(
-                                "❌ API key not found. Please re-initialize LLM.")
+                            st.error("❌ API key not found. Please re-initialize LLM.")
                             return
                     except Exception as e:
-                        st.error(
-                            f"❌ Failed to initialize embeddings: {str(e)}")
+                        st.error(f"❌ Failed to initialize embeddings: {str(e)}")
                         return
 
-                # Update or create vector store
-                if st.session_state.vector_store_initialized:
-                    vector_info = self.vector_store_manager.update_vector_store(
-                        documents, all_chunks
+                # Handle different DB modes
+                db_mode = st.session_state.get("db_mode", "current")
+
+                if db_mode == "new" or db_mode == "current+new":
+                    # Check if there's an existing new vector store
+                    existing_new_vector_store = st.session_state.get(
+                        "new_vector_store", None
+                    ) or self.new_db_manager.get_new_vector_store(
+                        current_model_provider
                     )
-                    action = "updated"
+
+                    if existing_new_vector_store:
+                        # Add to existing new vector store instead of replacing it
+                        self.new_db_manager.add_to_new_vector_store(
+                            vector_store=existing_new_vector_store,
+                            documents=documents,
+                            chunks=all_chunks,
+                        )
+                        new_vector_store = existing_new_vector_store
+                        action = "added to new database"
+                    else:
+                        # Create new vector store for uploaded documents
+                        new_vector_store = self.new_db_manager.create_new_vector_store(
+                            documents=documents,
+                            chunks=all_chunks,
+                            embeddings=self.vector_store_manager.embeddings,
+                            provider_name=current_model_provider,
+                        )
+                        action = "created in new database"
+
+                    st.session_state.new_vector_store = new_vector_store
+                    vector_info = None  # New DB doesn't have metadata yet
                 else:
-                    vector_info = self.vector_store_manager.create_vector_store(
-                        documents, all_chunks
-                    )
-                    st.session_state.vector_store_initialized = True
-                    action = "created"
+                    # Update or create regular vector store
+                    if st.session_state.vector_store_initialized:
+                        vector_info = self.vector_store_manager.update_vector_store(
+                            documents, all_chunks
+                        )
+                        action = "updated"
+                    else:
+                        vector_info = self.vector_store_manager.create_vector_store(
+                            documents, all_chunks
+                        )
+                        st.session_state.vector_store_initialized = True
+                        action = "created"
 
                 # Update session state
                 st.session_state.documents.extend(documents)
 
+                # Store PDF content in session state for preview
+                if "uploaded_pdf_contents" not in st.session_state:
+                    st.session_state.uploaded_pdf_contents = {}
+                
+                for doc in documents:
+                    # Store PDF content (for DOCX files, content is already converted to PDF)
+                    if doc.file_type.value == "pdf" or doc.metadata.get("converted_from_docx", False):
+                        # Use document name as key, store PDF bytes
+                        st.session_state.uploaded_pdf_contents[doc.name] = doc.content
+
+                # If using new or current+new mode, mark as initialized
+                if db_mode in ["new", "current+new"]:
+                    st.session_state.vector_store_initialized = True
+
                 # Show success message
-                st.success(
-                    f"""
-                ✅ Successfully {action} knowledge base!
-                - 📄 Documents: {len(documents)}
-                - 🧩 Chunks: {len(all_chunks)}
-                - 💾 Total Size: {format_file_size(vector_info.index_size_bytes)}
-                """
-                )
+                if vector_info:
+                    st.success(
+                        f"""
+                    ✅ Successfully {action} knowledge base!
+                    - 📄 Documents: {len(documents)}
+                    - 🧩 Chunks: {len(all_chunks)}
+                    - 💾 Total Size: {format_file_size(vector_info.index_size_bytes)}
+                    """
+                    )
+                else:
+                    st.success(
+                        f"""
+                    ✅ Successfully {action}!
+                    - 📄 Documents: {len(documents)}
+                    - 🧩 Chunks: {len(all_chunks)}
+                    - 🗄️ Database Mode: {db_mode}
+                    """
+                    )
 
                 self.logger.info(
                     f"Processed {len(documents)} documents with {len(all_chunks)} chunks"
@@ -1057,8 +1593,16 @@ class ChatbotApp:
                         search_k = st.session_state.get("search_k", 5)
 
                         # Get model parameters
-                        temperature = st.session_state.get(
-                            "model_temperature", 0.7)
+                        temperature = st.session_state.get("model_temperature", 0.7)
+
+                        # Get new_vector_store from session state if available
+                        new_vector_store = st.session_state.get(
+                            "new_vector_store", None
+                        )
+
+                        # CRITICAL: Ensure db_mode is synced before search
+                        db_mode = st.session_state.get("db_mode", "current")
+                        self.vector_store_manager.set_db_mode(db_mode)
 
                         if current_model_provider == "OpenAI (API)":
                             search_result = (
@@ -1067,6 +1611,7 @@ class ChatbotApp:
                                     api_key,
                                     k=search_k,
                                     temperature=temperature,
+                                    new_vector_store=new_vector_store,
                                 )
                             )
                         elif current_model_provider == "Local LLM (Qwen)":
@@ -1077,11 +1622,11 @@ class ChatbotApp:
                                     api_key,
                                     k=search_k,
                                     temperature=temperature,
+                                    new_vector_store=new_vector_store,
                                 )
                             )
                         else:
-                            search_result = {
-                                "response": "Unsupported model provider"}
+                            search_result = {"response": "Unsupported model provider"}
 
                         if not search_result or "Error" in search_result.get(
                             "response", ""
@@ -1111,8 +1656,7 @@ class ChatbotApp:
                                 content=search_result.get(
                                     "response", "No response generated"
                                 ),
-                                model_provider=ModelProvider(
-                                    current_model_provider),
+                                model_provider=ModelProvider(current_model_provider),
                                 response_time=0.0,
                                 tokens_used=0,
                                 source_documents=[
@@ -1137,8 +1681,7 @@ class ChatbotApp:
                         )
 
                         # Display response immediately
-                        self._display_assistant_response(
-                            assistant_message, user_input)
+                        self._display_assistant_response(assistant_message, user_input)
             else:
                 # For replacement, process without chat context and rerun
                 with st.spinner("🤔 Regenerating..."):
@@ -1163,8 +1706,14 @@ class ChatbotApp:
                     search_k = st.session_state.get("search_k", 5)
 
                     # Get model parameters
-                    temperature = st.session_state.get(
-                        "model_temperature", 0.7)
+                    temperature = st.session_state.get("model_temperature", 0.7)
+
+                    # Get new_vector_store from session state if available
+                    new_vector_store = st.session_state.get("new_vector_store", None)
+
+                    # CRITICAL: Ensure db_mode is synced before search
+                    db_mode = st.session_state.get("db_mode", "current")
+                    self.vector_store_manager.set_db_mode(db_mode)
 
                     if current_model_provider == "OpenAI (API)":
                         search_result = (
@@ -1173,6 +1722,7 @@ class ChatbotApp:
                                 api_key,
                                 k=search_k,
                                 temperature=temperature,
+                                new_vector_store=new_vector_store,
                             )
                         )
                     elif current_model_provider == "Local LLM (Qwen)":
@@ -1183,11 +1733,11 @@ class ChatbotApp:
                                 api_key,
                                 k=search_k,
                                 temperature=temperature,
+                                new_vector_store=new_vector_store,
                             )
                         )
                     else:
-                        search_result = {
-                            "response": "Unsupported model provider"}
+                        search_result = {"response": "Unsupported model provider"}
 
                     if not search_result or "Error" in search_result.get(
                         "response", ""
@@ -1217,8 +1767,7 @@ class ChatbotApp:
                             content=search_result.get(
                                 "response", "No response generated"
                             ),
-                            model_provider=ModelProvider(
-                                current_model_provider),
+                            model_provider=ModelProvider(current_model_provider),
                             response_time=0.0,
                             tokens_used=0,
                             source_documents=[
@@ -1257,67 +1806,186 @@ class ChatbotApp:
         self, assistant_message: ChatMessage, user_query: str
     ):
         """Display assistant response with source information and action buttons"""
-        # Display response in main area
-        col1, col2 = st.columns([2, 1])
-
-        with col1:
-            st.write(assistant_message.content)
-
-        # Show source information in right column
-        with col2:
-            if assistant_message.metadata and assistant_message.metadata.get("sources"):
-                sources = assistant_message.metadata["sources"]
-
-                st.markdown("### 📊 Response Information")
-
-                # Model and source info
-                model_name = assistant_message.metadata.get("model", "Unknown")
-                source_count = assistant_message.metadata.get(
-                    "source_count", 0)
-                retrieval_method = assistant_message.metadata.get(
-                    "retrieval_method", "Unknown"
-                )
-
-                st.metric("Model", model_name)
-                st.metric("Sources Used", source_count)
-                st.caption(f"Method: {retrieval_method}")
-
-                # Expandable source details
-                with st.expander(f"📚 View {source_count} Sources", expanded=False):
-                    for i, source in enumerate(sources, 1):
-                        st.markdown(f"**Source {i}**")
-
-                        # Source file and page info
+        # Display response in main area (no columns)
+        # Format content: replace literal \n with actual line breaks (blank lines)
+        formatted_content = assistant_message.content.replace('\\n', '\n\n') if isinstance(assistant_message.content, str) else str(assistant_message.content)
+        st.markdown(formatted_content)
+        
+        # Create layout below response: metadata+context on left, PDF preview on right
+        if assistant_message.metadata and assistant_message.metadata.get("sources"):
+            sources = assistant_message.metadata["sources"]
+            
+            # Create two columns: left for metadata+context, right for PDF preview
+            col_metadata, col_pdf = st.columns([1.2, 1])
+            
+            with col_metadata:
+                # Metadata expander
+                with st.expander("📊 Metadata", expanded=False):
+                    # Create JSON array in the format shown in image
+                    source_json_array = []
+                    for source in sources:
                         source_file = source.get("source", "Unknown")
                         page = source.get("page", "Unknown")
-
-                        st.write(f"📄 **File:** {source_file}")
-                        st.write(f"📖 **Page:** {page}")
-
-                        # Content preview - show full content with larger height
-                        content = source.get("content", "No content available")
-                        st.text_area(
-                            f"Content Preview {i}",
-                            content,
-                            height=300,  # Increased height for better content viewing
-                            key=f"source_content_new_{assistant_message.id}_{i}",
-                            disabled=True,
+                        
+                        # Convert page to list if it's a single value
+                        if isinstance(page, (int, str)):
+                            page_numbers = [str(page)]
+                        elif isinstance(page, list):
+                            page_numbers = [str(p) for p in page]
+                        else:
+                            page_numbers = ["Unknown"]
+                        
+                        source_json = {
+                            "file_name": source_file,
+                            "page_numbers": page_numbers,
+                            "source_type": "internal"
+                        }
+                        source_json_array.append(source_json)
+                    
+                    # Display JSON with word wrap
+                    source_json_str = json.dumps(source_json_array, indent=2, ensure_ascii=False)
+                    # Use st.text_area with word wrap instead of st.code for better wrapping
+                    st.text_area(
+                        "Metadata JSON",
+                        source_json_str,
+                        height=200,
+                        key=f"metadata_json_new_{assistant_message.id}_{uuid.uuid4()}",
+                        disabled=True,
+                        label_visibility="collapsed"
+                    )
+                
+                # Context expander
+                with st.expander("📝 Context", expanded=False):
+                    # Create context JSON array with content from sources
+                    context_json_array = []
+                    for i, source in enumerate(sources, 1):
+                        source_file = source.get("source", "Unknown")
+                        page = source.get("page", "Unknown")
+                        content = source.get("content", "")
+                        
+                        # Format content: replace literal \n with actual line breaks
+                        if isinstance(content, str):
+                            # Replace literal \n (escaped newline) with actual newlines
+                            formatted_content = content.replace('\\n', '\n')
+                        else:
+                            formatted_content = str(content)
+                        
+                        context_json = {
+                            "source_index": i,
+                            "file_name": source_file,
+                            "page": str(page),
+                            "content": formatted_content
+                        }
+                        context_json_array.append(context_json)
+                    
+                    # Display context JSON with word wrap
+                    context_json_str = json.dumps(context_json_array, indent=2, ensure_ascii=False)
+                    # Replace escaped newlines (\\n) in JSON string with actual newlines (blank lines) for better readability
+                    # This makes the JSON more readable in the text area - each \n becomes a blank line
+                    context_json_str = context_json_str.replace('\\n', '\n\n')
+                    # Use st.text_area with word wrap instead of st.code for better wrapping
+                    st.text_area(
+                        "Context JSON",
+                        context_json_str,
+                        height=400,
+                        key=f"context_json_new_{assistant_message.id}_{uuid.uuid4()}",
+                        disabled=True,
+                        label_visibility="collapsed"
+                    )
+                
+                with col_pdf:
+                    st.markdown("### 📄 See PDF Documents")
+                    
+                    # Get unique files from sources
+                    unique_files = {}
+                    for source in sources:
+                        source_file = source.get("source", "Unknown")
+                        page = source.get("page", "Unknown")
+                        
+                        # Convert page to int if possible
+                        try:
+                            if isinstance(page, str) and page.isdigit():
+                                page_num = int(page)
+                            elif isinstance(page, int):
+                                page_num = page
+                            else:
+                                page_num = 1
+                        except:
+                            page_num = 1
+                        
+                        if source_file not in unique_files:
+                            unique_files[source_file] = []
+                        if page_num not in unique_files[source_file]:
+                            unique_files[source_file].append(page_num)
+                    
+                    # Create dropdown for file selection
+                    if unique_files:
+                        file_options = []
+                        for file_name, pages in unique_files.items():
+                            for page in sorted(pages):
+                                file_options.append(f"{file_name} Page: {page}")
+                        
+                        # Use Streamlit's built-in key mechanism to preserve selection
+                        selectbox_key = f"pdf_select_new_{assistant_message.id}"
+                        
+                        # Ensure current selection is valid, if not set to first option
+                        if selectbox_key not in st.session_state or st.session_state[selectbox_key] not in file_options:
+                            if file_options:
+                                st.session_state[selectbox_key] = file_options[0]
+                        
+                        # Use selectbox with key - Streamlit handles state automatically
+                        # When selection changes, it triggers rerun automatically
+                        # Get the selected value directly from the widget (always returns current value)
+                        selected_file_page = st.selectbox(
+                            "Choose PDF File",
+                            file_options,
+                            key=selectbox_key
                         )
-
-                        # Additional metadata
-                        metadata_info = source.get("metadata", {})
-                        if metadata_info:
-                            with st.expander(f"📋 Metadata {i}"):
-                                for key, value in metadata_info.items():
-                                    # Don't repeat already shown info
-                                    if key not in ["source", "page"]:
-                                        st.write(f"**{key.title()}:** {value}")
-
-                        st.divider()
-            else:
-                st.markdown("### ℹ️ No Sources Available")
-                st.write(
-                    "No source information could be extracted for this response.")
+                        
+                        # Extract filename and page from selection
+                        if selected_file_page:
+                            try:
+                                # Parse "filename.pdf Page: X"
+                                parts = selected_file_page.rsplit(" Page: ", 1)
+                                if len(parts) == 2:
+                                    selected_file = parts[0]
+                                    selected_page = int(parts[1])
+                                    
+                                    # Get PDF content from session state
+                                    pdf_contents = st.session_state.get("uploaded_pdf_contents", {})
+                                    
+                                    # Try to find the file (check exact match and variations)
+                                    pdf_content = None
+                                    for stored_name, content in pdf_contents.items():
+                                        if stored_name == selected_file or selected_file in stored_name or stored_name in selected_file:
+                                            pdf_content = content
+                                            break
+                                    
+                                    if pdf_content:
+                                        # Find ALL matching sources for this file and page (ID-based)
+                                        # There can be multiple chunks on the same page that need to be highlighted
+                                        matching_sources = []
+                                        for source in sources:
+                                            source_file = source.get("source", "Unknown")
+                                            source_page = source.get("page", "Unknown")
+                                            try:
+                                                source_page_num = int(source_page) if isinstance(source_page, (int, str)) and str(source_page).isdigit() else None
+                                                if source_file == selected_file and source_page_num == selected_page:
+                                                    matching_sources.append(source)
+                                            except:
+                                                pass
+                                        
+                                        # Display PDF page with highlights
+                                        # Pass all matching sources so we can highlight all chunks on the page
+                                        self._display_pdf_page(pdf_content, selected_page, matching_sources)
+                                    else:
+                                        st.info(f"PDF content not found for: {selected_file}")
+                            except Exception as e:
+                                st.error(f"Error displaying PDF: {str(e)}")
+                        else:
+                            st.info("No PDF files available for preview")
+        else:
+            st.info("No source information available")
 
         # Action buttons below the response (only show if not in edit mode)
         if "edit_message_id" not in st.session_state:
@@ -1356,6 +2024,366 @@ class ChatbotApp:
                         unsafe_allow_html=True,
                     )
                     st.success("✅ Response copied to clipboard!", icon="📋")
+
+    def _display_pdf_page(self, pdf_content: bytes, page_number: int, highlight_sources: Optional[List[Dict]] = None):
+        """
+        Display a specific page from a PDF document with optional text highlighting
+        
+        Args:
+            pdf_content: PDF file content as bytes
+            page_number: Page number to display (1-based)
+            highlight_sources: List of source dictionaries containing chunk information for highlighting.
+                             Each source can contain:
+                             - content: Text content to highlight
+                             - start_char_in_page: Start character position in page text
+                             - end_char_in_page: End character position in page text
+                             - chunk_id: Chunk ID for reference
+                             Can also be a single Dict for backward compatibility
+        """
+        try:
+            # Try to use PyMuPDF for highlighting if available
+            try:
+                import fitz  # PyMuPDF
+                
+                # Open PDF document
+                pdf_document = fitz.open(stream=pdf_content, filetype="pdf")
+                
+                # Check if page number is valid (1-based to 0-based conversion)
+                if page_number < 1 or page_number > len(pdf_document):
+                    st.warning(f"Page {page_number} not found. PDF has {len(pdf_document)} pages.")
+                    pdf_document.close()
+                    return
+                
+                # Get the specific page (convert to 0-based index)
+                page = pdf_document[page_number - 1]
+                
+                # Add highlights if highlight_sources is provided
+                if highlight_sources:
+                    # Normalize to list if single dict provided (backward compatibility)
+                    if isinstance(highlight_sources, dict):
+                        highlight_sources = [highlight_sources]
+                    
+                    # Extract page text once using PyMuPDF (same as chunk extraction)
+                    page_text = page.get_text()
+                    
+                    # Collect all text instances to highlight from all chunks
+                    all_text_instances = []
+                    
+                    # Process each source/chunk (ID-based highlighting)
+                    for highlight_source in highlight_sources:
+                        if not highlight_source:
+                            continue
+                        
+                        chunk_id = highlight_source.get("chunk_id", "")
+                        self.logger.debug(f"Processing chunk ID: {chunk_id} for highlighting")
+                        
+                        # Try to use position-based highlighting if available
+                        start_char_in_page = highlight_source.get("start_char_in_page")
+                        end_char_in_page = highlight_source.get("end_char_in_page")
+                        
+                        text_instances = []
+                        
+                        # Strategy: Use position-based extraction (PyMuPDF consistent)
+                        if start_char_in_page is not None and end_char_in_page is not None:
+                            try:
+                                # Use direct indexing since we're using PyMuPDF for both extraction and highlighting
+                                if len(page_text) >= end_char_in_page:
+                                    # Extract the exact text from the page using position
+                                    exact_text = page_text[start_char_in_page:end_char_in_page]
+                                    if exact_text.strip():
+                                        # Search for this exact text in the PDF
+                                        instances = page.search_for(exact_text.strip())
+                                        text_instances.extend(instances)
+                                        self.logger.debug(f"Chunk {chunk_id}: Position-based highlight pos {start_char_in_page}-{end_char_in_page}, {len(exact_text)} chars, found {len(instances)} instances")
+                                else:
+                                    # Page text length mismatch - try to find content in page text
+                                    content_text = highlight_source.get("content", "").strip()
+                                    if content_text:
+                                        # Find the content in the page text
+                                        content_pos = page_text.find(content_text[:100])  # Try first 100 chars
+                                        if content_pos >= 0:
+                                            # Found it, use the found position
+                                            end_pos = min(content_pos + len(content_text), len(page_text))
+                                            exact_text = page_text[content_pos:end_pos]
+                                            if exact_text.strip():
+                                                instances = page.search_for(exact_text.strip())
+                                                text_instances.extend(instances)
+                                                self.logger.debug(f"Chunk {chunk_id}: Content-based position found at pos {content_pos}, {len(instances)} instances")
+                            except Exception as pos_error:
+                                self.logger.debug(f"Chunk {chunk_id}: Position-based highlight failed: {str(pos_error)}, falling back to content")
+                        
+                        # Fallback: Use content-based highlighting
+                        if not text_instances:
+                            highlight_text = highlight_source.get("content", "")
+                            if highlight_text:
+                                try:
+                                    import re
+                                    # Clean and normalize the highlight text
+                                    highlight_text_clean = highlight_text.replace('\n', ' ').replace('\r', ' ')
+                                    highlight_text_clean = re.sub(r'\s+', ' ', highlight_text_clean).strip()
+                                    
+                                    # Strategy 1: Try to find the entire text first
+                                    instances = page.search_for(highlight_text_clean)
+                                    text_instances.extend(instances)
+                                    
+                                    # Strategy 2: If not found, split into sentences
+                                    if not text_instances:
+                                        sentences = re.split(r'[.!?]\s+', highlight_text_clean)
+                                        sentences = [s.strip() for s in sentences if len(s.strip()) > 5]
+                                        for sentence in sentences:
+                                            if len(sentence.strip()) > 5:
+                                                instances = page.search_for(sentence.strip())
+                                                text_instances.extend(instances)
+                                    
+                                    # Strategy 3: Try smaller chunks if needed
+                                    if not text_instances:
+                                        words = highlight_text_clean.split()
+                                        chunk_size = 15
+                                        for i in range(0, len(words), chunk_size):
+                                            chunk = ' '.join(words[i:i+chunk_size])
+                                            if len(chunk.strip()) > 5:
+                                                instances = page.search_for(chunk.strip())
+                                                text_instances.extend(instances)
+                                    
+                                except Exception as highlight_error:
+                                    self.logger.warning(f"Chunk {chunk_id}: Could not highlight text: {str(highlight_error)}")
+                        
+                        # Add found instances to the collection (avoid duplicates)
+                        for inst in text_instances:
+                            # Check if this instance overlaps significantly with existing ones
+                            is_duplicate = False
+                            for existing in all_text_instances:
+                                # Check if rectangles overlap significantly (within 10 pixels)
+                                if (abs(inst.x0 - existing.x0) < 10 and 
+                                    abs(inst.y0 - existing.y0) < 10 and
+                                    abs(inst.x1 - existing.x1) < 10 and
+                                    abs(inst.y1 - existing.y1) < 10):
+                                    is_duplicate = True
+                                    break
+                            if not is_duplicate:
+                                all_text_instances.append(inst)
+                    
+                    # Highlight all found instances with yellow color
+                    for inst in all_text_instances:
+                        try:
+                            # Add highlight annotation (yellow color)
+                            highlight = page.add_highlight_annot(inst)
+                            highlight.set_colors(stroke=[1, 1, 0])  # Yellow RGB
+                            highlight.update()
+                        except Exception as annot_error:
+                            self.logger.debug(f"Could not add highlight annotation: {str(annot_error)}")
+                    
+                    if all_text_instances:
+                        self.logger.debug(f"Highlighted {len(all_text_instances)} text instances from {len(highlight_sources)} chunks on page {page_number}")
+                    else:
+                        self.logger.debug(f"No text instances found to highlight on page {page_number} from {len(highlight_sources)} chunks")
+                
+                # Convert highlighted page to image
+                try:
+                    from pdf2image import convert_from_bytes
+                    from PIL import Image
+                    
+                    # Create a new PDF with just this highlighted page before closing
+                    new_pdf = fitz.open()
+                    new_pdf.insert_pdf(pdf_document, from_page=page_number - 1, to_page=page_number - 1)
+                    
+                    # Get PDF bytes from the new document
+                    page_pdf_bytes = new_pdf.tobytes()
+                    
+                    # Close both documents
+                    new_pdf.close()
+                    pdf_document.close()
+                    
+                    # Convert to image
+                    images = convert_from_bytes(page_pdf_bytes, first_page=1, last_page=1, dpi=150)
+                    
+                    if images:
+                        # Display the highlighted image
+                        st.image(images[0], use_container_width=True)
+                    else:
+                        raise Exception("Image conversion failed")
+                
+                except ImportError:
+                    # Fallback: Save highlighted page as PDF and display in iframe
+                    # Create a new PDF with just this page
+                    new_pdf = fitz.open()
+                    new_pdf.insert_pdf(pdf_document, from_page=page_number - 1, to_page=page_number - 1)
+                    
+                    # Get PDF bytes before closing
+                    page_pdf_bytes = new_pdf.tobytes()
+                    
+                    # Close documents
+                    new_pdf.close()
+                    pdf_document.close()
+                    
+                    # Encode to base64
+                    pdf_base64 = base64.b64encode(page_pdf_bytes).decode('utf-8')
+                    
+                    # Display in iframe
+                    pdf_display = f'''
+                    <iframe src="data:application/pdf;base64,{pdf_base64}" 
+                            width="100%" 
+                            height="600px" 
+                            style="border: 1px solid #ccc;">
+                    </iframe>
+                    '''
+                    st.markdown(pdf_display, unsafe_allow_html=True)
+                
+                except Exception as img_error:
+                    # Fallback to base64 if image conversion fails
+                    # Check if document is still open
+                    if not pdf_document.is_closed:
+                        try:
+                            new_pdf = fitz.open()
+                            new_pdf.insert_pdf(pdf_document, from_page=page_number - 1, to_page=page_number - 1)
+                            page_pdf_bytes = new_pdf.tobytes()
+                            new_pdf.close()
+                            pdf_document.close()
+                            
+                            pdf_base64 = base64.b64encode(page_pdf_bytes).decode('utf-8')
+                            pdf_display = f'''
+                            <iframe src="data:application/pdf;base64,{pdf_base64}" 
+                                    width="100%" 
+                                    height="600px" 
+                                    style="border: 1px solid #ccc;">
+                            </iframe>
+                            '''
+                            st.markdown(pdf_display, unsafe_allow_html=True)
+                        except Exception as fallback_error:
+                            if not pdf_document.is_closed:
+                                pdf_document.close()
+                            st.error(f"Error displaying PDF: {str(fallback_error)}")
+                            self.logger.error(f"PDF display error: {str(fallback_error)}\n{traceback.format_exc()}")
+                    else:
+                        # Document already closed, try to recreate from original content
+                        try:
+                            pdf_document_reopen = fitz.open(stream=pdf_content, filetype="pdf")
+                            page_reopen = pdf_document_reopen[page_number - 1]
+                            
+                            # Try to highlight again if needed (use comprehensive strategy)
+                            # Note: highlight_text is no longer available in this scope, use highlight_sources instead
+                            if highlight_sources:
+                                # Re-process highlights using the same logic as above
+                                # Normalize to list if single dict provided
+                                if isinstance(highlight_sources, dict):
+                                    highlight_sources = [highlight_sources]
+                                
+                                page_text_reopen = page_reopen.get_text()
+                                all_text_instances_reopen = []
+                                
+                                for highlight_source in highlight_sources:
+                                    if not highlight_source:
+                                        continue
+                                    
+                                    chunk_id = highlight_source.get("chunk_id", "")
+                                    start_char_in_page = highlight_source.get("start_char_in_page")
+                                    end_char_in_page = highlight_source.get("end_char_in_page")
+                                    text_instances_reopen = []
+                                    
+                                    # Use position-based highlighting
+                                    if start_char_in_page is not None and end_char_in_page is not None and len(page_text_reopen) >= end_char_in_page:
+                                        try:
+                                            exact_text = page_text_reopen[start_char_in_page:end_char_in_page]
+                                            if exact_text.strip():
+                                                instances = page_reopen.search_for(exact_text.strip())
+                                                text_instances_reopen.extend(instances)
+                                        except:
+                                            pass
+                                    
+                                    # Fallback to content-based
+                                    if not text_instances_reopen:
+                                        highlight_text = highlight_source.get("content", "")
+                                        if highlight_text:
+                                            try:
+                                                import re
+                                                highlight_text_clean = highlight_text.replace('\n', ' ').replace('\r', ' ')
+                                                highlight_text_clean = re.sub(r'\s+', ' ', highlight_text_clean).strip()
+                                                instances = page_reopen.search_for(highlight_text_clean)
+                                                text_instances_reopen.extend(instances)
+                                            except:
+                                                pass
+                                    
+                                    # Add to collection
+                                    for inst in text_instances_reopen:
+                                        is_duplicate = False
+                                        for existing in all_text_instances_reopen:
+                                            if (abs(inst.x0 - existing.x0) < 10 and 
+                                                abs(inst.y0 - existing.y0) < 10 and
+                                                abs(inst.x1 - existing.x1) < 10 and
+                                                abs(inst.y1 - existing.y1) < 10):
+                                                is_duplicate = True
+                                                break
+                                        if not is_duplicate:
+                                            all_text_instances_reopen.append(inst)
+                                
+                                # Apply highlights
+                                for inst in all_text_instances_reopen:
+                                    try:
+                                        highlight = page_reopen.add_highlight_annot(inst)
+                                        highlight.set_colors(stroke=[1, 1, 0])
+                                        highlight.update()
+                                    except:
+                                        pass
+                            
+                            # Create PDF and display
+                            new_pdf = fitz.open()
+                            new_pdf.insert_pdf(pdf_document_reopen, from_page=page_number - 1, to_page=page_number - 1)
+                            page_pdf_bytes = new_pdf.tobytes()
+                            new_pdf.close()
+                            pdf_document_reopen.close()
+                            
+                            pdf_base64 = base64.b64encode(page_pdf_bytes).decode('utf-8')
+                            pdf_display = f'''
+                            <iframe src="data:application/pdf;base64,{pdf_base64}" 
+                                    width="100%" 
+                                    height="600px" 
+                                    style="border: 1px solid #ccc;">
+                            </iframe>
+                            '''
+                            st.markdown(pdf_display, unsafe_allow_html=True)
+                        except Exception as reopen_error:
+                            st.error(f"Error displaying PDF: {str(reopen_error)}")
+                            self.logger.error(f"PDF display error: {str(reopen_error)}\n{traceback.format_exc()}")
+            
+            except ImportError:
+                # PyMuPDF not available, use PyPDF2 fallback (no highlighting)
+                pdf_file = io.BytesIO(pdf_content)
+                pdf_reader = PyPDF2.PdfReader(pdf_file)
+                
+                if page_number < 1 or page_number > len(pdf_reader.pages):
+                    st.warning(f"Page {page_number} not found. PDF has {len(pdf_reader.pages)} pages.")
+                    return
+                
+                page = pdf_reader.pages[page_number - 1]
+                
+                # Try pdf2image
+                try:
+                    from pdf2image import convert_from_bytes
+                    images = convert_from_bytes(pdf_content, first_page=page_number, last_page=page_number, dpi=150)
+                    if images:
+                        st.image(images[0], use_container_width=True)
+                    else:
+                        raise Exception("Image conversion failed")
+                except (ImportError, Exception):
+                    # Fallback to base64
+                    pdf_writer = PyPDF2.PdfWriter()
+                    pdf_writer.add_page(page)
+                    output_pdf = io.BytesIO()
+                    pdf_writer.write(output_pdf)
+                    output_pdf.seek(0)
+                    pdf_base64 = base64.b64encode(output_pdf.read()).decode('utf-8')
+                    pdf_display = f'''
+                    <iframe src="data:application/pdf;base64,{pdf_base64}" 
+                            width="100%" 
+                            height="600px" 
+                            style="border: 1px solid #ccc;">
+                    </iframe>
+                    '''
+                    st.markdown(pdf_display, unsafe_allow_html=True)
+            
+        except Exception as e:
+            st.error(f"Error displaying PDF page: {str(e)}")
+            self.logger.error(f"PDF display error: {str(e)}\n{traceback.format_exc()}")
 
     def _clear_current_conversation(self):
         """Clear current conversation"""
@@ -1422,21 +2450,41 @@ class ChatbotApp:
             st.error(f"❌ Error clearing logs: {str(e)}")
 
     def _delete_chunks(self):
-        """Delete all vector store chunks and clear system info"""
+        """Delete only new_db chunks and clear related system info"""
         try:
-            # Clear vector store
-            self.vector_store_manager.clear_vector_store()
+            # Clear new_db vector stores
+            current_model_provider = st.session_state.get(
+                "current_model_provider", None
+            )
+            if current_model_provider:
+                # Clear for the current provider
+                self.new_db_manager.clear_new_vector_store(current_model_provider)
+            else:
+                # Clear all new vector stores if no provider is set
+                self.new_db_manager.clear_new_vector_store()
 
-            # Clear documents from session state
+            # Clear new_vector_store from session state
+            if "new_vector_store" in st.session_state:
+                st.session_state.new_vector_store = None
+
+            # Clear only new_db documents from session state
+            # Keep documents that were not in new_db (if any exist)
+            # For simplicity, we'll clear all documents since new_db documents are temporary
+            # If you want to preserve current_db documents, you'd need to track which documents belong to which DB
             st.session_state.documents = []
 
-            # Clear conversation to reset system info
-            st.session_state.current_conversation = ConversationSession(
-                id=str(uuid.uuid4()), title="New Conversation"
-            )
+            # Reset vector_store_initialized flag only if we're in new_db mode
+            db_mode = st.session_state.get("db_mode", "current")
+            if db_mode in ["new", "current+new"]:
+                # Only reset if there are no more new_db chunks
+                if not st.session_state.get("new_vector_store"):
+                    # If in "new" mode and we cleared all, reset the flag
+                    if db_mode == "new":
+                        st.session_state.vector_store_initialized = False
 
             st.success(
-                "✅ All chunks deleted and system info cleared successfully!")
+                "✅ New DB chunks deleted successfully! Current DB remains intact."
+            )
 
             # Force rerun to update UI
             st.rerun()

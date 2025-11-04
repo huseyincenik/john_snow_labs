@@ -4,6 +4,7 @@ Vector store service using FAISS for RAG QA Chatbot Application
 
 import os
 import pickle
+import re
 from pathlib import Path
 from typing import List, Optional, Tuple, Dict, Any
 import numpy as np
@@ -13,7 +14,7 @@ from langchain_ollama import OllamaEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.schema import Document as LangchainDocument
 
-from ..config import config
+from ..config import config, CURRENT_DB_OPENAI_DIR, CURRENT_DB_QWEN_DIR
 from ..models import Document, DocumentChunk, VectorStoreInfo, ModelProvider
 from ..utils import app_logger, measure_execution_time, retry_on_exception, cached
 from .cache_manager import CacheManager
@@ -29,6 +30,15 @@ class VectorStoreManager:
         self.embeddings = None
         self.current_model_provider = None
         self.document_metadata: Dict[str, Dict] = {}
+        self.use_current_db = (
+            False  # Flag for using current_db instead of regular vectorstore
+        )
+        self.db_mode = "current"  # "current", "new", "current+new"
+
+        # Cached document count (to avoid recalculating on every question)
+        # This should only be updated when documents are actually added
+        # CRITICAL: Restore from Streamlit session state if available (to persist across reruns)
+        self._cached_total_documents: Optional[int] = self._restore_cache_from_session()
 
         # Initialize cache manager
         self.cache_manager = CacheManager()
@@ -55,6 +65,72 @@ class VectorStoreManager:
 
         self.logger.info(f"Vector store index name: {self.index_path}")
         self.logger.info(f"Vector store directory: {self.vectorstore_dir}")
+
+        # Log restored cache if available
+        if self._cached_total_documents is not None:
+            self.logger.info(
+                f"Restored cached total documents count from session: {self._cached_total_documents}"
+            )
+
+    def _restore_cache_from_session(self) -> Optional[int]:
+        """
+        Restore cached document count from Streamlit session state.
+        This ensures cache persists across Streamlit reruns.
+
+        Returns:
+            Cached document count if available, None otherwise
+        """
+        try:
+            # Try to import streamlit (only if available, won't fail if not in Streamlit context)
+            import streamlit as st
+
+            # Get cache from session state
+            cache_key = "vector_store_cached_total_documents"
+            if cache_key in st.session_state:
+                cached_value = st.session_state[cache_key]
+                if (
+                    cached_value is not None
+                    and isinstance(cached_value, int)
+                    and cached_value > 0
+                ):
+                    # Use app_logger directly since self.logger not yet initialized
+                    app_logger.debug(
+                        f"Restored cached total documents from session state: {cached_value}"
+                    )
+                    return cached_value
+        except (ImportError, AttributeError, RuntimeError):
+            # Not in Streamlit context or session state not available
+            # This is OK, just return None
+            pass
+
+        return None
+
+    def _save_cache_to_session(self, value: Optional[int]) -> None:
+        """
+        Save cached document count to Streamlit session state.
+        This ensures cache persists across Streamlit reruns.
+
+        Args:
+            value: Document count to cache
+        """
+        try:
+            # Try to import streamlit (only if available)
+            import streamlit as st
+
+            # Save cache to session state
+            cache_key = "vector_store_cached_total_documents"
+            if value is not None and value > 0:
+                st.session_state[cache_key] = value
+                self.logger.debug(
+                    f"Saved cached total documents to session state: {value}"
+                )
+            elif cache_key in st.session_state:
+                # Clear cache if value is None or 0
+                del st.session_state[cache_key]
+        except (ImportError, AttributeError, RuntimeError):
+            # Not in Streamlit context or session state not available
+            # This is OK, just skip saving
+            pass
 
     def _convert_distance_to_similarity(self, distance_score: float) -> float:
         """
@@ -129,6 +205,10 @@ class VectorStoreManager:
                 self.embeddings = OpenAIEmbeddings(
                     model=config.model.openai_embedding_model, openai_api_key=api_key
                 )
+                # Log the embedding model being used for debugging
+                self.logger.info(
+                    f"Initialized OpenAI embeddings with model: {config.model.openai_embedding_model}"
+                )
             elif model_provider == "Local LLM (Qwen)":
                 # For local LLM, use Ollama embeddings
                 self.embeddings = OllamaEmbeddings(
@@ -139,9 +219,11 @@ class VectorStoreManager:
                     # Increase context window for embeddings (default 512 is too small)
                     num_ctx=2048,
                 )
+                self.logger.info(
+                    f"Initialized Qwen embeddings with model: {config.model.local_embedding_model}"
+                )
             else:
-                raise ValueError(
-                    f"Unsupported model provider: {model_provider}")
+                raise ValueError(f"Unsupported model provider: {model_provider}")
 
             self.current_model_provider = model_provider
             self.logger.info(f"Initialized embeddings for {model_provider}")
@@ -182,8 +264,7 @@ class VectorStoreManager:
                 texts.append(chunk.content)
 
                 # Find corresponding document
-                doc = next((d for d in documents if d.id ==
-                           chunk.document_id), None)
+                doc = next((d for d in documents if d.id == chunk.document_id), None)
                 doc_name = doc.name if doc else "Unknown"
 
                 metadata = {
@@ -232,8 +313,8 @@ class VectorStoreManager:
 
                     # Add remaining batches
                     for i in range(batch_size, len(texts), batch_size):
-                        batch_texts = texts[i: i + batch_size]
-                        batch_metas = metadatas[i: i + batch_size]
+                        batch_texts = texts[i : i + batch_size]
+                        batch_metas = metadatas[i : i + batch_size]
 
                         self.logger.info(
                             f"Processing batch {i//batch_size + 1}/{(len(texts) + batch_size - 1)//batch_size}"
@@ -248,10 +329,22 @@ class VectorStoreManager:
                 # Store document metadata
                 self._save_document_metadata(documents)
 
+                # For current_db mode, calculate and cache unique pubmed_id count
+                total_docs = len(documents)
+                if self.db_mode == "current" and self.vector_store:
+                    unique_pubmed_count = self._count_unique_pubmed_ids()
+                    if unique_pubmed_count > 0:
+                        self._cached_total_documents = unique_pubmed_count
+                        self._save_cache_to_session(unique_pubmed_count)
+                        total_docs = unique_pubmed_count
+                        self.logger.info(
+                            f"Cached total documents count after creating store: {total_docs}"
+                        )
+
                 # Create store info
                 store_info = VectorStoreInfo(
                     index_path=self.index_path,
-                    total_documents=len(documents),
+                    total_documents=total_docs,
                     total_chunks=len(chunks),
                     embedding_model=self._get_embedding_model_name(),
                     index_size_bytes=self._get_index_size(),
@@ -341,6 +434,17 @@ class VectorStoreManager:
                 # Get updated info
                 total_docs, total_chunks = self._get_store_stats()
 
+                # For current_db mode, recalculate and cache unique pubmed_id count
+                if self.db_mode == "current" and self.vector_store:
+                    unique_pubmed_count = self._count_unique_pubmed_ids()
+                    if unique_pubmed_count > 0:
+                        self._cached_total_documents = unique_pubmed_count
+                        self._save_cache_to_session(unique_pubmed_count)
+                        total_docs = unique_pubmed_count
+                        self.logger.info(
+                            f"Updated cached total documents count after adding documents: {total_docs}"
+                        )
+
                 store_info = VectorStoreInfo(
                     index_path=self.index_path,
                     total_documents=total_docs,
@@ -369,6 +473,7 @@ class VectorStoreManager:
         k: int = 5,
         temperature: float = None,
         max_tokens: int = None,
+        new_vector_store: Optional[FAISS] = None,
     ) -> Dict[str, Any]:
         """
         Search documents using OpenAI approach with advanced retrieval techniques
@@ -384,29 +489,225 @@ class VectorStoreManager:
             k: Number of documents to retrieve
             temperature: LLM temperature
             max_tokens: Maximum tokens for LLM response
+            new_vector_store: Optional new vector store for "new" or "current+new" modes
 
         Returns:
             Dictionary with response, sources, and metadata
         """
         # Check cache first
-        cached_result = self.cache_manager.get(
-            query, k=k
-        )
+        cached_result = self.cache_manager.get(query, k=k)
         if cached_result:
-            self.logger.info(
-                f"Returning cached result for query: '{query[:50]}...'")
+            self.logger.info(f"Returning cached result for query: '{query[:50]}...'")
             return cached_result
 
-        if not self.vector_store:
-            self._load_vector_store()
+        # Determine which vector store(s) to use based on db_mode
+        current_db_vector_store = None
+        new_db_vector_store = new_vector_store
 
-        if not self.vector_store:
-            self.logger.warning("No vector store available for search")
-            return {
-                "response": "No documents found to search.",
-                "sources": [],
-                "metadata": {"confidence": 0.0, "source_count": 0},
-            }
+        # CRITICAL: Only load current_db if NOT in "new" mode
+        # In "new" mode, we should NEVER touch current_db
+        if self.db_mode in ["current", "current+new"]:
+            if not self.vector_store:
+                # Load from current_db if in current mode
+                # Preserve cached document count when loading
+                current_db_path = self._get_current_db_path()
+                if current_db_path:
+                    self._load_vector_store(custom_path=current_db_path)
+                else:
+                    self._load_vector_store()
+            current_db_vector_store = self.vector_store
+
+            # CRITICAL: Ensure embeddings are set on the vector store after loading
+            # This is essential for similarity search to work correctly
+            if current_db_vector_store and self.embeddings:
+                if (
+                    not hasattr(current_db_vector_store, "embeddings")
+                    or current_db_vector_store.embeddings is None
+                ):
+                    current_db_vector_store.embeddings = self.embeddings
+                    self.logger.info("Set embeddings on vector store after loading")
+                elif current_db_vector_store.embeddings != self.embeddings:
+                    # Embeddings exist but are different - update them
+                    self.logger.warning(
+                        "Vector store embeddings differ from current embeddings, updating..."
+                    )
+                    current_db_vector_store.embeddings = self.embeddings
+        else:
+            # Explicitly clear current_db_vector_store for "new" mode
+            # This ensures we never accidentally use current_db
+            current_db_vector_store = None
+            self.vector_store = None
+            self.logger.info("Using new_db mode - current_db explicitly excluded")
+
+        # Determine which vector store to use based on mode
+        if self.db_mode == "new":
+            # Use only new_db - NEVER use current_db
+            if not new_db_vector_store:
+                self.logger.warning("No new vector store available for search")
+                return {
+                    "response": "No documents found to search in new database.",
+                    "sources": [],
+                    "metadata": {"confidence": 0.0, "source_count": 0},
+                }
+            vector_store_to_use = new_db_vector_store
+            self.logger.info("Using new_db for search (current_db excluded)")
+        elif self.db_mode == "current+new":
+            # Need to merge both stores
+            # IMPORTANT: Merging should only happen in Docker, not on local filesystem
+            # Check if we're in Docker by looking at environment or path
+            import os
+
+            is_docker = (
+                os.path.exists("/.dockerenv")
+                or os.environ.get("DOCKER_CONTAINER") == "true"
+            )
+
+            if not is_docker:
+                self.logger.warning(
+                    "current+new mode requires Docker environment. "
+                    "Merging will be done in Docker only to protect current_db on local filesystem."
+                )
+                # If not in Docker, use only new_db to avoid modifying local current_db
+                if new_db_vector_store:
+                    vector_store_to_use = new_db_vector_store
+                    self.logger.info(
+                        "Using new_db only (not in Docker, protecting local current_db)"
+                    )
+                elif current_db_vector_store:
+                    vector_store_to_use = current_db_vector_store
+                    self.logger.info(
+                        "Using current_db only (new_db not available, not in Docker)"
+                    )
+                else:
+                    self.logger.warning("No vector stores available")
+                    return {
+                        "response": "No documents found to search.",
+                        "sources": [],
+                        "metadata": {"confidence": 0.0, "source_count": 0},
+                    }
+            elif not current_db_vector_store and not new_db_vector_store:
+                self.logger.warning(
+                    "No vector stores available for search (both current and new are empty)"
+                )
+                return {
+                    "response": "No documents found to search.",
+                    "sources": [],
+                    "metadata": {"confidence": 0.0, "source_count": 0},
+                }
+            # Merge stores if both exist (only in Docker)
+            elif current_db_vector_store and new_db_vector_store:
+                # Merge the two stores (Docker environment)
+                self.logger.info(
+                    "Merging current_db and new_db for search (Docker environment)"
+                )
+                try:
+                    # Merge FAISS stores by extracting all documents and creating a new merged store
+                    # This approach is simpler but requires re-embedding (acceptable for merged searches)
+                    try:
+                        # Extract all documents from both stores
+                        # FAISS docstore contains LangchainDocument objects with page_content and metadata
+                        current_docs = []
+                        if (
+                            hasattr(current_db_vector_store, "docstore")
+                            and current_db_vector_store.docstore
+                        ):
+                            if hasattr(current_db_vector_store.docstore, "_dict"):
+                                current_docs = list(
+                                    current_db_vector_store.docstore._dict.values()
+                                )
+
+                        new_docs = []
+                        if (
+                            hasattr(new_db_vector_store, "docstore")
+                            and new_db_vector_store.docstore
+                        ):
+                            if hasattr(new_db_vector_store.docstore, "_dict"):
+                                new_docs = list(
+                                    new_db_vector_store.docstore._dict.values()
+                                )
+
+                        # Get embeddings and create new merged store
+                        # Extract texts and metadatas from LangchainDocument objects
+                        all_texts = []
+                        all_metadatas = []
+                        for doc in current_docs:
+                            # LangchainDocument has page_content and metadata attributes
+                            if hasattr(doc, "page_content"):
+                                all_texts.append(doc.page_content)
+                            else:
+                                self.logger.warning(
+                                    f"Document missing page_content: {type(doc)}"
+                                )
+                            if hasattr(doc, "metadata"):
+                                all_metadatas.append(doc.metadata)
+                            else:
+                                all_metadatas.append({})
+
+                        for doc in new_docs:
+                            if hasattr(doc, "page_content"):
+                                all_texts.append(doc.page_content)
+                            else:
+                                self.logger.warning(
+                                    f"Document missing page_content: {type(doc)}"
+                                )
+                            if hasattr(doc, "metadata"):
+                                all_metadatas.append(doc.metadata)
+                            else:
+                                all_metadatas.append({})
+
+                        # Ensure texts and metadatas have same length
+                        if len(all_texts) != len(all_metadatas):
+                            self.logger.warning(
+                                f"Mismatch: {len(all_texts)} texts vs {len(all_metadatas)} metadatas"
+                            )
+                            # Pad with empty dicts if needed
+                            while len(all_metadatas) < len(all_texts):
+                                all_metadatas.append({})
+
+                        # Create merged store from all documents
+                        if all_texts:
+                            vector_store_to_use = FAISS.from_texts(
+                                texts=all_texts,
+                                embedding=self.embeddings,
+                                metadatas=all_metadatas,
+                                normalize_L2=True,
+                            )
+                            self.logger.info(
+                                f"Successfully created merged store with {len(all_texts)} documents (current: {len(current_docs)}, new: {len(new_docs)})"
+                            )
+                        else:
+                            raise ValueError("No documents to merge")
+                    except Exception as merge_error:
+                        self.logger.error(
+                            f"Failed to create merged store from documents: {merge_error}"
+                        )
+                        # Fallback: use current_db only
+                        vector_store_to_use = current_db_vector_store
+                        self.logger.warning(
+                            "Using current_db only due to merge failure"
+                        )
+                except Exception as e:
+                    self.logger.error(f"Failed to merge stores: {e}")
+                    # Last resort: use only current_db
+                    vector_store_to_use = current_db_vector_store
+                    self.logger.warning("Using current_db only due to merge failure")
+            elif current_db_vector_store:
+                vector_store_to_use = current_db_vector_store
+                self.logger.info("Using current_db only (new_db not available)")
+            else:
+                vector_store_to_use = new_db_vector_store
+                self.logger.info("Using new_db only (current_db not available)")
+        else:
+            # "current" mode - use only current_db
+            if not current_db_vector_store:
+                self.logger.warning("No vector store available for search")
+                return {
+                    "response": "No documents found to search.",
+                    "sources": [],
+                    "metadata": {"confidence": 0.0, "source_count": 0},
+                }
+            vector_store_to_use = current_db_vector_store
+            self.logger.info("Using current_db for search")
 
         try:
             # Initialize OpenAI LLM
@@ -491,14 +792,51 @@ QUESTION: {question}
 ANSWER:"""
 
             qa_prompt = PromptTemplate(
-                template=qa_prompt_template, input_variables=[
-                    "context", "question"]
+                template=qa_prompt_template, input_variables=["context", "question"]
             )
+
+            # Step 1: First verify basic similarity search works
+            # This helps debug embedding issues
+            try:
+                test_results = vector_store_to_use.similarity_search_with_score(
+                    query, k=min(5, k)
+                )
+                self.logger.info(
+                    f"Basic similarity search test returned {len(test_results)} documents (query: '{query[:50]}...')"
+                )
+                if test_results:
+                    self.logger.info(
+                        f"First result similarity score: {test_results[0][1]:.4f}"
+                    )
+                else:
+                    self.logger.warning(
+                        "WARNING: Basic similarity search returned 0 results - this suggests an embedding mismatch!"
+                    )
+                    # Log embedding info for debugging
+                    if (
+                        hasattr(vector_store_to_use, "embeddings")
+                        and vector_store_to_use.embeddings
+                    ):
+                        embedding_model = getattr(
+                            vector_store_to_use.embeddings, "model", "unknown"
+                        )
+                        self.logger.warning(
+                            f"Vector store embeddings model: {embedding_model}"
+                        )
+                    if hasattr(vector_store_to_use, "index") and hasattr(
+                        vector_store_to_use.index, "ntotal"
+                    ):
+                        self.logger.warning(
+                            f"Vector store index contains {vector_store_to_use.index.ntotal} vectors"
+                        )
+            except Exception as e:
+                self.logger.error(f"Basic similarity search test failed: {str(e)}")
 
             # Step 1: Create base retriever with MMR for diversity and better recall
             # MMR (Maximal Marginal Relevance) balances relevance and diversity
             # More aggressive MMR settings for better coverage
-            base_retriever = self.vector_store.as_retriever(
+            # Use the determined vector store (could be current_db, new_db, or merged)
+            base_retriever = vector_store_to_use.as_retriever(
                 search_type="mmr",  # Use MMR instead of pure similarity
                 search_kwargs={
                     "k": k * 4,  # Get 4x more candidates for comprehensive coverage
@@ -566,7 +904,7 @@ ANSWER:"""
                 self.logger.info(
                     f"Calculating similarity scores using original query: '{query[:50]}...'"
                 )
-                all_docs_with_scores = self.vector_store.similarity_search_with_score(
+                all_docs_with_scores = vector_store_to_use.similarity_search_with_score(
                     query, k=k * 3  # Get enough candidates to find all compressed docs
                 )
 
@@ -582,8 +920,7 @@ ANSWER:"""
                         similarity_score = self._convert_distance_to_similarity(
                             distance_score
                         )
-                        doc_scores_map[chunk_id] = (
-                            distance_score, similarity_score)
+                        doc_scores_map[chunk_id] = (distance_score, similarity_score)
                         self.logger.debug(
                             f"  Original doc chunk_id={chunk_id}: distance={distance_score:.4f}, accuracy={similarity_score:.2%}"
                         )
@@ -616,9 +953,7 @@ ANSWER:"""
                     )
                     chain_sources = chain_sources[:k]
 
-            self.logger.info(
-                f"Final source count: {len(chain_sources)} (k={k})"
-            )
+            self.logger.info(f"Final source count: {len(chain_sources)} (k={k})")
 
             if not chain_sources:
                 return {
@@ -665,12 +1000,145 @@ ANSWER:"""
 
                 total_accuracy += accuracy_score
 
+                # Extract metadata fields for structured JSON response
+                doc_metadata = doc.metadata
+
+                # Get document_id - use fallback strategy if missing
+                document_id = doc_metadata.get("document_id", "")
+
+                # If document_id is missing, try to generate it from available metadata
+                # This is important for PubMed documents and legacy data
+                if not document_id:
+                    # Try pubmed_id first (for PubMed documents)
+                    pubmed_id = doc_metadata.get("pubmed_id")
+                    if pubmed_id:
+                        document_id = str(pubmed_id)
+                        self.logger.debug(
+                            f"Using pubmed_id as document_id: {document_id}"
+                        )
+                    else:
+                        # Try to extract ID from document_name (e.g., "PubMed_PMC7047764" -> "PMC7047764")
+                        doc_name = (
+                            doc_metadata.get("document_name")
+                            or doc_metadata.get("source")
+                            or ""
+                        )
+                        if doc_name:
+                            # Extract ID patterns from document name
+                            # Pattern 1: "PubMed_PMC7047764" -> "PMC7047764"
+                            if "PMC" in doc_name:
+                                pmc_match = re.search(r"PMC\d+", doc_name)
+                                if pmc_match:
+                                    document_id = pmc_match.group()
+                                    self.logger.debug(
+                                        f"Extracted document_id from PMC pattern: {document_id}"
+                                    )
+                            # Pattern 2: "PubMed_12345" -> "12345"
+                            elif "PubMed_" in doc_name:
+                                parts = doc_name.split("PubMed_")
+                                if len(parts) > 1 and parts[1]:
+                                    document_id = parts[1].split("_")[
+                                        0
+                                    ]  # Take first part after PubMed_
+                                    self.logger.debug(
+                                        f"Extracted document_id from PubMed pattern: {document_id}"
+                                    )
+                            # Pattern 3: Use document_name as-is if it looks like an ID
+                            elif doc_name and not doc_name.lower().endswith(
+                                (".pdf", ".docx", ".txt")
+                            ):
+                                document_id = doc_name
+                                self.logger.debug(
+                                    f"Using document_name as document_id: {document_id}"
+                                )
+
+                        # Last resort: generate a deterministic ID from chunk_id
+                        # This ensures same document chunks get same document_id
+                        if not document_id:
+                            chunk_id = doc_metadata.get("chunk_id", "")
+                            if chunk_id:
+                                # Use first 8 characters of chunk_id as document_id (not ideal but better than empty)
+                                document_id = (
+                                    chunk_id[:8] if len(chunk_id) >= 8 else chunk_id
+                                )
+                                self.logger.warning(
+                                    f"Generated document_id from chunk_id (not ideal): {document_id}. "
+                                    f"Consider fixing metadata for chunk."
+                                )
+
+                document_name = (
+                    doc_metadata.get("document_name")
+                    or doc_metadata.get("source")
+                    or doc_metadata.get("filename", "Unknown")
+                )
+                chunk_index = doc_metadata.get("chunk_index", 0)
+                start_char = doc_metadata.get("start_char", 0)
+                end_char = doc_metadata.get("end_char", 0)
+                chunk_size = end_char - start_char if end_char > start_char else 0
+                
+                # Get the actual chunk_id from metadata (this is the real chunk UUID)
+                actual_chunk_id = doc_metadata.get("chunk_id", "")
+                
+                # Also get page-specific position info
+                start_char_in_page = doc_metadata.get("start_char_in_page", start_char)
+                end_char_in_page = doc_metadata.get("end_char_in_page", end_char)
+
+                # Determine if document is from new_db
+                # Check if is_new_doc is explicitly set in metadata (from new_db_manager)
+                # Otherwise use db_mode as fallback
+                if "is_new_doc" in doc_metadata:
+                    is_new_doc = doc_metadata.get("is_new_doc", False)
+                elif self.db_mode == "new":
+                    # In "new" mode, all documents are from new_db
+                    is_new_doc = True
+                elif self.db_mode == "current+new":
+                    # In merged mode, documents from new_db typically don't have pubmed_id
+                    # Documents from current_db usually have pubmed_id in metadata
+                    is_new_doc = "pubmed_id" not in doc_metadata
+                else:  # current mode
+                    is_new_doc = False
+
+                # Extract file type from document name or metadata
+                file_type = doc_metadata.get("file_type", "")
+                if not file_type:
+                    # Try to extract from document name
+                    doc_name_lower = document_name.lower()
+                    if doc_name_lower.endswith(".pdf"):
+                        file_type = "pdf"
+                    elif doc_name_lower.endswith(".docx"):
+                        file_type = "docx"
+                    elif doc_name_lower.endswith(".txt"):
+                        file_type = "txt"
+                    else:
+                        file_type = "unknown"
+
+                # Get model provider
+                model_provider = self.current_model_provider or "Unknown"
+
+                # Create structured metadata JSON
+                structured_metadata = {
+                    # "Chunk_Id": doc_metadata.get("chunk_id", ""),  # Commented out as requested
+                    "Document_Id": document_id,
+                    "Document_Name": document_name,
+                    "Chunk_Index": chunk_index,
+                    "Start_Char": start_char,
+                    "End_Char": end_char,
+                    "Is_New_Doc": is_new_doc,
+                    "File_Type": file_type,
+                    "Chunk_Size": chunk_size,
+                    "Model_Provider": model_provider,
+                }
+
                 source_info = {
                     "content": doc.page_content,  # Show full content instead of truncating
-                    "metadata": doc.metadata,
+                    "metadata": doc.metadata,  # Keep original metadata for backward compatibility
+                    "structured_metadata": structured_metadata,  # New structured metadata JSON
                     "page": page,
                     "source": source,
-                    "chunk_id": i + 1,
+                    "chunk_id": actual_chunk_id if actual_chunk_id else str(i + 1),  # Use real chunk ID
+                    "chunk_index_display": i + 1,  # Keep display index for backward compatibility
+                    "start_char_in_page": start_char_in_page,  # Page-specific position
+                    "end_char_in_page": end_char_in_page,  # Page-specific position
                     "accuracy_score": accuracy_score,  # Add accuracy score to each source
                 }
                 sources.append(source_info)
@@ -698,8 +1166,7 @@ ANSWER:"""
                 if hasattr(self.embeddings, "embed_query"):
                     answer_embedding = self.embeddings.embed_query(answer_text)
                 else:
-                    answer_embedding = self.embeddings.embed_documents([answer_text])[
-                        0]
+                    answer_embedding = self.embeddings.embed_documents([answer_text])[0]
 
                 answer_vec = np.array(answer_embedding)
                 answer_norm = np.linalg.norm(answer_vec)
@@ -710,8 +1177,7 @@ ANSWER:"""
 
                     # Get content embedding
                     if hasattr(self.embeddings, "embed_query"):
-                        content_embedding = self.embeddings.embed_query(
-                            content)
+                        content_embedding = self.embeddings.embed_query(content)
                     else:
                         content_embedding = self.embeddings.embed_documents([content])[
                             0
@@ -742,8 +1208,7 @@ ANSWER:"""
 
                 # Re-calculate metrics with answer-based scores
                 total_accuracy = sum(s["accuracy_score"] for s in sources)
-                avg_accuracy = total_accuracy / \
-                    len(sources) if sources else 0.0
+                avg_accuracy = total_accuracy / len(sources) if sources else 0.0
 
                 # Re-assign chunk IDs after sorting
                 for idx, source in enumerate(sources):
@@ -762,8 +1227,7 @@ ANSWER:"""
                     f"Using default scores."
                 )
                 # Keep original scores if answer-based scoring fails
-                avg_accuracy = total_accuracy / \
-                    len(sources) if sources else 0.0
+                avg_accuracy = total_accuracy / len(sources) if sources else 0.0
 
             # Check if LLM indicates insufficient information (more strict detection)
             # Only trigger if LLM explicitly states lack of info in specific patterns
@@ -828,15 +1292,12 @@ ANSWER:"""
 
             # Store in cache for future queries with retrieval parameters
             # This ensures same question with different k gets separate cache entries
-            self.cache_manager.put(
-                query, result, k=k
-            )
+            self.cache_manager.put(query, result, k=k)
 
             return result
 
         except Exception as e:
-            self.logger.error(
-                f"Failed to search documents with OpenAI: {str(e)}")
+            self.logger.error(f"Failed to search documents with OpenAI: {str(e)}")
             return {
                 "response": f"Error during search: {str(e)}",
                 "sources": [],
@@ -863,8 +1324,7 @@ ANSWER:"""
                         if has_path_separator
                         else self.index_path
                     )
-                    self.logger.info(
-                        f"Saving vector store with name: {index_name}")
+                    self.logger.info(f"Saving vector store with name: {index_name}")
 
                     self.vector_store.save_local(index_name)
 
@@ -881,8 +1341,7 @@ ANSWER:"""
 
                 finally:
                     os.chdir(original_cwd)
-                    self.logger.info(
-                        f"Restored working directory: {os.getcwd()}")
+                    self.logger.info(f"Restored working directory: {os.getcwd()}")
 
                 self.logger.info(
                     f"Successfully saved vector store: {Path(self.index_path).name if ('/' in self.index_path or os.sep in self.index_path) else self.index_path}"
@@ -891,49 +1350,124 @@ ANSWER:"""
                 self.logger.error(f"Failed to save vector store: {str(e)}")
                 raise
 
-    def _load_vector_store(self) -> bool:
-        """Load vector store from disk"""
+    def set_db_mode(self, mode: str) -> None:
+        """
+        Set database mode: "current", "new", or "current+new"
+
+        Args:
+            mode: Database mode string
+        """
+        self.db_mode = mode
+        self.logger.info(f"Database mode set to: {mode}")
+
+    def _get_current_db_path(self) -> Optional[Path]:
+        """Get current_db path based on model provider"""
+        # CRITICAL: Never return current_db path if db_mode is "new"
+        if self.db_mode == "new":
+            self.logger.debug("Skipping current_db path - db_mode is 'new'")
+            return None
+
+        if self.current_model_provider == "OpenAI (API)":
+            path = CURRENT_DB_OPENAI_DIR / "faiss_index"
+            self.logger.info(f"Using OpenAI current_db path: {path.absolute()}")
+            return path
+        elif self.current_model_provider == "Local LLM (Qwen)":
+            path = CURRENT_DB_QWEN_DIR / "faiss_index"
+            self.logger.info(f"Using Qwen current_db path: {path.absolute()}")
+            return path
+        else:
+            # If provider not set, check both paths and return the one that exists
+            openai_path = CURRENT_DB_OPENAI_DIR / "faiss_index"
+            qwen_path = CURRENT_DB_QWEN_DIR / "faiss_index"
+
+            openai_exists = (openai_path / "index.faiss").exists() and (
+                openai_path / "index.pkl"
+            ).exists()
+            qwen_exists = (qwen_path / "index.faiss").exists() and (
+                qwen_path / "index.pkl"
+            ).exists()
+
+            if openai_exists:
+                self.logger.info(
+                    f"Provider not set, but OpenAI DB exists. Using: {openai_path.absolute()}"
+                )
+                return openai_path
+            elif qwen_exists:
+                self.logger.info(
+                    f"Provider not set, but Qwen DB exists. Using: {qwen_path.absolute()}"
+                )
+                return qwen_path
+            else:
+                # Default to OpenAI path if neither exists
+                self.logger.debug(
+                    f"Provider not set and no DB found. Defaulting to OpenAI path: {openai_path.absolute()}"
+                )
+                return openai_path
+
+    def _load_vector_store(self, custom_path: Optional[Path] = None) -> bool:
+        """
+        Load vector store from disk
+
+        Args:
+            custom_path: Optional custom path to load from (for current_db)
+        """
+        # CRITICAL: Never load current_db if db_mode is "new"
+        if self.db_mode == "new":
+            self.logger.debug("Skipping vector store load - db_mode is 'new'")
+            return False
+
         try:
-            # Extract index name from path
-            path_separators = ["/", os.sep]
-            has_path_separator = any(
-                sep in self.index_path for sep in path_separators)
-            index_name = (
-                Path(self.index_path).name if has_path_separator else self.index_path
-            )
+            # Determine which path to use
+            if custom_path:
+                load_dir = custom_path.parent
+                index_name = custom_path.name
+            elif self.db_mode == "current":
+                current_db_path = self._get_current_db_path()
+                if current_db_path:
+                    load_dir = current_db_path.parent
+                    index_name = current_db_path.name
+                else:
+                    load_dir = self.vectorstore_dir
+                    index_name = self.index_path
+            elif self.db_mode == "current+new":
+                # For current+new, still load current_db (but merge only in Docker)
+                current_db_path = self._get_current_db_path()
+                if current_db_path:
+                    load_dir = current_db_path.parent
+                    index_name = current_db_path.name
+                else:
+                    load_dir = self.vectorstore_dir
+                    index_name = self.index_path
+            else:
+                # Extract index name from path
+                path_separators = ["/", os.sep]
+                has_path_separator = any(
+                    sep in self.index_path for sep in path_separators
+                )
+                index_name = (
+                    Path(self.index_path).name
+                    if has_path_separator
+                    else self.index_path
+                )
+                load_dir = self.vectorstore_dir
 
             # Check files in the correct directory
             original_cwd = os.getcwd()
             try:
-                os.chdir(self.vectorstore_dir)
+                os.chdir(load_dir)
 
                 # FAISS creates a directory with the index name containing index.faiss and index.pkl
-                index_dir = index_name
                 faiss_file = f"{index_name}/index.faiss"
                 pkl_file = f"{index_name}/index.pkl"
 
                 self.logger.info(
                     f"Attempting to load vector store with name: {index_name}"
                 )
-                self.logger.info(
-                    f"Vector store directory: {self.vectorstore_dir}")
-                self.logger.info(
-                    f"Looking for files: {faiss_file}, {pkl_file}")
-                self.logger.info(
-                    f"FAISS file exists: {os.path.exists(faiss_file)}")
-                self.logger.info(
-                    f"PKL file exists: {os.path.exists(pkl_file)}")
-                self.logger.info(
-                    f"Embeddings available: {self.embeddings is not None}")
-
-                # Debug logs to verify state
-                self.logger.debug(f"Embeddings object: {self.embeddings}")
-                self.logger.debug(
-                    f"Vector store directory: {self.vectorstore_dir}")
-                self.logger.debug(
-                    f"FAISS file exists: {os.path.exists(faiss_file)}")
-                self.logger.debug(
-                    f"PKL file exists: {os.path.exists(pkl_file)}")
+                self.logger.info(f"Vector store directory: {load_dir}")
+                self.logger.info(f"Looking for files: {faiss_file}, {pkl_file}")
+                self.logger.info(f"FAISS file exists: {os.path.exists(faiss_file)}")
+                self.logger.info(f"PKL file exists: {os.path.exists(pkl_file)}")
+                self.logger.info(f"Embeddings available: {self.embeddings is not None}")
 
                 if os.path.exists(faiss_file) and os.path.exists(pkl_file):
                     # Check if embeddings are initialized
@@ -949,12 +1483,58 @@ ANSWER:"""
                         self.embeddings,
                         allow_dangerous_deserialization=True,
                     )
-                    self.logger.info(
-                        f"Successfully loaded vector store: {index_name}")
+                    # CRITICAL: Ensure embeddings are set on the vector store after loading
+                    # This is important for similarity search to work correctly
+                    if hasattr(self.vector_store, "embeddings"):
+                        self.vector_store.embeddings = self.embeddings
+                    self.logger.info(f"Successfully loaded vector store: {index_name}")
+
+                    # Verify vector store is properly initialized
+                    if self.vector_store:
+                        # Check if vector store has embeddings attribute
+                        if (
+                            hasattr(self.vector_store, "embeddings")
+                            and self.vector_store.embeddings
+                        ):
+                            embedding_model = getattr(
+                                self.vector_store.embeddings, "model", "unknown"
+                            )
+                            self.logger.info(
+                                f"Vector store embeddings model: {embedding_model}"
+                            )
+                        # Check vector count
+                        if hasattr(self.vector_store, "index") and hasattr(
+                            self.vector_store.index, "ntotal"
+                        ):
+                            self.logger.info(
+                                f"Vector store contains {self.vector_store.index.ntotal} vectors"
+                            )
+
+                    # For current_db mode, calculate and cache unique pubmed_id count when first loaded
+                    # Only calculate if cache is not already set (preserve existing cache)
+                    if (
+                        self.db_mode == "current"
+                        and self._cached_total_documents is None
+                    ):
+                        unique_pubmed_count = self._count_unique_pubmed_ids()
+                        if unique_pubmed_count > 0:
+                            self._cached_total_documents = unique_pubmed_count
+                            self._save_cache_to_session(unique_pubmed_count)
+                            self.logger.info(
+                                f"Initialized cached total documents count: {unique_pubmed_count}"
+                            )
+                    elif (
+                        self.db_mode == "current"
+                        and self._cached_total_documents is not None
+                    ):
+                        # Cache already exists, don't recalculate
+                        self.logger.debug(
+                            f"Preserving existing cached total documents count: {self._cached_total_documents}"
+                        )
+
                     return True
                 else:
-                    self.logger.debug(
-                        f"Vector store files not found: {index_name}")
+                    self.logger.debug(f"Vector store files not found: {index_name}")
 
             finally:
                 os.chdir(original_cwd)
@@ -986,8 +1566,7 @@ ANSWER:"""
         with open(metadata_file, "wb") as f:
             pickle.dump(doc_metadata, f)
 
-        self.logger.debug(
-            f"Saved document metadata for {len(documents)} documents")
+        self.logger.debug(f"Saved document metadata for {len(documents)} documents")
 
     def _update_document_metadata(self, new_documents: List[Document]) -> None:
         """Update document metadata with new documents"""
@@ -999,8 +1578,7 @@ ANSWER:"""
                 with open(metadata_file, "rb") as f:
                     self.document_metadata = pickle.load(f)
             except Exception as e:
-                self.logger.warning(
-                    f"Failed to load existing metadata: {str(e)}")
+                self.logger.warning(f"Failed to load existing metadata: {str(e)}")
                 self.document_metadata = {}
 
         # Add new documents
@@ -1023,11 +1601,62 @@ ANSWER:"""
             f"Updated document metadata with {len(new_documents)} new documents"
         )
 
+    def _count_unique_pubmed_ids(self) -> int:
+        """
+        Count unique pubmed_id values from current_db vector store metadata.
+        This is used for current_db mode to get the accurate document count.
+
+        Returns:
+            Number of unique pubmed_id values, or 0 if not available
+        """
+        if not self.vector_store:
+            self.logger.warning("Vector store not loaded, cannot count pubmed_ids")
+            return 0
+
+        try:
+            unique_pubmed_ids = set()
+            total_chunks_checked = 0
+
+            if hasattr(self.vector_store, "docstore") and self.vector_store.docstore:
+                if hasattr(self.vector_store.docstore, "_dict"):
+                    docstore_dict = self.vector_store.docstore._dict
+                    total_chunks_checked = len(docstore_dict)
+
+                    for doc_metadata in docstore_dict.values():
+                        if hasattr(doc_metadata, "metadata"):
+                            metadata = doc_metadata.metadata
+                            # Get pubmed_id from metadata
+                            pubmed_id = metadata.get("pubmed_id")
+                            if pubmed_id:
+                                unique_pubmed_ids.add(str(pubmed_id))
+
+            count = len(unique_pubmed_ids)
+
+            # Validate result: if we have chunks but no pubmed_ids, something is wrong
+            if total_chunks_checked > 0 and count == 0:
+                self.logger.warning(
+                    f"Found {total_chunks_checked} chunks but 0 unique pubmed_ids. "
+                    f"This may indicate metadata issue. Check if pubmed_id field exists in metadata."
+                )
+            elif count > 0:
+                self.logger.info(
+                    f"Found {count} unique pubmed_id values from {total_chunks_checked} chunks in current_db"
+                )
+            else:
+                self.logger.debug(
+                    f"No pubmed_ids found (checked {total_chunks_checked} chunks)"
+                )
+
+            return count
+
+        except Exception as e:
+            self.logger.error(f"Error counting unique pubmed_ids: {e}")
+            return 0
+
     def _get_store_stats(self) -> Tuple[int, int]:
         """Get total documents and chunks count"""
         if not self.document_metadata:
-            metadata_file = Path(self.vectorstore_dir) / \
-                "document_metadata.pkl"
+            metadata_file = Path(self.vectorstore_dir) / "document_metadata.pkl"
             if metadata_file.exists():
                 try:
                     with open(metadata_file, "rb") as f:
@@ -1078,16 +1707,36 @@ ANSWER:"""
     def _get_index_size(self) -> int:
         """Get index file size in bytes"""
         try:
-            # Check for FAISS files in directory format
-            path_separators = ["/", os.sep]
-            has_path_separator = any(
-                sep in self.index_path for sep in path_separators)
-            index_name = (
-                Path(self.index_path).name if has_path_separator else self.index_path
-            )
+            # Determine which path to check based on db_mode
+            if self.db_mode == "current":
+                current_db_path = self._get_current_db_path()
+                if current_db_path:
+                    faiss_dir = current_db_path
+                else:
+                    # Fallback to regular vectorstore
+                    path_separators = ["/", os.sep]
+                    has_path_separator = any(
+                        sep in self.index_path for sep in path_separators
+                    )
+                    index_name = (
+                        Path(self.index_path).name
+                        if has_path_separator
+                        else self.index_path
+                    )
+                    faiss_dir = self.vectorstore_dir / index_name
+            else:
+                # Regular vectorstore path
+                path_separators = ["/", os.sep]
+                has_path_separator = any(
+                    sep in self.index_path for sep in path_separators
+                )
+                index_name = (
+                    Path(self.index_path).name
+                    if has_path_separator
+                    else self.index_path
+                )
+                faiss_dir = self.vectorstore_dir / index_name
 
-            # FAISS creates a directory with index.faiss and index.pkl files
-            faiss_dir = self.vectorstore_dir / index_name
             faiss_file = faiss_dir / "index.faiss"
             pkl_file = faiss_dir / "index.pkl"
 
@@ -1098,38 +1747,249 @@ ANSWER:"""
                 total_size += pkl_file.stat().st_size
 
             return total_size
-        except Exception:
-            pass
+        except Exception as e:
+            self.logger.debug(f"Could not get index size: {e}")
         return 0
 
     def get_store_info(self) -> Optional[VectorStoreInfo]:
         """Get current vector store information"""
-        # Only try to load vector store if embeddings are initialized
-        if not self.vector_store and self.embeddings:
+        # For current_db mode or current+new mode, use cached document count to avoid recalculation
+        # The count should only change when documents are added, not when questions are asked
+        if (
+            self.db_mode in ["current", "current+new"]
+            and self._cached_total_documents is not None
+        ):
+            # Use cached value - never recalculate if cache exists
+            current_db_path = self._get_current_db_path()
+            if current_db_path and (current_db_path / "index.faiss").exists():
+                # Try to load vector store if not loaded yet (cache will be preserved)
+                if not self.vector_store and self.embeddings:
+                    loaded = self._load_vector_store(custom_path=current_db_path)
+                    # _load_vector_store will preserve existing cache
+                    self.logger.debug(
+                        f"Vector store loaded, cache preserved: {self._cached_total_documents}"
+                    )
+
+                # Use cached value (always use cached value if it exists)
+                if self._cached_total_documents is not None:
+                    faiss_file = current_db_path / "index.faiss"
+                    pkl_file = current_db_path / "index.pkl"
+                    if faiss_file.exists() and pkl_file.exists():
+                        # Get chunk count
+                        total_chunks = 0
+                        if self.vector_store:
+                            try:
+                                if (
+                                    hasattr(self.vector_store, "docstore")
+                                    and self.vector_store.docstore
+                                ):
+                                    if hasattr(self.vector_store.docstore, "_dict"):
+                                        total_chunks = len(
+                                            self.vector_store.docstore._dict
+                                        )
+                                elif hasattr(self.vector_store, "index") and hasattr(
+                                    self.vector_store.index, "ntotal"
+                                ):
+                                    total_chunks = self.vector_store.index.ntotal
+                            except Exception as e:
+                                self.logger.debug(f"Could not get chunk count: {e}")
+
+                        if total_chunks == 0:
+                            # Estimate from file size
+                            index_size = self._get_index_size()
+                            if index_size > 0:
+                                total_chunks = max(1, index_size // 4096)
+                            else:
+                                total_chunks = 2480  # Default fallback
+
+                        return VectorStoreInfo(
+                            index_path=str(current_db_path),
+                            total_documents=self._cached_total_documents,
+                            total_chunks=total_chunks,
+                            embedding_model=self._get_embedding_model_name(),
+                            index_size_bytes=self._get_index_size(),
+                        )
+
+        # Try to load vector store if embeddings are initialized
+        # IMPORTANT: Only load if db_mode is "current" or "current+new" - never load for "new" mode
+        # IMPORTANT: Only calculate cache if it doesn't exist - never overwrite existing cache!
+        if (
+            not self.vector_store
+            and self.embeddings
+            and self.db_mode in ["current", "current+new"]
+        ):
             self.logger.debug("Vector store not loaded, attempting to load...")
-            loaded = self._load_vector_store()
+            # Try loading from current_db if in current or current+new mode
+            if self.db_mode in ["current", "current+new"]:
+                current_db_path = self._get_current_db_path()
+                if current_db_path:
+                    loaded = self._load_vector_store(custom_path=current_db_path)
+                    if loaded:
+                        # Only calculate and cache unique pubmed_id count if cache doesn't exist
+                        # This prevents overwriting cache when questions are asked
+                        if self._cached_total_documents is None:
+                            unique_count = self._count_unique_pubmed_ids()
+                            if unique_count > 0:
+                                self._cached_total_documents = unique_count
+                                self._save_cache_to_session(unique_count)
+                                self.logger.info(
+                                    f"Initialized cached total documents count: {self._cached_total_documents}"
+                                )
+                            else:
+                                self.logger.warning(
+                                    f"Could not count unique pubmed_ids (returned {unique_count}), keeping cache as None"
+                                )
+                        else:
+                            self.logger.debug(
+                                f"Preserving existing cached total documents count: {self._cached_total_documents}"
+                            )
+                    self.logger.info(
+                        f"Attempted to load current_db: {current_db_path}, loaded={loaded}"
+                    )
+                else:
+                    loaded = self._load_vector_store()
             if not loaded:
                 self.logger.debug(
-                    "Failed to load vector store (this is OK if embeddings not initialized)"
+                    "Failed to load vector store (this is OK if embeddings not initialized or db_mode is 'new')"
                 )
 
-        # Check for FAISS files in directory format
-        path_separators = ["/", os.sep]
-        has_path_separator = any(
-            sep in self.index_path for sep in path_separators)
-        index_name = (
-            Path(self.index_path).name if has_path_separator else self.index_path
-        )
+        # Determine which path to check based on db_mode
+        if self.db_mode in ["current", "current+new"]:
+            current_db_path = self._get_current_db_path()
+            if current_db_path:
+                faiss_dir = current_db_path
+                # For current_db, index_path should reflect the current_db location
+                index_path_str = str(current_db_path)
+                self.logger.debug(f"Checking current_db path: {faiss_dir}")
+            else:
+                # Fallback to regular vectorstore
+                path_separators = ["/", os.sep]
+                has_path_separator = any(
+                    sep in self.index_path for sep in path_separators
+                )
+                index_name = (
+                    Path(self.index_path).name
+                    if has_path_separator
+                    else self.index_path
+                )
+                faiss_dir = self.vectorstore_dir / index_name
+                index_path_str = self.index_path
+        else:
+            # Regular vectorstore path
+            path_separators = ["/", os.sep]
+            has_path_separator = any(sep in self.index_path for sep in path_separators)
+            index_name = (
+                Path(self.index_path).name if has_path_separator else self.index_path
+            )
+            faiss_dir = self.vectorstore_dir / index_name
+            index_path_str = self.index_path
 
-        # FAISS creates a directory with index.faiss and index.pkl files
-        faiss_dir = self.vectorstore_dir / index_name
         faiss_file = faiss_dir / "index.faiss"
         pkl_file = faiss_dir / "index.pkl"
 
-        if faiss_file.exists() and pkl_file.exists():
-            total_docs, total_chunks = self._get_store_stats()
+        self.logger.debug(
+            f"Checking FAISS files: {faiss_file} (exists={faiss_file.exists()}), {pkl_file} (exists={pkl_file.exists()})"
+        )
 
-            # If we still have 0 chunks but files exist, try to get count directly from vector store
+        if faiss_file.exists() and pkl_file.exists():
+            # Try to get stats from loaded vector store first
+            total_docs = 0
+            total_chunks = 0
+
+            # If vector store is loaded, get stats directly from it
+            if self.vector_store:
+                try:
+                    if (
+                        hasattr(self.vector_store, "docstore")
+                        and self.vector_store.docstore
+                    ):
+                        if hasattr(self.vector_store.docstore, "_dict"):
+                            total_chunks = len(self.vector_store.docstore._dict)
+                            # Count unique documents from metadata
+                            # For current_db mode or current+new mode, count unique pubmed_id values
+                            # For other modes, use source/document_name fields
+                            if self.db_mode in ["current", "current+new"]:
+                                # Only recalculate if cache is not set
+                                # This prevents overwriting the cache when questions are asked
+                                if self._cached_total_documents is None:
+                                    # Count unique pubmed_id values (this is the accurate count for current_db)
+                                    unique_pubmed_ids = set()
+                                    for (
+                                        doc_metadata
+                                    ) in self.vector_store.docstore._dict.values():
+                                        if hasattr(doc_metadata, "metadata"):
+                                            metadata = doc_metadata.metadata
+                                            pubmed_id = metadata.get("pubmed_id")
+                                            if pubmed_id:
+                                                unique_pubmed_ids.add(str(pubmed_id))
+                                    total_docs = (
+                                        len(unique_pubmed_ids)
+                                        if unique_pubmed_ids
+                                        else 0
+                                    )
+                                    # Cache this value so it doesn't change when questions are asked
+                                    if total_docs > 0:
+                                        self._cached_total_documents = total_docs
+                                        self._save_cache_to_session(total_docs)
+                                        self.logger.info(
+                                            f"Cached total documents count from pubmed_id: {total_docs}"
+                                        )
+                                else:
+                                    # Use cached value instead of recalculating
+                                    total_docs = self._cached_total_documents
+                                    self.logger.debug(
+                                        f"Using cached total documents count: {total_docs}"
+                                    )
+                                self.logger.debug(
+                                    f"Found {total_docs} unique documents from {total_chunks} chunks using pubmed_id (cached: {self._cached_total_documents is not None})"
+                                )
+                            else:
+                                # For non-current_db modes, use source/document_name fields
+                                unique_doc_sources = set()
+                                for (
+                                    doc_metadata
+                                ) in self.vector_store.docstore._dict.values():
+                                    if hasattr(doc_metadata, "metadata"):
+                                        metadata = doc_metadata.metadata
+                                        # Priority: source > document_name > document_id > filename
+                                        # This matches what's shown in response information
+                                        doc_source = (
+                                            metadata.get("source")
+                                            or metadata.get("document_name")
+                                            or metadata.get("filename")
+                                            or metadata.get("document_id")
+                                        )
+                                        if doc_source:
+                                            unique_doc_sources.add(doc_source)
+                                total_docs = (
+                                    len(unique_doc_sources) if unique_doc_sources else 0
+                                )
+                                self.logger.debug(
+                                    f"Found {total_docs} unique documents from {total_chunks} chunks using source/document_name fields"
+                                )
+                    if total_chunks == 0 and hasattr(self.vector_store, "index"):
+                        if hasattr(self.vector_store.index, "ntotal"):
+                            total_chunks = self.vector_store.index.ntotal
+                except Exception as e:
+                    self.logger.debug(f"Could not get stats from vector store: {e}")
+
+            # If still 0, try to get from metadata (but skip for current_db as it may not have metadata file)
+            if total_chunks == 0 and self.db_mode != "current":
+                total_docs, total_chunks = self._get_store_stats()
+            elif total_chunks == 0:
+                # For current_db, try to estimate from file size or use a default
+                # We can't read FAISS without embeddings, so use file size as indicator
+                index_size = self._get_index_size()
+                if index_size > 0:
+                    # Estimate chunks based on file size (rough estimate: ~4KB per chunk)
+                    # This is just for display, not accurate
+                    total_chunks = max(1, index_size // 4096)
+                    total_docs = 1  # Can't determine doc count without loading
+                    self.logger.debug(
+                        f"Estimated chunks from file size: {total_chunks}"
+                    )
+
+            # If we still have 0, but vector store is loaded, try one more time
             if total_chunks == 0 and self.vector_store:
                 try:
                     if hasattr(self.vector_store.index, "ntotal"):
@@ -1145,19 +2005,36 @@ ANSWER:"""
                             f"Got chunk count from docstore: {total_chunks}"
                         )
                 except Exception as e:
-                    self.logger.warning(
-                        f"Could not get chunk count directly: {e}")
+                    self.logger.warning(f"Could not get chunk count directly: {e}")
 
-            return VectorStoreInfo(
-                index_path=self.index_path,
-                total_documents=total_docs,
-                total_chunks=total_chunks,
-                embedding_model=self._get_embedding_model_name(),
-                index_size_bytes=self._get_index_size(),
-            )
+            # If we have chunks or docs, or if files exist (even without accurate counts), return info
+            if (
+                total_chunks > 0
+                or total_docs > 0
+                or (faiss_file.exists() and pkl_file.exists())
+            ):
+                # For current_db mode, prefer cached value if available
+                if (
+                    self.db_mode == "current"
+                    and self._cached_total_documents is not None
+                    and self._cached_total_documents > 0
+                ):
+                    final_total_docs = self._cached_total_documents
+                else:
+                    final_total_docs = total_docs if total_docs > 0 else 1
+
+                return VectorStoreInfo(
+                    index_path=index_path_str,
+                    total_documents=final_total_docs,
+                    total_chunks=(
+                        total_chunks if total_chunks > 0 else 1
+                    ),  # At least 1 if files exist
+                    embedding_model=self._get_embedding_model_name(),
+                    index_size_bytes=self._get_index_size(),
+                )
         else:
             self.logger.debug(
-                f"FAISS files not found: {faiss_file.exists()=}, {pkl_file.exists()=}"
+                f"FAISS files not found at {faiss_dir}: {faiss_file.exists()=}, {pkl_file.exists()=}"
             )
 
         return None
@@ -1167,8 +2044,7 @@ ANSWER:"""
         try:
             # Remove index files in directory format
             path_separators = ["/", os.sep]
-            has_path_separator = any(
-                sep in self.index_path for sep in path_separators)
+            has_path_separator = any(sep in self.index_path for sep in path_separators)
             index_name = (
                 Path(self.index_path).name if has_path_separator else self.index_path
             )
@@ -1190,6 +2066,8 @@ ANSWER:"""
             # Clear in-memory objects
             self.vector_store = None
             self.document_metadata = {}
+            self._cached_total_documents = None  # Clear cached count
+            self._save_cache_to_session(None)  # Clear from session state too
 
             self.logger.info("Cleared vector store and metadata")
 

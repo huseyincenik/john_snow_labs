@@ -262,6 +262,7 @@ class DocumentProcessor:
     def _extract_pdf_text_by_pages(self, file_content: bytes) -> List[Tuple[str, int]]:
         """
         Extract text from PDF content page by page
+        Uses PyMuPDF (fitz) for consistent text extraction with highlighting
 
         Returns:
             List of (page_text, page_number) tuples
@@ -269,8 +270,38 @@ class DocumentProcessor:
         import io
 
         pages_content = []
-        pdf_file = io.BytesIO(file_content)
+        
+        # Use PyMuPDF for consistent text extraction (same as highlighting)
+        try:
+            import fitz  # PyMuPDF
+            pdf_document = fitz.open(stream=file_content, filetype="pdf")
+            
+            for page_num in range(len(pdf_document)):
+                try:
+                    page = pdf_document[page_num]
+                    page_text = page.get_text()
+                    if page_text.strip():
+                        # 1-based page numbers
+                        pages_content.append((page_text.strip(), page_num + 1))
+                except Exception as e:
+                    self.logger.warning(
+                        f"Failed to extract text from page {page_num + 1} with PyMuPDF: {str(e)}")
+                    continue
+            
+            pdf_document.close()
+            
+            if pages_content:
+                self.logger.debug(f"Extracted {len(pages_content)} pages using PyMuPDF")
+                return pages_content
+            else:
+                self.logger.warning("PyMuPDF extraction returned no pages, falling back to PyPDF2")
+        except ImportError:
+            self.logger.warning("PyMuPDF not available, falling back to PyPDF2")
+        except Exception as e:
+            self.logger.warning(f"PyMuPDF extraction failed: {str(e)}, falling back to PyPDF2")
 
+        # Fallback to PyPDF2 if PyMuPDF is not available
+        pdf_file = io.BytesIO(file_content)
         try:
             pdf_reader = PyPDF2.PdfReader(pdf_file)
 
@@ -515,12 +546,33 @@ class DocumentProcessor:
                 if not page_text.strip():
                     continue
 
-                # Split page content into chunks
+                # Split page content into chunks while tracking positions
+                # We need to track where each chunk starts in the page
                 page_chunks = text_splitter.split_text(page_text)
+                
+                # Track cumulative position in page
+                current_page_pos = 0
 
                 for chunk_text in page_chunks:
                     if not chunk_text.strip():
                         continue
+
+                    # Find the actual position of this chunk in the page text
+                    # This handles overlap by finding the first occurrence after current position
+                    chunk_start_in_page = page_text.find(chunk_text, current_page_pos)
+                    
+                    # If not found, try from beginning (overlap case)
+                    if chunk_start_in_page == -1:
+                        chunk_start_in_page = page_text.find(chunk_text)
+                    
+                    # If still not found, use current position
+                    if chunk_start_in_page == -1:
+                        chunk_start_in_page = current_page_pos
+                    
+                    chunk_end_in_page = chunk_start_in_page + len(chunk_text)
+                    
+                    # Update current position for next chunk (considering overlap)
+                    current_page_pos = max(chunk_start_in_page + 1, chunk_end_in_page - final_chunk_overlap)
 
                     # Create chunk with page information in metadata
                     chunk = DocumentChunk(
@@ -528,14 +580,17 @@ class DocumentProcessor:
                         document_id=document.id,
                         content=chunk_text,
                         chunk_index=chunk_index,
-                        start_char=0,  # Would need more complex calculation for exact positions
-                        end_char=len(chunk_text),
+                        start_char=chunk_start_in_page,  # Position in page text
+                        end_char=chunk_end_in_page,  # End position in page text
                         metadata={
                             'page': page_number,  # Real page number from document
                             'document_name': document.name,
                             'file_type': document.file_type.value,
                             'chunk_size': len(chunk_text),
-                            'model_provider': model_provider
+                            'model_provider': model_provider,
+                            'start_char_in_page': chunk_start_in_page,  # Explicit page position
+                            'end_char_in_page': chunk_end_in_page,  # Explicit page position
+                            'page_text_length': len(page_text)  # Store page text length for reference
                         }
                     )
                     all_chunks.append(chunk)

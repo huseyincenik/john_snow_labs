@@ -9,14 +9,25 @@ from typing import Optional
 
 # Base paths
 BASE_DIR = Path(__file__).parent.parent.parent
+
 DATA_DIR = BASE_DIR / "data"
 VECTORSTORE_DIR = DATA_DIR / "vectorstore"
 LOGS_DIR = BASE_DIR / "logs"
+
+# current_db: Use BASE_DIR (which is /app in Docker)
+# Docker volume mount (./current_db:/app/current_db) ensures /app/current_db maps to local ./current_db
+# This way, files saved to /app/current_db are actually saved to local rag_qa_chatbot_application/current_db
+CURRENT_DB_DIR = BASE_DIR / "current_db"
+CURRENT_DB_OPENAI_DIR = CURRENT_DB_DIR / "openai"
+CURRENT_DB_QWEN_DIR = CURRENT_DB_DIR / "qwen"
 
 # Create directories if they don't exist
 DATA_DIR.mkdir(exist_ok=True)
 VECTORSTORE_DIR.mkdir(exist_ok=True)
 LOGS_DIR.mkdir(exist_ok=True)
+CURRENT_DB_DIR.mkdir(exist_ok=True)
+CURRENT_DB_OPENAI_DIR.mkdir(exist_ok=True)
+CURRENT_DB_QWEN_DIR.mkdir(exist_ok=True)
 
 
 @dataclass
