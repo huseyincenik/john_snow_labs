@@ -1,0 +1,62 @@
+Interview Task: Running a Spark NLP Healthcare Pipeline and Training a Custom NER Model
+Objective: This task aims to work with Spark NLP for Healthcare and run a Named Entity Recognition (NER) pipeline using provided pre-trained models (ner_clinical, ner_deid_generic_augmented, and ner_posology) on a public dataset. After generating predictions, you will create a CoNLL file from the predictions and use it to train a custom NER model. Show new model results.
+Task Overview:
+Dataset Selection:
+Choose a publicly available healthcare-related dataset (e.g., MIMIC-III, mtsamples (https://mtsamples.com/), mtsamples_classifier (https://github.com/JohnSnowLabs/spark-nlp-workshop/blob/master/tutorials/Certification_Trainings/Healthcare/data/mtsamples_classifier.csv), oncology_note(https://github.com/JohnSnowLabs/spark-nlp-workshop/tree/master/tutorials/Certification_Trainings/Healthcare/data/oncology_notes), or any clinical notes dataset).
+Ensure that the dataset is in a format suitable for Named Entity Recognition (NER) tasks, such as clinical notes, prescriptions, or medical records.
+Set Up Spark NLP for Healthcare:
+Install Spark NLP for Healthcare and configure the environment (make sure to include instructions on setting up Spark NLP, as it may require specific versions or dependencies).
+Use the ner_clinical, ner_deid_generic_augmented, and ner_posology models from Spark NLP Healthcare to perform both NER models on the selected dataset.
+NER Pipeline Execution:
+Create a Spark NLP pipeline with the following steps:
+Tokenization and sentence splitting.
+Running the ner_clinical model to extract clinical entities.
+Running the ner_deid_generic_augmented model to extract PHI entities. 
+Running the ner_posology model to extract entities related to medications. (Prioritize Drug, Dosage, drop others) 
+Merge all NER models and prioritize posology and deid
+Extract predictions from the pipeline and review the entities identified in the dataset.
+Example notebook: Clinical Named Entity Recognition (NER) (1.Clinical_Named_Entity_Recognition_Model.ipynb)
+
+Generate CoNLL File:
+Convert the predictions (NER tags) from Spark NLP models into the CoNLL format. Ensure that:
+Example notebook: 1.3. Prepare CoNLL file from annotations for NER (1.3.prepare_CoNLL_from_annotations_for_NER.ipynb)
+Each token is labeled with the corresponding entity tag in the CoNLL standard format.
+The output is compliant with the standard CoNLL format used for training NER models.
+
+Example CoNLL format (Token \t Label):
+John    B-PER
+Doe     I-PER
+is      O
+a       O
+patient O
+Custom NER Model Training:
+Use the generated CoNLL file to train a custom NER model using Spark NLP. Ensure the model is trained on the CoNLL data and fine-tuned to predict similar entities.
+After training, evaluate the performance of the custom NER model on a validation set (using metrics like precision, recall, and F1-score).
+Example notebook: 1.4 Resume MedicalNer Model Training (1.4.Resume_MedicalNer_Model_Training.ipynb)
+
+Bonus (Optional but Recommended):
+Visualize the predictions of the custom NER model on a subset of the dataset.
+Provide comparisons of the model’s performance before and after fine-tuning.
+Perform error analysis to identify common mistakes or misclassifications by the custom NER model.
+Technical Requirements:
+Use Spark NLP for Healthcare for both the pre-trained NER models and custom NER model training.
+The dataset must be publicly available, and predictions should cover clinical entities (e.g., medical conditions, procedures, dosages).
+Generate and save predictions in CoNLL format.
+Train a custom NER model using Spark NLP’s training functions.
+Evaluation Criteria:
+Pipeline Implementation: How well the Spark NLP pipeline is structured and whether the pre-trained models are correctly applied to extract entities.
+CoNLL File Generation: The correctness and format of the CoNLL file generated from the NER predictions.
+Custom NER Training: The effectiveness of the custom-trained NER model in recognizing clinical entities.
+Code Quality: Is the code modular, readable, and well-commented?
+Performance: Performance of the custom NER model (precision, recall, F1-score).
+Documentation: Clear and concise instructions on setting up the environment, running the pipeline, and training the NER model.
+Submission Guidelines:
+Submit a GitHub repository containing the following:
+Code for running the Spark NLP pipeline, generating CoNLL files, and training the custom NER model.
+The generated CoNLL file and any other relevant output files.
+A README.md file explaining the dataset used, the steps to run the pipeline, and how to train the custom NER model.
+Include instructions on setting up Spark NLP and running the project.
+Bonus Evaluation:
+Insightful error analysis and visualization of the results will be a plus.
+This task will test the ability to work with Spark NLP for Healthcare, manage NER tasks, handle dataset preprocessing, and fine-tune models.
+
