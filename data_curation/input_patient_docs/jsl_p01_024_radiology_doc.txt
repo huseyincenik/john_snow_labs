@@ -1,0 +1,38 @@
+===== Document 024 =====
+Patient Id: p01
+Doc Id: 024
+Filename: p01/jsl_p01_024_radiology_doc.txt
+Doc Type: radiology
+Date: 2021-12-11
+Title: NM Ga-68 PSMA PET/CT
+---
+EXAMINATION: NM Ga-68 PSMA PET/CT
+CLINICAL STATEMENT: Biochemical recurrence of prostate cancer (PSA 1.65 ng/mL), s/p radiation therapy. Evaluate for site of recurrence.
+
+TECHNIQUE: PET/CT imaging from the skull base to the upper thighs was performed 66 minutes after intravenous injection of 4.7 mCi of Gallium-68 PSMA-11.
+
+COMPARISON: None.
+
+CORRELATION: MRI Prostate from November 06, 2021.
+
+FINDINGS:
+HEAD/NECK: Physiologic PSMA uptake.
+
+CHEST: No PSMA-avid lesions.
+
+ABDOMEN/PELVIS:
+PROSTATE: There is a focal area of intense PSMA uptake in the posterior right peripheral zone of the prostate. This corresponds directly to the lesion suspected to be recurrent tumor on the recent MRI (SUVmax 8.5).
+
+LYMPH NODES: No PSMA-avid lymph nodes in the pelvis, retroperitoneum, or elsewhere.
+
+BONES: No PSMA-avid osseous lesions.
+
+OTHER: Physiologic activity in the salivary glands, liver, spleen, kidneys, and bladder.
+
+IMPRESSION:
+1. Intense focal PSMA uptake in the right peripheral zone of the prostate, consistent with a local recurrence of prostate cancer.
+2. No evidence of PSMA-avid regional nodal or distant metastatic disease.
+
+Electronically Signed,
+Dr. Wilson, MD
+JSL Medical Center, Department of Radiology

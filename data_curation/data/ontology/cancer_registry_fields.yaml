@@ -1,0 +1,111 @@
+# Cancer Registry Field Definitions
+# ==================================
+# NAACCR-compliant cancer registry core elements for comprehensive cancer data extraction
+# Based on NAACCR standards, ICD-O-3 coding, and AJCC TNM staging (7th/8th edition)
+# Total fields: 12
+
+domains:
+
+  # ========== DIAGNOSIS DOMAIN ==========
+  diagnosis:
+    profile: "PrimaryCancerCondition, CancerDiagnosis, DiagnosticReport"
+    fields:
+      - name: naaccr_diagnosis_dt
+        description: "Date of cancer diagnosis in NAACCR format"
+        data_type: string
+        category: diagnosis
+        instructions: "Extract the earliest date of cancer diagnosis in YYYY-MM-DD format. Prefer pathological confirmation date over clinical diagnosis date. Look for dates in pathology reports, biopsy results, or diagnosis statements. Return 'Not Reported' if no diagnosis date found."
+        vocabulary: "NAACCR Item #390 - Date of Diagnosis"
+
+      - name: ca_site
+        description: "Anatomical site of cancer using ICD-O-3 topography code"
+        data_type: string
+        category: diagnosis
+        instructions: "Extract the anatomical site in ICD-O-3 format: 'Site Name (Code)/Behavior' (e.g., 'Prostate (C61)/Malignant', 'Colon, Sigmoid (C18.7)/Malignant'). Use topography codes from ICD-O-3 standards. Behavior codes: /0=Benign, /1=Uncertain, /2=In situ, /3=Malignant primary, /6=Metastatic. If not explicitly stated, infer based on anatomical location. Return 'Not Reported' if site cannot be determined."
+        vocabulary: "ICD-O-3 Topography (Site) Codes"
+
+      - name: naaccr_histology_cd
+        description: "ICD-O-3 histology/morphology code with behavior"
+        data_type: string
+        category: diagnosis
+        instructions: "Extract ICD-O-3 histology code in 'Code/Description' format (e.g., '8140/3 - Adenocarcinoma, NOS', '8480/3 - Mucinous adenocarcinoma'). The code format is XXXX/Y where XXXX is morphology and Y is behavior (0=Benign, 1=Uncertain, 2=In situ, 3=Malignant primary, 6=Metastatic). If not explicitly stated, map the described histology to ICD-O-3 code. Return 'Not Reported' if histology cannot be determined."
+        vocabulary: "ICD-O-3 Morphology (Histology) Codes"
+
+  # ========== CLINICAL STAGING DOMAIN ==========
+  clinical_staging:
+    profile: "TNMClinicalStageGroup, CancerStage"
+    fields:
+      - name: ca_clinical_t_stage
+        description: "Clinical T stage (tumor size/extent) per AJCC staging"
+        data_type: string
+        category: staging
+        instructions: "Extract clinical T stage using AJCC standards. Valid values: cT0, cTis, cTa, cT1, cT1a, cT1b, cT2, cT2a, cT2b, cT3, cT3a, cT3b, cT4, cT4a, cT4b, cTx (or T0, Tis, Ta, T1-T4 variations when clinical context clear). Source: clinical notes, imaging reports, physical examination. NEVER use 'Rx' or invalid values. Return null if not found."
+        vocabulary: "AJCC TNM Clinical T Stage (7th/8th Edition)"
+
+      - name: ca_clinical_n_stage
+        description: "Clinical N stage (lymph node involvement) per AJCC staging"
+        data_type: string
+        category: staging
+        instructions: "Extract clinical N stage using AJCC standards. Valid values: cN0, cN1, cN1a, cN1b, cN1c, cN2, cN2a, cN2b, cN2c, cN3, cN3a, cN3b, cN3c, cNx (or N0, N1-N3 variations when clinical context clear). Source: clinical examination, imaging studies, palpation. NEVER use 'Rx' or invalid values. Return null if not found."
+        vocabulary: "AJCC TNM Clinical N Stage (7th/8th Edition)"
+
+      - name: ca_clinical_m_stage
+        description: "Clinical M stage (distant metastasis) per AJCC staging"
+        data_type: string
+        category: staging
+        instructions: "Extract clinical M stage using AJCC standards. Valid values: cM0, cM1, cM1a, cM1b, cM1c, cMx (or M0, M1 variations when clinical context clear). Source: imaging studies, clinical assessment, symptoms. NEVER use 'Rx' or invalid values. Return null if not found."
+        vocabulary: "AJCC TNM Clinical M Stage (7th/8th Edition)"
+
+  # ========== PATHOLOGICAL STAGING DOMAIN ==========
+  pathological_staging:
+    profile: "TNMPathologicStageGroup, PathologyReport"
+    fields:
+      - name: ca_path_t_stage
+        description: "Pathological T stage (tumor size/extent) from surgical pathology"
+        data_type: string
+        category: staging
+        instructions: "Extract pathological T stage from surgical pathology reports. Valid values: pT0, pTis, pTa, pT1, pT1a, pT1b, pT2, pT2a, pT2b, pT3, pT3a, pT3b, pT4, pT4a, pT4b, pTx. MUST use 'p' prefix for pathological staging. Source: surgical pathology reports, resection specimens, biopsy reports. NEVER use 'Rx' or values without 'p' prefix. Return null if not found."
+        vocabulary: "AJCC TNM Pathological T Stage (7th/8th Edition)"
+
+      - name: ca_path_n_stage
+        description: "Pathological N stage (lymph node involvement) from surgical pathology"
+        data_type: string
+        category: staging
+        instructions: "Extract pathological N stage from surgical pathology reports. Valid values: pN0, pN1, pN1a, pN1b, pN1c, pN2, pN2a, pN2b, pN2c, pN3, pN3a, pN3b, pN3c, pNx. MUST use 'p' prefix for pathological staging. Source: lymph node dissection results, pathology reports. NEVER use 'Rx' or values without 'p' prefix. Return null if not found."
+        vocabulary: "AJCC TNM Pathological N Stage (7th/8th Edition)"
+
+      - name: ca_path_m_stage
+        description: "Pathological M stage (distant metastasis) from surgical pathology"
+        data_type: string
+        category: staging
+        instructions: "Extract pathological M stage from surgical pathology reports. Valid values: pM0, pM1, pM1a, pM1b, pM1c, pMx. MUST use 'p' prefix for pathological staging. Source: pathological confirmation of distant metastases. NEVER use 'Rx' or values without 'p' prefix. Return null if not found."
+        vocabulary: "AJCC TNM Pathological M Stage (7th/8th Edition)"
+
+  # ========== SUMMARY STAGING DOMAIN ==========
+  summary_staging:
+    profile: "CancerStageGroup, SEERSummaryStage"
+    fields:
+      - name: ca_gen_sum_stage_2
+        description: "SEER Summary Stage 2000 derived from TNM staging"
+        data_type: string
+        category: staging
+        instructions: "Derive SEER Summary Stage from TNM values or extract if explicitly stated. Valid values: '0' (In situ), '1' (Localized), '2' (Regional by direct extension), '3' (Regional lymph nodes involved), '4' (Distant site/lymph nodes), '7' (Distant site/lymph nodes, unknown if extension or mets), '9' (Unstaged/Unknown). Use TNM staging to determine appropriate summary stage. Return '9' if cannot be determined."
+        vocabulary: "SEER Summary Stage 2000"
+
+  # ========== PERFORMANCE STATUS DOMAIN ==========
+  performance_status:
+    profile: "PerformanceStatus, ECOGStatus, KarnofskyStatus"
+    fields:
+      - name: ecog
+        description: "ECOG Performance Status (0-5)"
+        data_type: integer
+        category: performance
+        instructions: "Extract ECOG Performance Status score. Valid values: 0 (Fully active), 1 (Restricted in strenuous activity), 2 (Ambulatory, unable to work), 3 (Limited self-care, >50% in bed), 4 (Completely disabled, totally confined), 5 (Dead). If only KPS present, infer ECOG: KPS 90-100→0, KPS 70-80→1, KPS 50-60→2, KPS 30-40→3, KPS ≤20→4. Document inference in notes. Return null if not found."
+        vocabulary: "ECOG Performance Status Scale"
+
+      - name: kps
+        description: "Karnofsky Performance Score (0-100)"
+        data_type: integer
+        category: performance
+        instructions: "Extract Karnofsky Performance Score. Valid values: 0-100 in increments of 10. 100 (Normal), 90 (Minor symptoms), 80 (Some symptoms), 70 (Cares for self), 60 (Occasional assistance), 50 (Considerable assistance), 40 (Disabled), 30 (Severely disabled), 20 (Very sick), 10 (Moribund), 0 (Dead). If only ECOG present, infer KPS: ECOG 0→90-100, ECOG 1→70-80, ECOG 2→50-60, ECOG 3→30-40, ECOG 4→≤20. Document inference in notes. Return null if not found."
+        vocabulary: "Karnofsky Performance Scale"

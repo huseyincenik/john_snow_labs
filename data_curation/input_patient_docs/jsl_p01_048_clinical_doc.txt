@@ -1,0 +1,25 @@
+===== Document 048 =====
+Patient Id: p01
+Doc Id: 048
+Filename: p01/jsl_p01_048_clinical_doc.txt
+Doc Type: clinical
+Date: 2025-10-20
+Title: GI Clinic - Colonoscopy Note
+---
+PATIENT: Patient
+ID: p01
+
+PROCEDURE: High-Definition Chromoendoscopy via Colostomy.
+
+INDICATION: Lynch Syndrome surveillance.
+
+FINDINGS:
+The colonoscope was advanced through the end colostomy to the terminal ileum. The colonic mucosa was examined carefully during withdrawal. There were post-surgical changes noted. No polyps, masses, or other mucosal abnormalities were identified.
+
+IMPRESSION: Normal colonoscopy. No evidence of new polyps or neoplasia.
+
+RECOMMENDATION: Continue annual colonoscopic surveillance as per Lynch Syndrome guidelines.
+
+Electronically Signed,
+Dr. Peters, MD
+JSL Medical Center, Department of Gastroenterology

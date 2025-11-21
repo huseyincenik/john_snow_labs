@@ -1,0 +1,48 @@
+[project]
+name = "data-curation-docetl"
+version = "0.1.0"
+description = "Data Curation Service using DocETL for medical document processing"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "openai>=1.3.0",
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0.1",
+    "aiofiles>=23.2.1",
+    "asyncpg>=0.29.0",
+    "psycopg2-binary>=2.9.9",
+    "sqlalchemy>=2.0.23",
+    "httpx>=0.25.0",
+    "tenacity>=8.2.3",
+    "python-multipart>=0.0.6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.11.0",
+    "ruff>=0.1.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "README.md", "pyproject.toml", "cancer_registry_fields.yaml", "config", "data", "docker-compose.yml", "Dockerfile"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+

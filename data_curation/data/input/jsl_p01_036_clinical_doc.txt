@@ -1,0 +1,27 @@
+===== Document 036 =====
+Patient Id: p01
+Doc Id: 036
+Filename: p01/jsl_p01_036_clinical_doc.txt
+Doc Type: clinical
+Date: 2023-11-20
+Title: Interventional Radiology Follow-Up
+---
+PATIENT: Patient
+ID: p01
+
+SUBJECTIVE:
+Patient is a 68-year-old male s/p left PCN tube placement for a benign ureteral stricture. He is now 6 months out from the procedure and has been tolerating the tube. He is eager to attempt internalization. He continues treatment for his prostate cancer with good response.
+
+ASSESSMENT:
+- Left ureteral obstruction, successfully managed with a PCN tube.
+- Ready to proceed with antegrade intervention.
+
+PLAN:
+1.  We have scheduled the patient for an antegrade nephrogram, balloon ureteroplasty (dilation) of the left ureteral stricture, and antegrade placement of a double-J ureteral stent.
+2.  The procedure is planned for next week.
+3.  If successful, we will cap the nephrostomy tube for a trial period. If he tolerates this without pain or signs of obstruction, the PCN tube can then be removed, leaving him with only the internal stent.
+4.  Discussed risks including failure of the procedure, infection, and bleeding. Patient understands and wishes to proceed.
+
+Electronically Signed,
+Dr. Marinda, MD
+JSL Medical Center, Department of Interventional Radiology

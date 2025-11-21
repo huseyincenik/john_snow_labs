@@ -1,0 +1,36 @@
+===== Document 001 =====
+Patient Id: p01
+Doc Id: 001
+Filename: p01/jsl_p01_001_summary_doc.txt
+Doc Type: summary
+Date: 2015-09-15
+Title: Oncology Initial Evaluation Summary
+---
+PATIENT: Patient
+ID: p01
+DOB: [REDACTED]
+
+ATTENDING: Dr. Smith, MD (Medical Oncology)
+
+COMPREHENSIVE ONCOLOGY HISTORY:
+
+This is a 60-year-old male with a significant personal and family history of cancer, consistent with a hereditary cancer syndrome.
+
+1.  **Rectal Cancer (C20.9):** Diagnosed in 1987. He was treated at an outside facility with neoadjuvant chemoradiation (5-FU/Mitomycin and 3000 cGy pelvic radiation) followed by an abdominoperineal resection (APR) resulting in a permanent end colostomy. He is considered cured but with significant long-term effects from pelvic radiation.
+
+2.  **Appendiceal Cancer (C18.1):** Diagnosed in 2005 after presenting with symptoms leading to a laparoscopic appendectomy. Pathology revealed a moderately differentiated mucinous adenocarcinoma, pT3. He declined a recommended right hemicolectomy and was treated with adjuvant capecitabine in 2006. He is currently considered to have no evidence of disease (NED) from this primary.
+
+3.  **Prostate Cancer (C61.9):** Recently diagnosed in July 2015 via transperineal biopsy, prompted by a rising PSA (14.7 ng/mL). Pathology showed prostatic adenocarcinoma, Gleason Grade Group 3 (3+4), involving 1 of 6 cores (45% of core).
+
+4.  **Hereditary Cancer Syndrome:** His history of three separate primary cancers (rectal, appendiceal, prostate) is highly suspicious for Lynch Syndrome (HNPCC). His family history is also significant for a father who died of colon cancer and a sister who died of metastatic cancer. Formal genetics consultation and testing will be strongly recommended.
+
+CURRENT PRESENTATION:
+The patient is referred to JSL Medical Center for management of his newly diagnosed, unfavorable intermediate-risk prostate cancer. The key challenge in his management is his prior pelvic radiation, which significantly constrains treatment options.
+
+ASSESSMENT & PLAN:
+1.  **Prostate Cancer:** The patient is not a candidate for brachytherapy due to his absent rectum and prior pelvic radiation. Treatment options discussed are radical prostatectomy (RP) vs. external beam radiation therapy (EBRT) with androgen deprivation therapy (ADT). Given his surgical history and prior radiation, both options carry increased risk of morbidity. He is leaning towards radiation-based treatment.
+2.  **Genetic Counseling:** Urgent referral to the Cancer Genetics clinic to discuss testing for Lynch Syndrome. This has significant implications for his future cancer risk (e.g., bladder, urothelial, gastric) and for his family members.
+3.  **Staging:** Proceed with staging workup for the prostate cancer, including a bone scan and a pelvic MRI to better define the local extent of the disease.
+4.  **Multidisciplinary Review:** His case will be presented at the next Genitourinary (GU) Oncology Tumor Board to discuss the complexities of his treatment.
+
+This patient represents a complex clinical case requiring careful multidisciplinary management to navigate his multiple cancer diagnoses and treatment-related constraints.

@@ -1,0 +1,33 @@
+===== Document 004 =====
+Patient Id: p01
+Doc Id: 004
+Filename: p01/jsl_p01_004_clinical_doc.txt
+Doc Type: clinical
+Date: 2015-10-15
+Title: Radiation Oncology Consultation Note
+---
+PATIENT: Patient
+ID: p01
+
+REASON FOR CONSULTATION: Management of unfavorable intermediate-risk prostate cancer.
+
+HISTORY OF PRESENT ILLNESS: The patient is a 60-year-old male with a complex oncologic history, most notably rectal cancer in 1987 treated with neoadjuvant chemoradiation (30 Gy) and APR, and now a new diagnosis of prostate cancer (Gleason 3+4=7, PSA 15.7 ng/mL). He has known Lynch Syndrome. Staging workup (MRI, bone scan) is negative for metastatic disease, though local staging is limited by artifact. He is reluctant to undergo surgery.
+
+ASSESSMENT:
+The patient has unfavorable intermediate-risk prostate cancer. His prior pelvic radiation presents a significant challenge. The rectum is absent, precluding brachytherapy. The main options are radical prostatectomy or external beam radiation therapy (EBRT).
+
+DISCUSSION:
+We discussed treatment options at length.
+1.  **Surgery (RP):** This remains a valid option, but the risks of urinary incontinence and erectile dysfunction are high, and the procedure is technically challenging given his prior APR and pelvic scarring.
+2.  **EBRT:** This is a feasible alternative. Given his unfavorable-risk features, treatment would be combined with androgen deprivation therapy (ADT) for 6 months. We discussed the increased risk of late GU and GI toxicity due to re-irradiation of the pelvis, even with modern techniques. The prior 30 Gy is a significant dose, and further radiation must be planned meticulously to minimize overlap and spare organs at risk, particularly the bladder. There is also a theoretical increased risk of a second malignancy (e.g., bladder cancer) in a patient with Lynch Syndrome receiving pelvic radiation, although the absolute risk is low.
+
+PLAN:
+After extensive discussion, the patient expresses his preference to proceed with EBRT and ADT. He understands the risks, including the potential for significant long-term urinary toxicity.
+1.  Initiate ADT (e.g., Leuprolide) for 6 months.
+2.  Proceed with CT simulation for radiation planning. We will plan for a dose of 75.6 Gy in 42 fractions to the prostate.
+3.  Place fiducial markers in the prostate for image guidance during treatment.
+4.  Continue multidisciplinary management with Urology and Medical Oncology.
+
+Electronically Signed,
+Dr. Brown, MD
+JSL Medical Center, Department of Radiation Oncology

@@ -1,0 +1,25 @@
+===== Document 021 =====
+Patient Id: p01
+Doc Id: 021
+Filename: p01/jsl_p01_021_pathology_doc.txt
+Doc Type: pathology
+Date: 2020-08-08
+Title: Surgical Pathology Report - Bladder Scar
+---
+PATIENT: Patient
+ID: p01
+ACCESSION: [REDACTED]
+
+CLINICAL HISTORY: Resection of scar tissue at left ureteral orifice.
+
+SPECIMEN: Left trigone scar
+
+FINAL DIAGNOSIS:
+Urothelial mucosa with reactive atypia and changes related to prior surgical procedure. No evidence of carcinoma.
+
+COMMENT:
+The specimen consists of fragments of urothelial mucosa with underlying fibrotic stroma. There is marked chronic inflammation and reactive changes to the urothelium. No malignancy is identified. These findings are consistent with post-surgical and/or post-radiation scarring.
+
+Electronically Signed,
+Dr. Miller, MD
+JSL Lab, Department of Pathology

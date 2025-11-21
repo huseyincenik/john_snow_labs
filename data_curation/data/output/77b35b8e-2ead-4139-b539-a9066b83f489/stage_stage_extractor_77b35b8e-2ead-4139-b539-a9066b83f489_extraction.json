@@ -1,0 +1,330 @@
+{
+  "session_id": "77b35b8e-2ead-4139-b539-a9066b83f489",
+  "generated_timestamp": "2025-11-21T09:30:42.168707",
+  "stage": "stage_extractor",
+  "total_documents_processed": 1,
+  "document_results": [
+    {
+      "doc_id": "001",
+      "extracted_fields": [
+        {
+          "field_name": "naaccr_diagnosis_dt",
+          "category": "diagnosis",
+          "raw_value": "2015-09-15",
+          "normalized_value": "2015-09-15",
+          "units": "YYYY-MM-DD",
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "The value is extracted from the document and converted to a standardized format (YYYY-MM-DD). This ensures consistency across different formats.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "001",
+              "split_number": 1,
+              "reasoning_excerpt": "Extract the earliest date of cancer diagnosis in YYYY-MM-DD format."
+            }
+          ],
+          "extraction_timestamp": "2025-11-21T09:30:42.168321",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_site",
+          "category": "diagnosis",
+          "raw_value": "Prostate (C61)/Malignant",
+          "normalized_value": "prostate",
+          "units": null,
+          "vocabulary_code": "Site Name (Code)/Behavior",
+          "field_evidence": {
+            "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "001",
+              "split_number": 1,
+              "reasoning_excerpt": "Extract the anatomical site in ICD-O-3 format."
+            }
+          ],
+          "extraction_timestamp": "2025-11-21T09:30:42.168342",
+          "data_type": "string"
+        },
+        {
+          "field_name": "naaccr_histology_cd",
+          "category": "diagnosis",
+          "raw_value": null,
+          "normalized_value": null,
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "001",
+              "split_number": 1,
+              "reasoning_excerpt": "Extract ICD-O-3 histology code in 'Code/Description' format."
+            }
+          ],
+          "extraction_timestamp": "2025-11-21T09:30:42.168349",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_clinical_t_stage",
+          "category": "staging",
+          "raw_value": null,
+          "normalized_value": null,
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "001",
+              "split_number": 1,
+              "reasoning_excerpt": "Extract clinical T stage using AJCC standards."
+            }
+          ],
+          "extraction_timestamp": "2025-11-21T09:30:42.168356",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_clinical_n_stage",
+          "category": "staging",
+          "raw_value": null,
+          "normalized_value": null,
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "001",
+              "split_number": 1,
+              "reasoning_excerpt": "Extract clinical N stage using AJCC standards."
+            }
+          ],
+          "extraction_timestamp": "2025-11-21T09:30:42.168362",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_clinical_m_stage",
+          "category": "staging",
+          "raw_value": null,
+          "normalized_value": null,
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "001",
+              "split_number": 1,
+              "reasoning_excerpt": "Extract clinical M stage using AJCC standards."
+            }
+          ],
+          "extraction_timestamp": "2025-11-21T09:30:42.168368",
+          "data_type": "string"
+        },
+        {
+          "field_name": "naaccr_histology_cd",
+          "category": "diagnosis",
+          "raw_value": null,
+          "normalized_value": null,
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "001",
+              "split_number": 1,
+              "reasoning_excerpt": "Extract ICD-O-3 histology code in 'Code/Description' format."
+            }
+          ],
+          "extraction_timestamp": "2025-11-21T09:30:42.168374",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_path_t_stage",
+          "category": "staging",
+          "raw_value": null,
+          "normalized_value": null,
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "001",
+              "split_number": 1,
+              "reasoning_excerpt": "Extract pathological T stage from surgical pathology reports."
+            }
+          ],
+          "extraction_timestamp": "2025-11-21T09:30:42.168409",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_path_n_stage",
+          "category": "staging",
+          "raw_value": null,
+          "normalized_value": null,
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "001",
+              "split_number": 1,
+              "reasoning_excerpt": "Extract pathological N stage from surgical pathology reports."
+            }
+          ],
+          "extraction_timestamp": "2025-11-21T09:30:42.168416",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_path_m_stage",
+          "category": "staging",
+          "raw_value": null,
+          "normalized_value": null,
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "001",
+              "split_number": 1,
+              "reasoning_excerpt": "Extract pathological M stage from surgical pathology reports."
+            }
+          ],
+          "extraction_timestamp": "2025-11-21T09:30:42.168422",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_gen_sum_stage_2",
+          "category": "staging",
+          "raw_value": null,
+          "normalized_value": null,
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "001",
+              "split_number": 1,
+              "reasoning_excerpt": "Extract the current stage of prostate cancer from the document."
+            }
+          ],
+          "extraction_timestamp": "2025-11-21T09:30:42.168427",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ecog",
+          "category": "performance",
+          "raw_value": null,
+          "normalized_value": null,
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "001",
+              "split_number": 1,
+              "reasoning_excerpt": "Extract the current stage of prostate cancer from the document."
+            }
+          ],
+          "extraction_timestamp": "2025-11-21T09:30:42.168433",
+          "data_type": "integer"
+        },
+        {
+          "field_name": "kps",
+          "category": "performance",
+          "raw_value": null,
+          "normalized_value": null,
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "001",
+              "split_number": 1,
+              "reasoning_excerpt": "Extract the current stage of prostate cancer from the document."
+            }
+          ],
+          "extraction_timestamp": "2025-11-21T09:30:42.168438",
+          "data_type": "integer"
+        }
+      ],
+      "total_fields_extracted": 13,
+      "processing_time_seconds": 55.97719049453735
+    }
+  ],
+  "total_fields_extracted": 13,
+  "processing_time_seconds": 55.97823405265808,
+  "timestamp": "2025-11-21T09:30:42.168718"
+}

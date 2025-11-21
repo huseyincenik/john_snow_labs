@@ -1,0 +1,35 @@
+===== Document 042 =====
+Patient Id: p01
+Doc Id: 042
+Filename: p01/jsl_p01_042_clinical_doc.txt
+Doc Type: clinical
+Date: 2025-03-10
+Title: Urology Follow-Up Note
+---
+PATIENT: Patient
+ID: p01
+
+SUBJECTIVE:
+Patient is a 69-year-old male for routine surveillance. He underwent a left ureteral stent exchange in January and recovered without issue. He continues on ADT for his prostate cancer. He has no urologic complaints.
+
+OBJECTIVE:
+-   **Cystoscopy (today):** No evidence of recurrent bladder tumor. Stable post-treatment changes.
+-   **Urine Cytology (from 01/15/2025):** Negative for high-grade urothelial carcinoma.
+-   **Labs (03/04/2025):**
+    -   PSA: <0.05 ng/mL (stable)
+    -   Testosterone: 9 ng/dL (stable)
+
+ASSESSMENT:
+1.  **Bladder Cancer (C67.9):** No evidence of disease. Continues to be in remission.
+2.  **Prostate Cancer (C61.9):** Remains well-controlled and suppressed on ADT.
+3.  **Lynch Syndrome:** Stable, continuing multi-system surveillance.
+
+PLAN:
+1.  Continue ADT (Relugolix).
+2.  Continue scheduled ureteral stent exchanges.
+3.  Next surveillance cystoscopy and urine cytology in 6 months.
+4.  Continue follow-up with Medical Oncology for ADT management and with GI/Derm for other Lynch-related surveillance.
+
+Electronically Signed,
+Dr. Johnson, MD
+JSL Medical Center, Department of Urology

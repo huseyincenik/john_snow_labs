@@ -1,0 +1,370 @@
+{
+  "session_id": "77b35b8e-2ead-4139-b539-a9066b83f489",
+  "status": "completed",
+  "message": "Processing completed successfully",
+  "tagger_result": {
+    "session_id": "77b35b8e-2ead-4139-b539-a9066b83f489",
+    "generated_timestamp": "2025-11-21T09:29:46.182971",
+    "stage": "stage_tagger",
+    "total_documents": 1,
+    "sorted_documents": [
+      {
+        "doc_id": "001",
+        "filename": "jsl_p01_001_summary_doc.txt",
+        "doc_type": "summary",
+        "doc_date": "2015-09-15",
+        "type_confidence": 0.95,
+        "date_confidence": 0.85,
+        "content": "===== Document 001 =====\nPatient Id: p01\nDoc Id: 001\nFilename: p01/jsl_p01_001_summary_doc.txt\nDoc Type: summary\nDate: 2015-09-15\nTitle: Oncology Initial Evaluation Summary\n---\nPATIENT: Patient\nID: p01\nDOB: [REDACTED]\n\nATTENDING: Dr. Smith, MD (Medical Oncology)\n\nCOMPREHENSIVE ONCOLOGY HISTORY:\n\nThis is a 60-year-old male with a significant personal and family history of cancer, consistent with a hereditary cancer syndrome.\n\n1.  **Rectal Cancer (C20.9):** Diagnosed in 1987. He was treated at an outside facility with neoadjuvant chemoradiation (5-FU/Mitomycin and 3000 cGy pelvic radiation) followed by an abdominoperineal resection (APR) resulting in a permanent end colostomy. He is considered cured but with significant long-term effects from pelvic radiation.\n\n2.  **Appendiceal Cancer (C18.1):** Diagnosed in 2005 after presenting with symptoms leading to a laparoscopic appendectomy. Pathology revealed a moderately differentiated mucinous adenocarcinoma, pT3. He declined a recommended right hemicolectomy and was treated with adjuvant capecitabine in 2006. He is currently considered to have no evidence of disease (NED) from this primary.\n\n3.  **Prostate Cancer (C61.9):** Recently diagnosed in July 2015 via transperineal biopsy, prompted by a rising PSA (14.7 ng/mL). Pathology showed prostatic adenocarcinoma, Gleason Grade Group 3 (3+4), involving 1 of 6 cores (45% of core).\n\n4.  **Hereditary Cancer Syndrome:** His history of three separate primary cancers (rectal, appendiceal, prostate) is highly suspicious for Lynch Syndrome (HNPCC). His family history is also significant for a father who died of colon cancer and a sister who died of metastatic cancer. Formal genetics consultation and testing will be strongly recommended.\n\nCURRENT PRESENTATION:\nThe patient is referred to JSL Medical Center for management of his newly diagnosed, unfavorable intermediate-risk prostate cancer. The key challenge in his management is his prior pelvic radiation, which significantly constrains treatment options.\n\nASSESSMENT & PLAN:\n1.  **Prostate Cancer:** The patient is not a candidate for brachytherapy due to his absent rectum and prior pelvic radiation. Treatment options discussed are radical prostatectomy (RP) vs. external beam radiation therapy (EBRT) with androgen deprivation therapy (ADT). Given his surgical history and prior radiation, both options carry increased risk of morbidity. He is leaning towards radiation-based treatment.\n2.  **Genetic Counseling:** Urgent referral to the Cancer Genetics clinic to discuss testing for Lynch Syndrome. This has significant implications for his future cancer risk (e.g., bladder, urothelial, gastric) and for his family members.\n3.  **Staging:** Proceed with staging workup for the prostate cancer, including a bone scan and a pelvic MRI to better define the local extent of the disease.\n4.  **Multidisciplinary Review:** His case will be presented at the next Genitourinary (GU) Oncology Tumor Board to discuss the complexities of his treatment.\n\nThis patient represents a complex clinical case requiring careful multidisciplinary management to navigate his multiple cancer diagnoses and treatment-related constraints.",
+        "split_info": {
+          "is_split": false,
+          "split_number": 1,
+          "total_splits": 1,
+          "estimated_tokens": 796
+        }
+      }
+    ],
+    "processing_time_seconds": 0.003981590270996094,
+    "timestamp": "2025-11-21T09:29:46.182984"
+  },
+  "extraction_result": {
+    "session_id": "77b35b8e-2ead-4139-b539-a9066b83f489",
+    "generated_timestamp": "2025-11-21T09:30:42.168707",
+    "stage": "stage_extractor",
+    "total_documents_processed": 1,
+    "document_results": [
+      {
+        "doc_id": "001",
+        "extracted_fields": [
+          {
+            "field_name": "naaccr_diagnosis_dt",
+            "category": "diagnosis",
+            "raw_value": "2015-09-15",
+            "normalized_value": "2015-09-15",
+            "units": "YYYY-MM-DD",
+            "vocabulary_code": null,
+            "field_evidence": {
+              "explanation": "The value is extracted from the document and converted to a standardized format (YYYY-MM-DD). This ensures consistency across different formats.",
+              "inferred": false,
+              "related_entities": []
+            },
+            "confidence_level": "medium",
+            "confidence_score": 1.0,
+            "sources": [
+              {
+                "doc_id": "001",
+                "split_number": 1,
+                "reasoning_excerpt": "Extract the earliest date of cancer diagnosis in YYYY-MM-DD format."
+              }
+            ],
+            "extraction_timestamp": "2025-11-21T09:30:42.168321",
+            "data_type": "string"
+          },
+          {
+            "field_name": "ca_site",
+            "category": "diagnosis",
+            "raw_value": "Prostate (C61)/Malignant",
+            "normalized_value": "prostate",
+            "units": null,
+            "vocabulary_code": "Site Name (Code)/Behavior",
+            "field_evidence": {
+              "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+              "inferred": false,
+              "related_entities": []
+            },
+            "confidence_level": "medium",
+            "confidence_score": 1.0,
+            "sources": [
+              {
+                "doc_id": "001",
+                "split_number": 1,
+                "reasoning_excerpt": "Extract the anatomical site in ICD-O-3 format."
+              }
+            ],
+            "extraction_timestamp": "2025-11-21T09:30:42.168342",
+            "data_type": "string"
+          },
+          {
+            "field_name": "naaccr_histology_cd",
+            "category": "diagnosis",
+            "raw_value": null,
+            "normalized_value": null,
+            "units": null,
+            "vocabulary_code": null,
+            "field_evidence": {
+              "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+              "inferred": false,
+              "related_entities": []
+            },
+            "confidence_level": "medium",
+            "confidence_score": 1.0,
+            "sources": [
+              {
+                "doc_id": "001",
+                "split_number": 1,
+                "reasoning_excerpt": "Extract ICD-O-3 histology code in 'Code/Description' format."
+              }
+            ],
+            "extraction_timestamp": "2025-11-21T09:30:42.168349",
+            "data_type": "string"
+          },
+          {
+            "field_name": "ca_clinical_t_stage",
+            "category": "staging",
+            "raw_value": null,
+            "normalized_value": null,
+            "units": null,
+            "vocabulary_code": null,
+            "field_evidence": {
+              "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+              "inferred": false,
+              "related_entities": []
+            },
+            "confidence_level": "medium",
+            "confidence_score": 1.0,
+            "sources": [
+              {
+                "doc_id": "001",
+                "split_number": 1,
+                "reasoning_excerpt": "Extract clinical T stage using AJCC standards."
+              }
+            ],
+            "extraction_timestamp": "2025-11-21T09:30:42.168356",
+            "data_type": "string"
+          },
+          {
+            "field_name": "ca_clinical_n_stage",
+            "category": "staging",
+            "raw_value": null,
+            "normalized_value": null,
+            "units": null,
+            "vocabulary_code": null,
+            "field_evidence": {
+              "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+              "inferred": false,
+              "related_entities": []
+            },
+            "confidence_level": "medium",
+            "confidence_score": 1.0,
+            "sources": [
+              {
+                "doc_id": "001",
+                "split_number": 1,
+                "reasoning_excerpt": "Extract clinical N stage using AJCC standards."
+              }
+            ],
+            "extraction_timestamp": "2025-11-21T09:30:42.168362",
+            "data_type": "string"
+          },
+          {
+            "field_name": "ca_clinical_m_stage",
+            "category": "staging",
+            "raw_value": null,
+            "normalized_value": null,
+            "units": null,
+            "vocabulary_code": null,
+            "field_evidence": {
+              "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+              "inferred": false,
+              "related_entities": []
+            },
+            "confidence_level": "medium",
+            "confidence_score": 1.0,
+            "sources": [
+              {
+                "doc_id": "001",
+                "split_number": 1,
+                "reasoning_excerpt": "Extract clinical M stage using AJCC standards."
+              }
+            ],
+            "extraction_timestamp": "2025-11-21T09:30:42.168368",
+            "data_type": "string"
+          },
+          {
+            "field_name": "naaccr_histology_cd",
+            "category": "diagnosis",
+            "raw_value": null,
+            "normalized_value": null,
+            "units": null,
+            "vocabulary_code": null,
+            "field_evidence": {
+              "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+              "inferred": false,
+              "related_entities": []
+            },
+            "confidence_level": "medium",
+            "confidence_score": 1.0,
+            "sources": [
+              {
+                "doc_id": "001",
+                "split_number": 1,
+                "reasoning_excerpt": "Extract ICD-O-3 histology code in 'Code/Description' format."
+              }
+            ],
+            "extraction_timestamp": "2025-11-21T09:30:42.168374",
+            "data_type": "string"
+          },
+          {
+            "field_name": "ca_path_t_stage",
+            "category": "staging",
+            "raw_value": null,
+            "normalized_value": null,
+            "units": null,
+            "vocabulary_code": null,
+            "field_evidence": {
+              "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+              "inferred": false,
+              "related_entities": []
+            },
+            "confidence_level": "medium",
+            "confidence_score": 1.0,
+            "sources": [
+              {
+                "doc_id": "001",
+                "split_number": 1,
+                "reasoning_excerpt": "Extract pathological T stage from surgical pathology reports."
+              }
+            ],
+            "extraction_timestamp": "2025-11-21T09:30:42.168409",
+            "data_type": "string"
+          },
+          {
+            "field_name": "ca_path_n_stage",
+            "category": "staging",
+            "raw_value": null,
+            "normalized_value": null,
+            "units": null,
+            "vocabulary_code": null,
+            "field_evidence": {
+              "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+              "inferred": false,
+              "related_entities": []
+            },
+            "confidence_level": "medium",
+            "confidence_score": 1.0,
+            "sources": [
+              {
+                "doc_id": "001",
+                "split_number": 1,
+                "reasoning_excerpt": "Extract pathological N stage from surgical pathology reports."
+              }
+            ],
+            "extraction_timestamp": "2025-11-21T09:30:42.168416",
+            "data_type": "string"
+          },
+          {
+            "field_name": "ca_path_m_stage",
+            "category": "staging",
+            "raw_value": null,
+            "normalized_value": null,
+            "units": null,
+            "vocabulary_code": null,
+            "field_evidence": {
+              "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+              "inferred": false,
+              "related_entities": []
+            },
+            "confidence_level": "medium",
+            "confidence_score": 1.0,
+            "sources": [
+              {
+                "doc_id": "001",
+                "split_number": 1,
+                "reasoning_excerpt": "Extract pathological M stage from surgical pathology reports."
+              }
+            ],
+            "extraction_timestamp": "2025-11-21T09:30:42.168422",
+            "data_type": "string"
+          },
+          {
+            "field_name": "ca_gen_sum_stage_2",
+            "category": "staging",
+            "raw_value": null,
+            "normalized_value": null,
+            "units": null,
+            "vocabulary_code": null,
+            "field_evidence": {
+              "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+              "inferred": false,
+              "related_entities": []
+            },
+            "confidence_level": "medium",
+            "confidence_score": 1.0,
+            "sources": [
+              {
+                "doc_id": "001",
+                "split_number": 1,
+                "reasoning_excerpt": "Extract the current stage of prostate cancer from the document."
+              }
+            ],
+            "extraction_timestamp": "2025-11-21T09:30:42.168427",
+            "data_type": "string"
+          },
+          {
+            "field_name": "ecog",
+            "category": "performance",
+            "raw_value": null,
+            "normalized_value": null,
+            "units": null,
+            "vocabulary_code": null,
+            "field_evidence": {
+              "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+              "inferred": false,
+              "related_entities": []
+            },
+            "confidence_level": "medium",
+            "confidence_score": 1.0,
+            "sources": [
+              {
+                "doc_id": "001",
+                "split_number": 1,
+                "reasoning_excerpt": "Extract the current stage of prostate cancer from the document."
+              }
+            ],
+            "extraction_timestamp": "2025-11-21T09:30:42.168433",
+            "data_type": "integer"
+          },
+          {
+            "field_name": "kps",
+            "category": "performance",
+            "raw_value": null,
+            "normalized_value": null,
+            "units": null,
+            "vocabulary_code": null,
+            "field_evidence": {
+              "explanation": "The value is extracted from the document and converted to a standardized format (code/behavior). This ensures consistency across different formats.",
+              "inferred": false,
+              "related_entities": []
+            },
+            "confidence_level": "medium",
+            "confidence_score": 1.0,
+            "sources": [
+              {
+                "doc_id": "001",
+                "split_number": 1,
+                "reasoning_excerpt": "Extract the current stage of prostate cancer from the document."
+              }
+            ],
+            "extraction_timestamp": "2025-11-21T09:30:42.168438",
+            "data_type": "integer"
+          }
+        ],
+        "total_fields_extracted": 13,
+        "processing_time_seconds": 55.97719049453735
+      }
+    ],
+    "total_fields_extracted": 13,
+    "processing_time_seconds": 55.97823405265808,
+    "timestamp": "2025-11-21T09:30:42.168718"
+  },
+  "consolidation_result": {
+    "session_id": "77b35b8e-2ead-4139-b539-a9066b83f489",
+    "generated_timestamp": "2025-11-21T09:30:48.450463",
+    "stage": "stage_consolidator",
+    "total_fields_consolidated": 0,
+    "consolidated_fields": [],
+    "processing_time_seconds": 6.2735161781311035,
+    "timestamp": "2025-11-21T09:30:48.450487"
+  },
+  "created_at": "2025-11-21T09:30:52.212958"
+}

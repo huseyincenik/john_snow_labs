@@ -1,0 +1,26 @@
+===== Document 015 =====
+Patient Id: p01
+Doc Id: 015
+Filename: p01/jsl_p01_015_pathology_doc.txt
+Doc Type: pathology
+Date: 2019-07-21
+Title: Surgical Pathology Report - Re-staging TURBT
+---
+PATIENT: Patient
+ID: p01
+ACCESSION: [REDACTED]
+
+CLINICAL HISTORY: Re-staging TURBT for pT1 high-grade bladder cancer.
+
+SPECIMEN: Bladder, posterior wall re-resection
+
+FINAL DIAGNOSIS:
+Residual NON-INVASIVE papillary urothelial carcinoma, HIGH GRADE (pTa).
+Muscularis propria is present and is not involved.
+Extensive therapy-related changes and inflammation are noted.
+
+COMMENT: The findings indicate residual high-grade, but non-invasive (pTa), disease. The absence of residual T1 disease is a favorable prognostic factor. The patient is clear to proceed with planned adjuvant intravesical therapy.
+
+Electronically Signed,
+Dr. Miller, MD
+JSL Lab, Department of Pathology

@@ -1,0 +1,25 @@
+===== Document 009 =====
+Patient Id: p01
+Doc Id: 009
+Filename: p01/jsl_p01_009_pathology_doc.txt
+Doc Type: pathology
+Date: 2019-05-05
+Title: Urine Cytology Report
+---
+PATIENT: Patient
+ID: p01
+ACCESSION: [REDACTED]
+
+CLINICAL HISTORY: 64-year-old male with bladder mass, history of Lynch syndrome.
+
+SPECIMEN SOURCE: Bladder, Urine, Voided
+
+FINAL DIAGNOSIS:
+Atypical urothelial cells present.
+
+COMMENT:
+The specimen contains rare clusters of urothelial cells with enlarged nuclei, irregular nuclear contours, and hyperchromasia. These findings are atypical and suspicious, but not definitive for high-grade urothelial carcinoma. Degenerative changes and inflammation are present, which may be contributing to the atypia. Clinical and cystoscopic correlation is required.
+
+Electronically Signed,
+Dr. Miller, MD
+JSL Lab, Department of Pathology

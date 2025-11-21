@@ -1,0 +1,37 @@
+===== Document 026 =====
+Patient Id: p01
+Doc Id: 026
+Filename: p01/jsl_p01_026_radiology_doc.txt
+Doc Type: radiology
+Date: 2022-09-10
+Title: MRI PROSTATE POST TREAT W/WO CON
+---
+EXAMINATION: MRI PROSTATE POST TREAT W/WO CONTRAST
+CLINICAL STATEMENT: 67-year-old male with known local recurrence of prostate cancer on active surveillance. Rising PSA of 2.77 ng/mL. Re-evaluation.
+
+TECHNIQUE: Multiplanar, multisequence images of the prostate were obtained at 1.5T without and with intravenous gadolinium contrast.
+
+COMPARISON: MRI from November 06, 2021.
+
+FINDINGS:
+PROSTATE GLAND: The prostate volume is 8.4 cc. Continued post-treatment changes.
+
+PROSTATE LESIONS:
+LESION 1: The previously identified lesion in the right anterior and posterior mid-gland to apex peripheral zone is unchanged in size, measuring 1.4 cm. It remains suspicious for viable tumor.
+
+OTHER FINDINGS:
+BLADDER: The bladder is trabeculated. There is new, moderate left hydronephrosis and mild-to-moderate left hydroureter, which appears more pronounced than on prior studies. There is wall thickening, hyperenhancement, and calcification in the left bladder base at and adjacent to the left ureterovesical junction. This is concerning for chronic obstruction/inflammation.
+
+LYMPH NODES: No pelvic lymphadenopathy.
+
+BONES: No suspicious osseous lesions.
+
+IMPRESSION:
+1. Unchanged right peripheral zone lesion, consistent with known local recurrence of prostate cancer.
+2. Worsening moderate left hydroureteronephrosis, likely due to chronic inflammatory changes and calcification at the left UVJ, a long-term complication of prior surgery and radiation.
+
+RECOMMENDATION: Clinical correlation for the worsening left hydronephrosis is advised.
+
+Electronically Signed,
+Dr. Davis, MD
+JSL Medical Center, Department of Radiology

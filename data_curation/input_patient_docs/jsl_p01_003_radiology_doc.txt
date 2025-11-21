@@ -1,0 +1,27 @@
+===== Document 003 =====
+Patient Id: p01
+Doc Id: 003
+Filename: p01/jsl_p01_003_radiology_doc.txt
+Doc Type: radiology
+Date: 2015-10-01
+Title: NM BONE SCAN, WHOLE BODY
+---
+EXAMINATION: NM BONE SCAN, WHOLE BODY
+CLINICAL STATEMENT: Prostate cancer, Gleason score 7. Staging evaluation for osseous metastasis.
+
+TECHNIQUE: Following the intravenous injection of 20.1 mCi of Technetium-99m MDP, whole-body planar images were acquired.
+
+COMPARISON: None.
+
+FINDINGS:
+There is symmetric and homogeneous uptake of radiotracer throughout the axial and appendicular skeleton.
+No focal areas of abnormally increased uptake are seen to suggest osteoblastic metastatic disease.
+Mild degenerative changes are noted in the shoulders, hips, and spine.
+Renal excretion is symmetric. Activity is seen in the urinary bladder.
+
+IMPRESSION:
+No scintigraphic evidence of osseous metastatic disease.
+
+Electronically Signed,
+Dr. Wilson, MD
+JSL Medical Center, Department of Radiology

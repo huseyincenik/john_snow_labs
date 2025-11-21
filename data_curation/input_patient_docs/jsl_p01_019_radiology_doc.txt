@@ -1,0 +1,31 @@
+===== Document 019 =====
+Patient Id: p01
+Doc Id: 019
+Filename: p01/jsl_p01_019_radiology_doc.txt
+Doc Type: radiology
+Date: 2020-06-25
+Title: US RENAL LIMITED
+---
+EXAMINATION: ULTRASOUND RENAL, LIMITED
+CLINICAL STATEMENT: Bladder cancer surveillance.
+
+TECHNIQUE: Grayscale and Doppler imaging of the kidneys and bladder.
+
+COMPARISON: CT Urogram from March 30, 2019.
+
+FINDINGS:
+RIGHT KIDNEY: Measures 10.1 cm. No hydronephrosis. Stable simple cortical and parapelvic cysts.
+
+LEFT KIDNEY: Measures 11.2 cm. There is new moderate hydronephrosis. The renal cortex is maintained. The visualized proximal ureter is dilated. The cause of obstruction is not definitively identified on this limited study, but may be related to changes at the ureterovesical junction (UVJ).
+
+BLADDER: Bladder wall appears thickened. Post-void residual volume is elevated at 97 mL.
+
+IMPRESSION:
+1. New moderate left hydronephrosis, concerning for obstruction at or near the left UVJ. This may be related to prior surgery (TURBT) or radiation changes.
+2. Significant post-void residual urine.
+
+RECOMMENDATION: Clinical correlation and further evaluation of the left collecting system is recommended, potentially with CT or direct visualization.
+
+Electronically Signed,
+Dr. Wilson, MD
+JSL Medical Center, Department of Radiology

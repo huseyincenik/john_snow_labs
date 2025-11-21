@@ -1,0 +1,38 @@
+===== Document 007 =====
+Patient Id: p01
+Doc Id: 007
+Filename: p01/jsl_p01_007_clinical_doc.txt
+Doc Type: clinical
+Date: 2019-02-15
+Title: Radiation Oncology Follow-Up
+---
+PATIENT: Patient
+ID: p01
+
+SUBJECTIVE:
+Patient is a 64-year-old male, s/p EBRT (75.6 Gy) and ADT for prostate cancer, completed in April 2016. He has a history of Lynch syndrome with prior rectal and appendiceal cancers. He presents for routine follow-up.
+He reports feeling well overall. However, he notes an episode of gross hematuria approximately one month ago. This was a single episode, which self-resolved. He was seen at a local clinic and given antibiotics, though no formal diagnosis was made.
+An MRI of the abdomen, done for his routine colon cancer surveillance in late 2018, incidentally noted a "0.8 cm lesion along the posterior bladder wall." He has not had specific follow-up for this finding yet.
+His PSA has been slowly rising but remains low.
+
+OBJECTIVE:
+Labs:
+- PSA (02/02/2019): 0.23 ng/mL (Previous: 0.11 in Jan 2018)
+- Testosterone (02/02/2019): 374 ng/dL (Recovered)
+
+ASSESSMENT:
+1.  **Prostate Cancer (C61.9):** Biochemical recurrence (BCR). His PSA is slowly rising from its nadir of <0.05. The doubling time is long, and the absolute value is still very low. This is consistent with a local recurrence.
+2.  **New Bladder Lesion / Hematuria:** The combination of gross hematuria and an enhancing bladder lesion on MRI in a patient with Lynch Syndrome and a history of pelvic radiation is highly concerning for a new primary bladder cancer (urothelial carcinoma). This requires urgent evaluation. The history of pelvic radiation is a known risk factor, as is Lynch Syndrome itself.
+
+PLAN:
+1.  **Prostate Cancer:** Continue active surveillance with serial PSA monitoring every 6 months. No intervention is indicated at this time for the slow BCR.
+2.  **Bladder Lesion:**
+    - Urgent referral back to Urology (Dr. Johnson).
+    - Recommend CT Urogram to evaluate the entire urinary tract.
+    - Recommend urine cytology.
+    - He will almost certainly require a cystoscopy with biopsy/resection of the bladder lesion.
+3.  Reinforced the importance of the urologic evaluation given his multiple risk factors for urothelial carcinoma.
+
+Electronically Signed,
+Dr. Brown, MD
+JSL Medical Center, Department of Radiation Oncology

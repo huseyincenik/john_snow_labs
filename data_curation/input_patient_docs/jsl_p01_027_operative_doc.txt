@@ -1,0 +1,35 @@
+===== Document 027 =====
+Patient Id: p01
+Doc Id: 027
+Filename: p01/jsl_p01_027_operative_doc.txt
+Doc Type: operative
+Date: 2022-11-23
+Title: Procedure Note - PSMA PET/CT Guided Prostate Biopsy
+---
+PRE-PROCEDURE DIAGNOSIS: Local recurrence of prostate cancer.
+
+POST-PROCEDURE DIAGNOSIS: Same.
+
+PROCEDURE: PSMA PET/CT-guided coaxial core needle biopsy of prostate.
+
+INDICATION: To obtain tissue from known site of recurrence for histopathologic confirmation and potential genomic testing, given rising PSA.
+
+OPERATOR: Dr. Marinda, MD (Interventional Radiology)
+
+PROCEDURE DETAILS:
+The patient was placed in the prone position. A pre-procedure PSMA PET/CT scan was performed to localize the target.
+Under sterile conditions and local anesthesia, and with real-time PET/CT guidance, a coaxial needle was advanced via a transgluteal approach to the margin of the PSMA-avid lesion in the right peripheral zone of the prostate.
+Six core biopsy specimens were obtained using an 18-gauge core needle device.
+Touch preparations were made and assessed on-site for adequacy, which showed suspicious cells.
+
+COMPLICATIONS: None. The patient tolerated the procedure well.
+
+SPECIMENS SENT:
+1. Prostate core biopsy, right peripheral zone (for pathology)
+2. Touch preps (for cytology)
+
+IMPRESSION: Successful PSMA PET/CT-guided core biopsy of the recurrent prostate tumor.
+
+Electronically Signed,
+Dr. Marinda, MD
+JSL Medical Center, Department of Interventional Radiology

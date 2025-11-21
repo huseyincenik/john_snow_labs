@@ -1,0 +1,33 @@
+===== Document 044 =====
+Patient Id: p01
+Doc Id: 044
+Filename: p01/jsl_p01_044_clinical_doc.txt
+Doc Type: clinical
+Date: 2025-04-15
+Title: Medical Oncology Follow-Up Note
+---
+PATIENT: Patient
+ID: p01
+
+SUBJECTIVE:
+Patient is a 69-year-old male on continuous ADT for prostate cancer, seen for follow-up. He feels well. We are here to review his recent baseline DEXA scan.
+
+OBJECTIVE:
+-   **DEXA Scan (04/01/2025):** Shows osteopenia (lowest T-score -2.1). No osteoporosis.
+-   **Labs:** PSA remains suppressed at <0.05 ng/mL.
+
+ASSESSMENT:
+1.  **Recurrent Prostate Cancer (C61.9):** Stable, suppressed on Relugolix.
+2.  **ADT-induced Bone Loss:** Has developed osteopenia as a result of long-term androgen deprivation.
+
+PLAN:
+1.  **Bone Health:** To mitigate further bone loss and reduce fracture risk, we will start treatment with a bone-modifying agent.
+    -   Plan to start Denosumab (Prolia) 60 mg subcutaneously every 6 months.
+    -   Patient needs to see his dentist for clearance before initiating Denosumab to ensure no active dental issues that could increase risk of osteonecrosis of the jaw (ONJ).
+    -   Continue Calcium and Vitamin D supplementation.
+2.  **Prostate Cancer:** Continue Relugolix. Continue monitoring PSA/Testosterone every 6 months.
+3.  Follow up in 6 months.
+
+Electronically Signed,
+Dr. Smith, MD
+JSL Medical Center, Department of Medical Oncology

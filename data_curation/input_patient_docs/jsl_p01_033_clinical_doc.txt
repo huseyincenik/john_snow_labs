@@ -1,0 +1,33 @@
+===== Document 033 =====
+Patient Id: p01
+Doc Id: 033
+Filename: p01/jsl_p01_033_clinical_doc.txt
+Doc Type: clinical
+Date: 2023-08-10
+Title: Medical Oncology Follow-Up Note
+---
+PATIENT: Patient
+ID: p01
+
+SUBJECTIVE:
+Patient is a 68-year-old male with recurrent prostate cancer, seen for follow-up. He was started on Relugolix approximately 4 months ago. He reports doing well. He has some mild hot flashes but is otherwise tolerating the medication without issue. He is also managing his left nephrostomy tube.
+
+OBJECTIVE:
+Labs:
+- PSA (08/03/2023): 0.15 ng/mL (Previous: 4.33 ng/mL before starting Relugolix)
+- Testosterone (08/03/2023): 12 ng/dL (castrate)
+
+ASSESSMENT:
+1.  **Recurrent Prostate Cancer (C61.9):** Excellent biochemical response to Relugolix. PSA has dropped significantly and testosterone is well-suppressed.
+2.  **Left Ureteral Obstruction:** Stable, managed with PCN tube.
+3.  **Lynch Syndrome / Other Cancers:** Stable, continues surveillance.
+
+PLAN:
+1.  Continue Relugolix daily.
+2.  Monitor PSA and testosterone every 3-6 months.
+3.  He will continue to follow with IR for management of his nephrostomy tube and planned ureteral intervention.
+4.  Continue all other cancer surveillance as planned.
+
+Electronically Signed,
+Dr. Smith, MD
+JSL Medical Center, Department of Medical Oncology

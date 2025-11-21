@@ -1,0 +1,34 @@
+===== Document 029 =====
+Patient Id: p01
+Doc Id: 029
+Filename: p01/jsl_p01_029_clinical_doc.txt
+Doc Type: clinical
+Date: 2022-12-08
+Title: Interventional Radiology Consultation (Telehealth)
+---
+PATIENT: Patient
+ID: p01
+
+REASON FOR CONSULTATION: Evaluation for management of left urinary obstruction.
+
+REFERRING PHYSICIAN: Dr. Johnson (Urology)
+
+NARRATIVE: This is a 67-year-old man with a complex history (Lynch syndrome, s/p APR, s/p pelvic RT, s/p TURBT) who was found to have worsening left hydroureteronephrosis on imaging. This is attributed to dystrophic calcification and scarring at the left ureteral orifice, a long-term sequela of his prior treatments. His urologist, Dr. Johnson, performed a cystoscopy and felt another transurethral resection would be unsafe. He refers the patient to me to discuss percutaneous options.
+
+REVIEW OF IMAGING: I have reviewed the CT urogram from 12/01/2022 which confirms moderate-severe left hydroureteronephrosis down to the UVJ, with associated calcifications.
+
+ASSESSMENT: Left ureteral obstruction, secondary to benign (post-treatment) stricture.
+
+DISCUSSION: We discussed the situation at length. The obstruction, if left untreated, will lead to progressive, irreversible loss of function in his left kidney. The options are:
+1.  **Percutaneous Nephrostomy (PCN) Tube Placement:** This would be the initial step to decompress the kidney and preserve its function. It involves placing a tube through the back directly into the kidney.
+2.  **Antegrade Stent Placement:** After PCN placement, we could attempt to traverse the stricture from above and place an internalized ureteral stent (an "antegrade" approach).
+3.  **Balloon Ureteroplasty:** We could also attempt to dilate the stricture with a balloon.
+
+PLAN:
+I recommended proceeding with percutaneous nephrostomy tube placement as the first and most important step to relieve the obstruction. Once the kidney is decompressed, we can plan for subsequent attempts at internalization or definitive repair. The patient understands the rationale but is hesitant to have an external tube and requested time to consider his options.
+
+We will schedule him for a follow-up visit in 2 weeks to make a final decision.
+
+Electronically Signed,
+Dr. Marinda, MD
+JSL Medical Center, Department of Interventional Radiology

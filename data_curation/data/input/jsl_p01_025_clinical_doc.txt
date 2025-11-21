@@ -1,0 +1,43 @@
+===== Document 025 =====
+Patient Id: p01
+Doc Id: 025
+Filename: p01/jsl_p01_025_clinical_doc.txt
+Doc Type: clinical
+Date: 2022-01-28
+Title: Urology Note - Discussion of Recurrence
+---
+PATIENT: Patient
+ID: p01
+
+SUBJECTIVE:
+Patient is seen to discuss the results of his recent imaging for biochemically recurrent prostate cancer. He has reviewed the reports and understands the findings. He feels well and has no new symptoms.
+
+OBJECTIVE:
+- PSA (01/22/2022): 1.79 ng/mL (continuing to rise).
+- MRI Prostate (11/06/2021): Lesion in right peripheral zone suspicious for recurrence.
+- PSMA PET/CT (12/11/2021): Intense focal uptake in the right prostate, confirming a localized recurrence. No evidence of metastatic disease.
+
+ASSESSMENT:
+1.  **Localized Recurrent Prostate Cancer:** The patient has a biopsy-proven (from 2015) and now imaging-confirmed isolated local recurrence of his prostate cancer in the right peripheral zone after definitive radiation therapy.
+2.  **Bladder Cancer:** NED.
+3.  **Lynch Syndrome:** Stable.
+
+DISCUSSION & PLAN:
+We had a long discussion about management options for his localized, post-radiation recurrence.
+1.  **Active Surveillance:** Continue to monitor the PSA. Given the slow pace of rise and localized nature, this is a very reasonable option. Intervention can be deferred.
+2.  **Salvage Therapy:**
+    a.  **Salvage Radical Prostatectomy:** Technically very difficult and high-risk in a patient with two prior pelvic surgeries (APR) and pelvic radiation. High risk of severe incontinence and other complications.
+    b.  **Salvage Cryotherapy or HIFU:** Focal therapies could be considered to ablate the known recurrence. This would be less morbid than surgery.
+    c.  **Systemic Therapy (ADT):** Could be re-initiated, but we typically reserve this for metastatic disease or more rapidly progressing non-metastatic disease.
+
+After discussing the risks and benefits, the patient is hesitant to undergo any immediate invasive treatment. He prefers to continue with active surveillance for now.
+
+PLAN:
+1.  Continue active surveillance of the recurrent prostate cancer with PSA testing every 4-6 months.
+2.  We will obtain a biopsy of the PSMA-avid lesion to confirm viable adenocarcinoma and potentially for genomic analysis to guide future therapy.
+3.  Continue routine surveillance for bladder cancer and other Lynch-related cancers.
+4.  Follow up in 6 months with repeat PSA.
+
+Electronically Signed,
+Dr. Johnson, MD
+JSL Medical Center, Department of Urology

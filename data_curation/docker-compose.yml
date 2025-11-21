@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    env_file:
+      - config/.env
+    ports:
+      - "8000:8000"
+    environment:
+      - OUTPUT_DIR=/app/data/output
+      - LOG_DIR=/app/logs
+      - QWEN_API_BASE=http://qwen:11434/v1
+    depends_on:
+      - qwen
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+  qwen:
+    image: ollama/ollama:latest
+    container_name: qwen
+    ports:
+      - "${QWEN_PORT:-11435}:11434"
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    volumes:
+      - ./ollama:/root/.ollama
+    command: ["serve"]
+    restart: unless-stopped
+
+  # Optional: PostgreSQL service
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-data_curation}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    profiles:
+      - postgres
+
+volumes:
+  postgres_data:
+

@@ -1,0 +1,35 @@
+===== Document 008 =====
+Patient Id: p01
+Doc Id: 008
+Filename: p01/jsl_p01_008_radiology_doc.txt
+Doc Type: radiology
+Date: 2019-03-30
+Title: CT UROGRAM W/WO CONTRAST
+---
+EXAMINATION: CT UROGRAM W/WO CONTRAST
+CLINICAL STATEMENT: 64-year-old male with history of Lynch syndrome, prior pelvic radiation, and prostate cancer. Recent gross hematuria and 0.8 cm bladder lesion on prior MRI. Evaluate for urothelial carcinoma.
+
+TECHNIQUE: Multiphase CT imaging of the abdomen and pelvis was performed without and with intravenous contrast, including non-contrast, nephrographic, and excretory phases.
+
+COMPARISON: Abdominal MRI from 2018.
+
+FINDINGS:
+KIDNEYS/URETERS: No hydronephrosis or hydroureter. No filling defects in the upper tracts. Bilateral simple renal cysts are noted.
+
+BLADDER: There is a new, avidly enhancing soft tissue nodule in the left posterior bladder wall, near the trigone. It measures 1.2 x 1.1 cm in maximal dimensions. This corresponds to the lesion seen on the prior MRI and has increased in size. The bladder wall is otherwise mildly trabeculated, consistent with post-radiation changes.
+
+PROSTATE: Status post radiation changes. Fiducial markers are present.
+
+OTHER: Status post-APR with end colostomy. No abdominopelvic lymphadenopathy. Degenerative changes in the spine.
+
+IMPRESSION:
+1.  A 1.2 x 1.1 cm enhancing nodule in the left posterior bladder wall, suspicious for urothelial carcinoma.
+2.  No evidence of upper tract urothelial disease.
+3.  No pelvic lymphadenopathy or distant metastatic disease.
+
+RECOMMENDATION:
+Cystoscopy with biopsy is recommended for definitive diagnosis.
+
+Electronically Signed,
+Dr. Davis, MD
+JSL Medical Center, Department of Radiology

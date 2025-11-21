@@ -1,0 +1,32 @@
+===== Document 030 =====
+Patient Id: p01
+Doc Id: 030
+Filename: p01/jsl_p01_030_radiology_doc.txt
+Doc Type: radiology
+Date: 2022-12-29
+Title: NM RENAL SCAN W/ DIURETIC (MAG3)
+---
+EXAMINATION: NM RENAL SCAN W/ DIURETIC (MAG3)
+CLINICAL STATEMENT: 67-year-old male with left hydronephrosis. Evaluate for severity of obstruction and differential function.
+
+TECHNIQUE: Following intravenous injection of 8.19 mCi of Tc-99m MAG3, dynamic posterior images of the kidneys were acquired for 40 minutes. At 20 minutes, 40 mg of furosemide was administered intravenously.
+
+FINDINGS:
+PERFUSION: Both kidneys are well-perfused.
+
+FUNCTION:
+DIFFERENTIAL FUNCTION: Left Kidney: 44%, Right Kidney: 56%.
+
+LEFT KIDNEY: There is mildly delayed tracer uptake and excretion. The collecting system is dilated. Following diuretic administration, there is delayed and incomplete washout, with a half-time (T1/2) clearance of greater than 20 minutes. The renogram curve is consistent with a significant partial obstruction.
+
+RIGHT KIDNEY: Normal uptake and prompt excretion. The T1/2 clearance after diuretic is less than 10 minutes, which is normal.
+
+IMPRESSION:
+1.  Split renal function is 44% on the left and 56% on the right. The left kidney still contributes significantly to overall renal function.
+2.  The left kidney demonstrates a pattern consistent with a high-grade partial obstruction.
+
+This confirms the functional significance of the left ureteral obstruction and the need for intervention to preserve the remaining function of the left kidney.
+
+Electronically Signed,
+Dr. Wilson, MD
+JSL Medical Center, Department of Radiology

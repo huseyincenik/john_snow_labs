@@ -1,0 +1,55 @@
+# Ollama model files (too large for Git)
+ollama/
+*.ollama
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+logs/
+*.log
+
+# Output data (optional - uncomment if you don't want to track output)
+# data/output/
+# demo_runs/
+
+# OS
+.DS_Store
+Thumbs.db
+

@@ -1,0 +1,29 @@
+===== Document 031 =====
+Patient Id: p01
+Doc Id: 031
+Filename: p01/jsl_p01_031_summary_doc.txt
+Doc Type: summary
+Date: 2023-01-15
+Title: GU Multidisciplinary Tumor Board Note
+---
+PATIENT: Patient
+ID: p01
+
+CASE PRESENTED BY: Dr. Johnson, MD (Urology)
+
+HISTORY: 67-year-old male with Lynch syndrome and a history of rectal cancer (s/p APR/RT), appendiceal cancer, prostate cancer (s/p EBRT), and bladder cancer (s/p TURBT/BCG). He has two active issues:
+1.  **Biochemically Recurrent Prostate Cancer:** PSA is now 2.77 ng/mL. PSMA PET/MRI confirmed an isolated, biopsy-proven (Gleason 3+4) recurrence in the right prostate. No metastases.
+2.  **Left Ureteral Obstruction:** Severe left hydronephrosis due to a benign stricture at the UVJ (post-surgical/radiation). MAG3 scan shows the left kidney is obstructed but still provides 44% of total renal function.
+
+DISCUSSION:
+-   **Urology (Dr. Johnson):** The patient has been reluctant to have a percutaneous nephrostomy tube. The MAG3 scan confirms the obstruction is significant and threatens the kidney. The patient needs to be strongly encouraged to proceed with decompression.
+-   **Radiation Oncology (Dr. Brown):** Salvage re-irradiation of the prostate is not a good option given the prior full-course EBRT and the proximity to the previously irradiated rectal bed.
+-   **Medical Oncology (Dr. Smith):** For the prostate cancer, since it is a localized recurrence and the PSA rise is not precipitous, observation is still an option. However, given the continued rise, initiating systemic therapy is also reasonable. An oral GnRH antagonist like Relugolix would be a good choice to avoid the testosterone flare associated with LHRH agonists.
+-   **Interventional Radiology (Dr. Marinda):** We are ready to proceed with PCN placement as soon as the patient consents. This is the necessary first step before any antegrade procedures can be considered.
+
+RECOMMENDATIONS:
+1.  **Ureteral Obstruction:** Strongly recommend the patient proceed with percutaneous nephrostomy tube placement to preserve left renal function. This is the most urgent issue.
+2.  **Prostate Cancer:** Initiate systemic therapy with Relugolix (oral GnRH antagonist) to control the PSA rise and disease progression.
+3.  Continue all other routine cancer surveillance for Lynch syndrome and bladder cancer.
+
+PLAN: Dr. Johnson will meet with the patient to discuss these recommendations and strongly advise for PCN placement.

@@ -1,0 +1,41 @@
+===== Document 002 =====
+Patient Id: p01
+Doc Id: 002
+Filename: p01/jsl_p01_002_radiology_doc.txt
+Doc Type: radiology
+Date: 2015-10-01
+Title: MRI PROSTATE W/WO CONTRAST
+---
+EXAMINATION: MRI PROSTATE W/WO CONTRAST
+CLINICAL STATEMENT: Prostate cancer, PSA 15.7 ng/mL. Biopsy in July 2015 showed Gleason 3+4=7. History of Lynch Syndrome (HNPCC), status post APR for rectal cancer in 1987. Staging evaluation.
+
+TECHNIQUE: Multiplanar, multisequence images of the prostate and pelvis were obtained at 3T without and with intravenous administration of gadolinium-based contrast.
+
+COMPARISON: MRI from outside hospital dated May 20, 2015.
+
+FINDINGS:
+PROSTATE GLAND: The prostate gland is small, with an estimated volume of 8 cc. Anatomy is distorted due to post-surgical changes from the prior abdominoperineal resection. Extensive metallic artifact from surgical clips limits evaluation, particularly of the gland's posterior aspects and seminal vesicles.
+
+PROSTATE LESIONS:
+Compared to the prior study, there are more conspicuous, ill-defined areas of T2 hypointensity with restricted diffusion and early focal enhancement, suspicious for tumor. These are located in:
+1. The right base, involving the posterior peripheral and transition zones.
+2. The left posterior peripheral zone at the apex.
+
+EXTRACAPSULAR EXTENSION (ECE): Evaluation is severely limited by artifact and distorted anatomy. There is broad abutment of the tumor with the capsule in the right base and left apex posteriorly. No definitive ECE is identified.
+
+SEMINAL VESICLES (SV): The seminal vesicles are not clearly visualized due to post-surgical changes and artifact. SV invasion cannot be excluded.
+
+LYMPH NODES: No pelvic lymphadenopathy is identified.
+
+BONES: A tiny sclerotic lesion is noted in the proximal right femoral diaphysis, likely benign (enostosis). No acute or suspicious osseous lesion to suggest metastasis.
+
+OTHER: Status post-APR with end colostomy noted.
+
+IMPRESSION:
+1. Findings suspicious for multifocal prostate cancer, with dominant lesions in the right base and left apex, showing interval increase in conspicuity since the prior MRI from May 2015.
+2. Assessment for extracapsular extension and seminal vesicle invasion is severely limited by post-surgical artifact and anatomical distortion. No gross ECE is seen.
+3. No evidence of pelvic lymphadenopathy or osseous metastases.
+
+Electronically Signed,
+Dr. Davis, MD
+JSL Medical Center, Department of Radiology
