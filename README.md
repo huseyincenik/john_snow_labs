@@ -40,7 +40,7 @@ Unified workspace that hosts three deliverables prepared for the John Snow Labs 
   &nbsp;
   <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="Python" height="36">
   &nbsp;
-  <img src="https://raw.githubusercontent.com/jupyter/notebook/master/docs/resources/jupyter.svg" alt="Jupyter" height="36">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Jupyter_logo.svg/1035px-Jupyter_logo.svg.png" alt="Jupyter" height="36">
 
 - **RAG QA Chatbot**  
   <img src="https://streamlit.io/images/brand/streamlit-logo-primary-colormark-darktext.png" alt="Streamlit" height="36">

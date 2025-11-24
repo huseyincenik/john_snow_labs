@@ -10,7 +10,7 @@
     &nbsp;
     <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="Python" height="40">
     &nbsp;
-    <img src="https://raw.githubusercontent.com/jupyter/notebook/master/docs/resources/jupyter.svg" alt="Jupyter" height="40">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Jupyter_logo.svg/1035px-Jupyter_logo.svg.png" alt="Jupyter" height="40">
   </p>
 </div>
 
