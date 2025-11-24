@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://avatars.githubusercontent.com/u/31632515?s=200&v=4" alt="John Snow Labs logo" width="96">
+  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQkzoKPaZIwIrnqHBYP_if-0vLt-hT6h2h-BQ&s" alt="John Snow Labs logo" width="96">
   <h1>RAG QA Chatbot Application</h1>
   <p>Streamlit-based assistant with dual LLM support, semantic caching, and observability dashboards.</p>
   <img alt="Project views" src="https://komarev.com/ghpvc/?username=huseyincenik&color=orange&label=RAG+Chatbot+Views">

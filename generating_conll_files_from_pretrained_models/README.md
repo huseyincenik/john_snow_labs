@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://avatars.githubusercontent.com/u/31632515?s=200&v=4" alt="John Snow Labs logo" width="96">
+  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQkzoKPaZIwIrnqHBYP_if-0vLt-hT6h2h-BQ&s" alt="John Snow Labs logo" width="96">
   <h1>Spark NLP Healthcare CoNLL Generation & Custom NER Training</h1>
   <p>From pretrained clinical NER pipelines to labeled CoNLL datasets and fine-tuned models.</p>
   <img alt="Project views" src="https://komarev.com/ghpvc/?username=huseyincenik&color=orange&label=CoNLL+Generator+Views">
