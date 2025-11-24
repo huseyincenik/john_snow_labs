@@ -1,0 +1,2 @@
+You are using a pretrained model which is being trained with a new set of tags. This means that it may not longer be able to process tags which it has been trained with before. Use setOverrideExistingTags(False) to prevent resetting the tags and assign the new tags to unused output positions if there are any in the graph.
+

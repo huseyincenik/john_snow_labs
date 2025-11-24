@@ -1,3 +1,20 @@
+<div align="center">
+  <img src="https://avatars.githubusercontent.com/u/31632515?s=200&v=4" alt="John Snow Labs logo" width="96">
+  <h1>RAG QA Chatbot Application</h1>
+  <p>Streamlit-based assistant with dual LLM support, semantic caching, and observability dashboards.</p>
+  <img alt="Project views" src="https://komarev.com/ghpvc/?username=huseyincenik&color=orange&label=RAG+Chatbot+Views">
+</div>
+
+---
+
+## Project Navigator
+
+- Portfolio overview → [`../README.md`](../README.md)
+- DocETL data curation service → [`../data_curation`](../data_curation)
+- Spark NLP CoNLL generator → [`../generating_conll_files_from_pretrained_models`](../generating_conll_files_from_pretrained_models)
+
+> Feed curated oncology JSON or custom NER outputs from the sister projects into this app’s `current_db/` or upload workflow to deliver an end-to-end demo.
+
 # RAG QA Chatbot Application
 
 A production-ready **Retrieval-Augmented Generation (RAG)** chatbot application with advanced document processing, semantic search, and intelligent question-answering capabilities.

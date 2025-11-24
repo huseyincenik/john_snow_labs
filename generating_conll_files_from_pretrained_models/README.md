@@ -1,247 +1,184 @@
-# Spark NLP Healthcare NER Pipeline ve Custom Model Eğitimi
+<div align="center">
+  <img src="https://avatars.githubusercontent.com/u/31632515?s=200&v=4" alt="John Snow Labs logo" width="96">
+  <h1>Spark NLP Healthcare CoNLL Generation & Custom NER Training</h1>
+  <p>From pretrained clinical NER pipelines to labeled CoNLL datasets and fine-tuned models.</p>
+  <img alt="Project views" src="https://komarev.com/ghpvc/?username=huseyincenik&color=orange&label=CoNLL+Generator+Views">
+</div>
 
-Bu proje, Spark NLP for Healthcare kullanarak Named Entity Recognition (NER) pipeline'ı çalıştırır, sonuçları CoNLL formatına dönüştürür ve custom NER modeli eğitir.
+This project runs Spark NLP for Healthcare pipelines, converts predictions into CoNLL format, and fine-tunes custom NER models that can be reused by downstream doc-curation or RAG systems.
 
-## Proje Yapısı
+---
+
+## Project Navigator
+
+- Back to portfolio home → [`../README.md`](../README.md)
+- DocETL data curation API → [`../data_curation`](../data_curation)
+- RAG QA chatbot → [`../rag_qa_chatbot_application`](../rag_qa_chatbot_application)
+
+---
+
+## End-to-End Flow
+
+```
+┌────────────────────────────┐    ┌──────────────────────────────┐
+│ Dataset Loader (Spark/CSV) │ -> │ Pretrained Healthcare NERs    │
+└──────────────┬────────────┘    │ ner_clinical / ner_deid /     │
+               │                 │ ner_posology w/ priority      │
+               ▼                 └──────────────┬───────────────┘
+       ┌─────────────────────┐                 │
+       │ Entity Harmonizer   │                 ▼
+       └──────────┬──────────┘         ┌────────────────────────┐
+                  │                    │ CoNLL Converter        │
+                  ▼                    │ (token-level tagging)  │
+       ┌─────────────────────┐         └──────────┬─────────────┘
+       │ Custom NER Training │--------------------┘
+       │ (Embeddings +       │
+       │  training pipeline) │
+       └─────────────────────┘
+```
+
+Outputs: `data/conll/*.conll` files, model checkpoints in `models/trained/`, and notebook logs that record metrics (precision, recall, F1).
+
+---
+
+## Repository Layout
 
 ```
 generating_conll_files_from_pretrained_models/
-├── notebooks/              # Jupyter notebook'lar
+├── notebooks/
 │   ├── 1_dataset_loading.ipynb
 │   ├── 2_ner_pipeline.ipynb
 │   ├── 3_conll_generation.ipynb
 │   └── 4_custom_model_training.ipynb
-├── src/                   # Python modülleri
-│   ├── __init__.py
+├── src/
 │   ├── dataset_loader.py
 │   ├── ner_pipeline.py
 │   ├── conll_converter.py
 │   └── model_trainer.py
 ├── data/
-│   ├── raw/              # Ham dataset'ler
-│   ├── processed/        # İşlenmiş veriler
-│   └── conll/            # CoNLL formatındaki dosyalar
+│   ├── raw/
+│   ├── processed/
+│   └── conll/
 ├── models/
-│   └── trained/          # Eğitilmiş modeller
+│   └── trained/
 ├── requirements.txt
 └── README.md
 ```
 
-## Gereksinimler
+---
 
-### Sistem Gereksinimleri
-- Python 3.7+
-- Java 8 veya 11
-- En az 16GB RAM (önerilen)
-- Spark NLP for Healthcare lisansı
+## Prerequisites
 
-### Python Paketleri
+| Requirement              | Minimum       | Notes                      |
+| ------------------------ | ------------- | -------------------------- |
+| Python                   | 3.8+          | Tested with 3.10           |
+| Java                     | 8 or 11       | Required by Spark          |
+| RAM                      | 16 GB         | 32 GB recommended          |
+| Spark NLP for Healthcare | Valid license | Needed for `spark-nlp-jsl` |
+
+Install Python deps:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-**Önemli:** Spark NLP for Healthcare lisanslı bir üründür. Kurulum için:
+Install Spark NLP for Healthcare (replace placeholders with your credentials):
 
 ```bash
-pip install spark-nlp-jsl==<JSL_VERSION> --extra-index-url https://pypi.johnsnowlabs.com/<SECRET>
+pip install spark-nlp-jsl==<JSL_VERSION> \
+  --extra-index-url https://pypi.johnsnowlabs.com/<SECRET>
 ```
 
-`JSL_VERSION` ve `SECRET` değerleri lisans anahtarınızda bulunur.
+---
 
-## Kurulum
+## Quick Start
 
-1. **Repository'yi klonlayın:**
-```bash
-git clone <repository-url>
-cd generating_conll_files_from_pretrained_models
-```
+1. **Clone the repo**
+   ```bash
+   git clone <repository-url>
+   cd generating_conll_files_from_pretrained_models
+   ```
+2. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. **Configure license**
+   - Request a Healthcare license from John Snow Labs.
+   - Create `spark_jsl.json` or export the provided environment variables.
+4. **Launch notebooks**
+   ```bash
+   jupyter lab
+   ```
 
-2. **Bağımlılıkları yükleyin:**
-```bash
-pip install -r requirements.txt
-```
+---
 
-3. **Spark NLP Healthcare lisansını yapılandırın:**
-   - John Snow Labs'tan lisans anahtarı alın
-   - `spark_jsl.json` dosyası oluşturun veya environment variable'ları ayarlayın
+## Notebook Walkthrough
 
-## Kullanım
+| Notebook                        | Purpose                                                                              | Key Outputs                          |
+| ------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------ |
+| `1_dataset_loading.ipynb`       | Download/clean datasets (MTSamples, oncology notes, MIMIC)                           | Spark DataFrames in `data/raw`       |
+| `2_ner_pipeline.ipynb`          | Run stacked Healthcare NER models with priority merging (Posology > DeID > Clinical) | Harmonized entity dataframe          |
+| `3_conll_generation.ipynb`      | Convert tokens + entities into CoNLL 2003 compliant sequences                        | `data/conll/*.conll`                 |
+| `4_custom_model_training.ipynb` | Fine-tune NER with embeddings, early stopping, evaluation                            | Saved models under `models/trained/` |
 
-### 1. Dataset Yükleme
-
-`notebooks/1_dataset_loading.ipynb` notebook'unu çalıştırarak dataset'i yükleyin:
+Example usage:
 
 ```python
 from src.dataset_loader import DatasetLoader
+from src.conll_converter import CoNLLConverter
 
 loader = DatasetLoader(data_dir="data/raw")
 df = loader.download_mtsamples_classifier()
 text_df = loader.prepare_text_dataframe(df, text_column="text")
-```
-
-**Desteklenen Dataset'ler:**
-- `mtsamples_classifier`: https://github.com/JohnSnowLabs/spark-nlp-workshop/blob/master/tutorials/Certification_Trainings/Healthcare/data/mtsamples_classifier.csv
-- `oncology_notes`: https://github.com/JohnSnowLabs/spark-nlp-workshop/tree/master/tutorials/Certification_Trainings/Healthcare/data/oncology_notes
-- MIMIC-III (manuel yükleme gerekir)
-
-### 2. NER Pipeline Çalıştırma
-
-`notebooks/2_ner_pipeline.ipynb` notebook'unu kullanarak NER pipeline'ını çalıştırın:
-
-**Kullanılan Modeller:**
-- `ner_clinical`: Klinik entity'ler (hastalıklar, prosedürler, vb.)
-- `ner_deid_generic_augmented`: PHI (Protected Health Information) entity'ler
-- `ner_posology`: İlaç ve dozaj entity'leri (Drug, Dosage öncelikli)
-
-**Önceliklendirme:**
-- Posology ve DeID modelleri önceliklidir
-- Çakışan entity'lerde posology ve deid sonuçları tercih edilir
-
-### 3. CoNLL Dosyası Oluşturma
-
-`notebooks/3_conll_generation.ipynb` notebook'unu kullanarak NER sonuçlarını CoNLL formatına dönüştürün:
-
-```python
-from src.conll_converter import CoNLLConverter
 
 converter = CoNLLConverter(spark)
 conll_text = converter.make_conll(
     text_df=text_df,
     entity_df=entity_df,
     save_conll=True,
-    output_path="data/conll/conll2003_text_file.conll"
+    output_path="data/conll/mtsamples.conll"
 )
 ```
 
-**CoNLL Formatı:**
-```
-Token    Label
-John     B-PER
-Doe      I-PER
-is       O
-a        O
-patient  O
-```
+---
 
-### 4. Custom Model Eğitimi
+## Training Features
 
-`notebooks/4_custom_model_training.ipynb` notebook'unu kullanarak custom NER modeli eğitin:
+- Multi-model NER inference (clinical, deid, posology) with conflict resolution.
+- Tokenization aligned with Spark NLP annotators.
+- CoNLL writer that enforces BIO tags and preserves evidence spans.
+- Training pipeline with configurable epochs, LR, batch size, and early stopping.
+- Evaluation summary (precision, recall, F1, macro/micro averages) logged per run.
 
-```python
-from src.model_trainer import ModelTrainer
+---
 
-trainer = ModelTrainer(spark)
-trainer.load_embeddings()
+## Troubleshooting
 
-# Load CoNLL dataset
-training_data = trainer.load_conll_dataset("data/conll/conll2003_text_file.conll")
+| Issue                         | Resolution                                                                                            |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Spark session fails           | Ensure Java is installed, `JAVA_HOME` is set, and increase driver memory (`spark.driver.memory=32G`). |
+| License errors                | Double-check `SECRET`/`JSL_VERSION`, ensure internet access for model download.                       |
+| Out-of-memory during training | Reduce batch size, sample fewer documents, or scale up cluster resources.                             |
 
-# Split dataset
-train_data, validation_data = trainer.split_dataset(training_data, train_ratio=0.8)
+---
 
-# Create and train pipeline
-pipeline = trainer.create_training_pipeline(
-    max_epochs=10,
-    lr=0.003,
-    batch_size=8,
-    use_best_model=True,
-    early_stopping_patience=3
-)
+## References & Data Sources
 
-trained_model = trainer.train_model(train_data, pipeline)
+- [Spark NLP Workshop Datasets](https://github.com/JohnSnowLabs/spark-nlp-workshop/tree/master/tutorials/Certification_Trainings/Healthcare/data)
+- [MTSamples](https://mtsamples.com/)
+- Spark NLP Healthcare certification notebooks (`1.Clinical_Named_Entity_Recognition_Model.ipynb`, `1.3.prepare_CoNLL_from_annotations_for_NER.ipynb`, `1.4.Resume_MedicalNer_Model_Training.ipynb`)
 
-# Evaluate
-eval_results = trainer.evaluate_model(validation_data)
+---
 
-# Save model
-trainer.save_model("models/trained/custom_ner_model")
-```
+## Contribution Guidelines
 
-## Özellikler
+1. Fork the repository.
+2. Create a feature branch: `git checkout -b feature/my-enhancement`.
+3. Commit and push your changes.
+4. Open a pull request describing datasets, models, and environment details.
 
-### NER Pipeline
-- ✅ Tokenization ve sentence splitting
-- ✅ Multiple NER model execution (clinical, deid, posology)
-- ✅ Entity merging with priority (posology > deid > clinical)
-- ✅ Posology model filtering (Drug, Dosage only)
+---
 
-### CoNLL Conversion
-- ✅ Standard CoNLL format output
-- ✅ B-/I- prefix labeling
-- ✅ Token-level entity tagging
-- ✅ Spark NLP tokenization integration
+## License
 
-### Model Training
-- ✅ Custom NER model training from CoNLL data
-- ✅ Early stopping support
-- ✅ Best model selection
-- ✅ Evaluation metrics (precision, recall, F1-score)
-- ✅ Model checkpointing and resuming
-
-## Değerlendirme Metrikleri
-
-Model değerlendirmesi şu metrikleri içerir:
-- **Precision**: Doğru tahmin edilen entity'lerin tüm tahminlere oranı
-- **Recall**: Doğru tahmin edilen entity'lerin tüm gerçek entity'lere oranı
-- **F1-Score**: Precision ve Recall'un harmonik ortalaması
-- **Macro-average**: Tüm entity tipleri için ortalama
-- **Micro-average**: Tüm entity'ler için toplam
-
-## Referans Notebook'lar
-
-Bu proje, aşağıdaki Spark NLP workshop notebook'larından ilham almıştır:
-
-1. **Clinical Named Entity Recognition (NER)**
-   - `1.Clinical_Named_Entity_Recognition_Model.ipynb`
-
-2. **Prepare CoNLL file from annotations for NER**
-   - `1.3.prepare_CoNLL_from_annotations_for_NER.ipynb`
-
-3. **Resume MedicalNer Model Training**
-   - `1.4.Resume_MedicalNer_Model_Training.ipynb`
-
-## Dataset URL'leri
-
-- **mtsamples_classifier**: https://github.com/JohnSnowLabs/spark-nlp-workshop/blob/master/tutorials/Certification_Trainings/Healthcare/data/mtsamples_classifier.csv
-- **oncology_notes**: https://github.com/JohnSnowLabs/spark-nlp-workshop/tree/master/tutorials/Certification_Trainings/Healthcare/data/oncology_notes
-- **mtsamples**: https://mtsamples.com/
-
-## Sorun Giderme
-
-### Spark Session Hatası
-- Java'nın yüklü olduğundan emin olun
-- `JAVA_HOME` environment variable'ını ayarlayın
-- Spark driver memory'yi artırın
-
-### Model Yükleme Hatası
-- Spark NLP Healthcare lisansının geçerli olduğundan emin olun
-- `SECRET` değerinin doğru olduğunu kontrol edin
-- İnternet bağlantısını kontrol edin (model indirme için gerekli)
-
-### Memory Hatası
-- Spark driver memory'yi artırın: `spark.driver.memory=32G`
-- Batch size'ı küçültün
-- Dataset'i daha küçük parçalara bölün
-
-## Lisans
-
-Bu proje Spark NLP for Healthcare kullanır, bu da lisanslı bir üründür. Kullanım için John Snow Labs'tan lisans almanız gerekir.
-
-## Katkıda Bulunma
-
-1. Fork edin
-2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Commit edin (`git commit -m 'Add some amazing feature'`)
-4. Push edin (`git push origin feature/amazing-feature`)
-5. Pull Request açın
-
-## İletişim
-
-Sorularınız için issue açabilirsiniz.
-
-## Teşekkürler
-
-- John Snow Labs - Spark NLP for Healthcare
-- Spark NLP Workshop repository
-
+This project depends on Spark NLP for Healthcare, which is a commercial offering. Ensure you have an active license key before running the notebooks.

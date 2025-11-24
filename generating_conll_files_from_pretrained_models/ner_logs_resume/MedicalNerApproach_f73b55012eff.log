@@ -1,0 +1,106 @@
+Name of the selected graph: pretrained graph
+Training started - total epochs: 2 - lr: 0.003 - batch size: 16 - labels: 19 - chars: 87 - training examples: 2553
+
+
+Epoch 1/2 started, lr: 0.003, dataset size: 2553
+
+
+Epoch 1/2 - 17.38s - loss: 936.29956 - avg training loss: 6.5020804 - batches: 144
+Quality on validation dataset (10.0%), validation examples = 255
+time to finish evaluation: 1.74s
+Total validation loss: 65.8212	Avg validation loss: 3.2911
+label	 tp	 fp	 fn	 prec	 rec	 f1
+I-NAME	 0	 0	 3	 0.0	 0.0	 0.0
+I-TREATMENT	 206	 28	 94	 0.8803419	 0.68666667	 0.77153563
+B-DATE	 5	 0	 5	 1.0	 0.5	 0.6666667
+I-DATE	 0	 0	 5	 0.0	 0.0	 0.0
+I-LOCATION	 0	 0	 1	 0.0	 0.0	 0.0
+I-PROBLEM	 319	 76	 84	 0.80759495	 0.7915633	 0.79949874
+I-PROFESSION	 0	 0	 1	 0.0	 0.0	 0.0
+B-NAME	 0	 0	 1	 0.0	 0.0	 0.0
+B-PROBLEM	 142	 53	 40	 0.72820514	 0.7802198	 0.7533156
+B-AGE	 4	 1	 1	 0.8	 0.8	 0.8000001
+I-TEST	 73	 11	 30	 0.86904764	 0.70873785	 0.78074867
+B-TEST	 41	 7	 19	 0.8541667	 0.68333334	 0.7592593
+B-TREATMENT	 97	 21	 40	 0.8220339	 0.7080292	 0.76078427
+B-PROFESSION	 0	 0	 1	 0.0	 0.0	 0.0
+B-LOCATION	 0	 1	 1	 0.0	 0.0	 0.0
+tp: 887 fp: 198 fn: 326 labels: 15
+Macro-average	 prec: 0.45075935, rec: 0.3772367, f1: 0.41073376
+Micro-average	 prec: 0.8175115, rec: 0.73124486, f1: 0.77197564
+Quality on test dataset: 
+time to finish evaluation: 13.07s
+Total test loss: 413.0712	Avg test loss: 2.4735
+label	 tp	 fp	 fn	 prec	 rec	 f1
+I-NAME	 2	 1	 17	 0.6666667	 0.10526316	 0.18181817
+I-AGE	 0	 1	 4	 0.0	 0.0	 0.0
+I-TREATMENT	 1687	 342	 547	 0.8314441	 0.7551477	 0.79146147
+B-DATE	 28	 3	 46	 0.9032258	 0.3783784	 0.53333336
+I-DATE	 9	 1	 44	 0.9	 0.16981132	 0.28571427
+I-LOCATION	 0	 0	 53	 0.0	 0.0	 0.0
+I-PROBLEM	 2940	 500	 699	 0.85465115	 0.80791426	 0.8306257
+I-PROFESSION	 0	 0	 22	 0.0	 0.0	 0.0
+B-NAME	 4	 0	 11	 1.0	 0.26666668	 0.42105266
+B-PROBLEM	 1408	 369	 261	 0.79234666	 0.8436189	 0.8171793
+B-AGE	 32	 4	 6	 0.8888889	 0.84210527	 0.8648648
+I-TEST	 466	 183	 379	 0.7180277	 0.5514793	 0.62382865
+B-TEST	 312	 73	 209	 0.81038964	 0.59884834	 0.6887417
+B-ID	 0	 0	 1	 0.0	 0.0	 0.0
+B-TREATMENT	 898	 179	 299	 0.8337976	 0.75020885	 0.7897977
+B-PROFESSION	 0	 0	 8	 0.0	 0.0	 0.0
+B-LOCATION	 0	 1	 30	 0.0	 0.0	 0.0
+tp: 7786 fp: 1657 fn: 2636 labels: 17
+Macro-average	 prec: 0.5411434, rec: 0.357026, f1: 0.43021345
+Micro-average	 prec: 0.82452613, rec: 0.7470735, f1: 0.78389126
+
+
+Epoch 2/2 started, lr: 0.0029850747, dataset size: 2553
+
+
+Epoch 2/2 - 16.89s - loss: 333.28638 - avg training loss: 2.3144886 - batches: 144
+Quality on validation dataset (10.0%), validation examples = 255
+time to finish evaluation: 1.30s
+Total validation loss: 50.7746	Avg validation loss: 2.5387
+label	 tp	 fp	 fn	 prec	 rec	 f1
+I-NAME	 0	 0	 3	 0.0	 0.0	 0.0
+I-TREATMENT	 254	 93	 46	 0.7319885	 0.8466667	 0.78516227
+B-DATE	 7	 2	 3	 0.7777778	 0.7	 0.73684216
+I-DATE	 0	 0	 5	 0.0	 0.0	 0.0
+I-LOCATION	 1	 2	 0	 0.33333334	 1.0	 0.5
+I-PROBLEM	 298	 40	 105	 0.8816568	 0.7394541	 0.8043185
+I-PROFESSION	 0	 0	 1	 0.0	 0.0	 0.0
+B-NAME	 0	 0	 1	 0.0	 0.0	 0.0
+B-PROBLEM	 135	 29	 47	 0.8231707	 0.7417582	 0.7803468
+B-AGE	 4	 1	 1	 0.8	 0.8	 0.8000001
+I-TEST	 88	 15	 15	 0.8543689	 0.8543689	 0.8543689
+B-TEST	 46	 11	 14	 0.80701756	 0.76666665	 0.78632474
+B-TREATMENT	 113	 36	 24	 0.75838923	 0.82481754	 0.7902098
+B-PROFESSION	 0	 0	 1	 0.0	 0.0	 0.0
+B-LOCATION	 0	 1	 1	 0.0	 0.0	 0.0
+tp: 946 fp: 230 fn: 267 labels: 15
+Macro-average	 prec: 0.4511802, rec: 0.48491547, f1: 0.46743995
+Micro-average	 prec: 0.8044218, rec: 0.7798846, f1: 0.79196316
+Quality on test dataset: 
+time to finish evaluation: 13.08s
+Total test loss: 351.9392	Avg test loss: 2.1074
+label	 tp	 fp	 fn	 prec	 rec	 f1
+I-NAME	 5	 1	 14	 0.8333333	 0.2631579	 0.4
+I-AGE	 0	 1	 4	 0.0	 0.0	 0.0
+I-TREATMENT	 1938	 866	 296	 0.6911555	 0.8675022	 0.7693529
+B-DATE	 44	 9	 30	 0.8301887	 0.5945946	 0.6929134
+I-DATE	 21	 3	 32	 0.875	 0.3962264	 0.54545456
+I-LOCATION	 11	 8	 42	 0.57894737	 0.20754717	 0.30555555
+I-PROBLEM	 2850	 345	 789	 0.8920188	 0.7831822	 0.83406496
+I-PROFESSION	 0	 0	 22	 0.0	 0.0	 0.0
+B-NAME	 3	 1	 12	 0.75	 0.2	 0.3157895
+B-PROBLEM	 1299	 177	 370	 0.8800813	 0.77831036	 0.8260731
+B-AGE	 33	 4	 5	 0.8918919	 0.8684211	 0.88
+I-TEST	 569	 315	 276	 0.64366513	 0.6733728	 0.65818393
+B-TEST	 368	 128	 153	 0.7419355	 0.706334	 0.7236972
+B-ID	 0	 0	 1	 0.0	 0.0	 0.0
+B-TREATMENT	 1015	 349	 182	 0.7441349	 0.8479532	 0.7926591
+B-PROFESSION	 0	 4	 8	 0.0	 0.0	 0.0
+B-LOCATION	 0	 2	 30	 0.0	 0.0	 0.0
+tp: 8156 fp: 2213 fn: 2266 labels: 17
+Macro-average	 prec: 0.55013835, rec: 0.4227413, f1: 0.4780986
+Micro-average	 prec: 0.7865754, rec: 0.7825753, f1: 0.7845702
