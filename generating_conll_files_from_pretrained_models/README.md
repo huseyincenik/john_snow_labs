@@ -4,11 +4,13 @@
   <p>From pretrained clinical NER pipelines to labeled CoNLL datasets and fine-tuned models.</p>
   <img alt="Project views" src="https://komarev.com/ghpvc/?username=huseyincenik&color=orange&label=CoNLL+Generator+Views">
   <p>
-    <img src="https://nlp.johnsnowlabs.com/assets/images/logo.svg" alt="Spark NLP" height="40">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/f/f3/Apache_Spark_logo.svg" alt="Apache Spark" height="40">
     &nbsp;
-    <img src="https://www.python.org/static/community_logos/python-logo.png" alt="Python" height="40">
+    <img src="https://raw.githubusercontent.com/JohnSnowLabs/spark-nlp/master/docs/assets/images/logo.png" alt="Spark NLP" height="40">
     &nbsp;
-    <img src="https://upload.wikimedia.org/wikipedia/commons/3/38/Jupyter_logo.svg" alt="Jupyter" height="40">
+    <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="Python" height="40">
+    &nbsp;
+    <img src="https://raw.githubusercontent.com/jupyter/notebook/master/docs/resources/jupyter.svg" alt="Jupyter" height="40">
   </p>
 </div>
 

@@ -6,13 +6,13 @@
   <p>
     <img src="https://streamlit.io/images/brand/streamlit-logo-primary-colormark-darktext.png" alt="Streamlit" height="40">
     &nbsp;
-    <img src="https://avatars.githubusercontent.com/u/126733545?s=200&v=4" alt="LangChain" height="40">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/LangChain_Logo.svg/2560px-LangChain_Logo.svg.png" alt="LangChain" height="40">
     &nbsp;
-    <img src="https://seeklogo.com/images/O/openai-logo-8B9BFEDC26-seeklogo.com.png" alt="OpenAI" height="40">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/4/4d/OpenAI_Logo.svg" alt="OpenAI" height="40">
     &nbsp;
-    <img src="https://www.docker.com/wp-content/uploads/2022/03/Moby-logo.png" alt="Docker" height="40">
+    <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/docker/docker-original.svg" alt="Docker" height="40">
     &nbsp;
-    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a7/Faiss_logo.svg" alt="FAISS" height="40">
+    <img src="https://daxg39y63pxwu.cloudfront.net/images/blog/faiss-vector-database/FAISS_Vector_Database.webp" alt="FAISS" height="40">
   </p>
 </div>
 
@@ -107,6 +107,7 @@ Our application implements state-of-the-art retrieval techniques:
 The application supports two vector databases:
 
 1. **Current DB (Persistent)**
+
    - Pre-loaded PubMed database shipped with Docker
    - Persistent across container restarts
    - Located in `current_db/` directory
@@ -120,6 +121,7 @@ The application supports two vector databases:
    - Allows testing and experimentation without affecting persistent data
 
 **Database Selection Modes:**
+
 - **Current DB**: Search only in pre-loaded PubMed database
 - **New DB**: Search only in newly uploaded documents (temporary)
 - **Current + New DB**: Search in both databases combined (recommended for comprehensive results)
@@ -732,6 +734,7 @@ The application now provides metadata in a structured JSON format:
 ```
 
 **Key Changes:**
+
 - Metadata is now provided as structured JSON in the `structured_metadata` field
 - `Chunk_Id` has been **removed** from the metadata structure
 - All metadata fields are consistently formatted
