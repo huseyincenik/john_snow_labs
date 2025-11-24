@@ -3,6 +3,13 @@
   <h1>Spark NLP Healthcare CoNLL Generation & Custom NER Training</h1>
   <p>From pretrained clinical NER pipelines to labeled CoNLL datasets and fine-tuned models.</p>
   <img alt="Project views" src="https://komarev.com/ghpvc/?username=huseyincenik&color=orange&label=CoNLL+Generator+Views">
+  <p>
+    <img src="https://nlp.johnsnowlabs.com/assets/images/logo.svg" alt="Spark NLP" height="40">
+    &nbsp;
+    <img src="https://www.python.org/static/community_logos/python-logo.png" alt="Python" height="40">
+    &nbsp;
+    <img src="https://upload.wikimedia.org/wikipedia/commons/3/38/Jupyter_logo.svg" alt="Jupyter" height="40">
+  </p>
 </div>
 
 This project runs Spark NLP for Healthcare pipelines, converts predictions into CoNLL format, and fine-tunes custom NER models that can be reused by downstream doc-curation or RAG systems.

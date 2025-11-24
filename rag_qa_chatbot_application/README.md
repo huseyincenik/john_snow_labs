@@ -3,6 +3,17 @@
   <h1>RAG QA Chatbot Application</h1>
   <p>Streamlit-based assistant with dual LLM support, semantic caching, and observability dashboards.</p>
   <img alt="Project views" src="https://komarev.com/ghpvc/?username=huseyincenik&color=orange&label=RAG+Chatbot+Views">
+  <p>
+    <img src="https://streamlit.io/images/brand/streamlit-logo-primary-colormark-darktext.png" alt="Streamlit" height="40">
+    &nbsp;
+    <img src="https://avatars.githubusercontent.com/u/126733545?s=200&v=4" alt="LangChain" height="40">
+    &nbsp;
+    <img src="https://seeklogo.com/images/O/openai-logo-8B9BFEDC26-seeklogo.com.png" alt="OpenAI" height="40">
+    &nbsp;
+    <img src="https://www.docker.com/wp-content/uploads/2022/03/Moby-logo.png" alt="Docker" height="40">
+    &nbsp;
+    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a7/Faiss_logo.svg" alt="FAISS" height="40">
+  </p>
 </div>
 
 ---

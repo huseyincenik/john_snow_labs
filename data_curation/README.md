@@ -3,6 +3,17 @@
   <h1>Data Curation Service – DocETL Pipeline</h1>
   <p>LLM-driven oncology extraction pipeline that delivers registry-ready JSON artifacts.</p>
   <img alt="Project views" src="https://komarev.com/ghpvc/?username=huseyincenik&color=orange&label=Data+Curation+Views">
+  <p>
+    <img src="https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png" alt="FastAPI" height="40">
+    &nbsp;
+    <img src="https://www.python.org/static/community_logos/python-logo.png" alt="Python" height="40">
+    &nbsp;
+    <img src="https://www.docker.com/wp-content/uploads/2022/03/Moby-logo.png" alt="Docker" height="40">
+    &nbsp;
+    <img src="https://seeklogo.com/images/O/openai-logo-8B9BFEDC26-seeklogo.com.png" alt="OpenAI" height="40">
+    &nbsp;
+    <img src="https://ollama.ai/public/icon-192.png" alt="Ollama/Qwen" height="40">
+  </p>
 </div>
 
 This repository contains a complete DocETL-powered **Data Curation Service** that extracts structured oncology data from unstructured documents, normalizes it according to the `cancer_registry_fields.yaml` ontology, and produces patient-level summaries suitable for registry ingestion.

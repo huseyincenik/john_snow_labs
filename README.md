@@ -20,6 +20,39 @@ Unified workspace that hosts three deliverables prepared for the John Snow Labs 
 - `generating_conll_files_from_pretrained_models/` → Spark NLP Healthcare notebooks + training utilities
 - `rag_qa_chatbot_application/` → Streamlit RAG app (OpenAI + Ollama)
 
+## 🧰 Tech Stack Logos
+
+- **Data Curation Service**  
+  <img src="https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png" alt="FastAPI" height="36">
+  &nbsp;
+  <img src="https://www.python.org/static/community_logos/python-logo.png" alt="Python" height="36">
+  &nbsp;
+  <img src="https://www.docker.com/wp-content/uploads/2022/03/Moby-logo.png" alt="Docker" height="36">
+  &nbsp;
+  <img src="https://seeklogo.com/images/O/openai-logo-8B9BFEDC26-seeklogo.com.png" alt="OpenAI" height="36">
+  &nbsp;
+  <img src="https://ollama.ai/public/icon-192.png" alt="Ollama/Qwen" height="36">
+
+- **CoNLL Generator & NER Training**  
+  <img src="https://upload.wikimedia.org/wikipedia/commons/f/f3/Apache_Spark_logo.svg" alt="Apache Spark" height="36">
+  &nbsp;
+  <img src="https://nlp.johnsnowlabs.com/assets/images/logo.svg" alt="Spark NLP" height="36">
+  &nbsp;
+  <img src="https://www.python.org/static/community_logos/python-logo.png" alt="Python" height="36">
+  &nbsp;
+  <img src="https://upload.wikimedia.org/wikipedia/commons/3/38/Jupyter_logo.svg" alt="Jupyter" height="36">
+
+- **RAG QA Chatbot**  
+  <img src="https://streamlit.io/images/brand/streamlit-logo-primary-colormark-darktext.png" alt="Streamlit" height="36">
+  &nbsp;
+  <img src="https://avatars.githubusercontent.com/u/126733545?s=200&v=4" alt="LangChain" height="36">
+  &nbsp;
+  <img src="https://seeklogo.com/images/O/openai-logo-8B9BFEDC26-seeklogo.com.png" alt="OpenAI" height="36">
+  &nbsp;
+  <img src="https://www.docker.com/wp-content/uploads/2022/03/Moby-logo.png" alt="Docker" height="36">
+  &nbsp;
+  <img src="https://upload.wikimedia.org/wikipedia/commons/a/a7/Faiss_logo.svg" alt="FAISS" height="36">
+
 ## 🧱 Cohesive Architecture Snapshot
 
 ```
