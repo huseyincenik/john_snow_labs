@@ -179,6 +179,16 @@ conll_text = converter.make_conll(
 
 ---
 
+## 📑 Kaggle Notebook Links (Summary Table)
+
+| Step | Notebook Name | Kaggle Link |
+|------|---------------|-------------|
+| **Part 1** | Data Preparation & CoNLL Generation | https://www.kaggle.com/code/huseyincenik/1-data-preparation-ner-pipeline-and-conll |
+| **Part 2** | Custom NER Model Training | https://www.kaggle.com/code/huseyincenik/2-model-training-custom-ner-model-training |
+| **Part 3** | Trained Model Inference & Predictions | https://www.kaggle.com/code/huseyincenik/3-prediction-trained-model-inference |
+
+---
+
 ## Contribution Guidelines
 
 1. Fork the repository.
