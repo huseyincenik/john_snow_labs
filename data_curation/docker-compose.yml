@@ -10,24 +10,9 @@ services:
     environment:
       - OUTPUT_DIR=/app/data/output
       - LOG_DIR=/app/logs
-      - QWEN_API_BASE=http://qwen:11434/v1
-    depends_on:
-      - qwen
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-    restart: unless-stopped
-
-  qwen:
-    image: ollama/ollama:latest
-    container_name: qwen
-    ports:
-      - "${QWEN_PORT:-11435}:11434"
-    environment:
-      - OLLAMA_KEEP_ALIVE=24h
-    volumes:
-      - ./ollama:/root/.ollama
-    command: ["serve"]
     restart: unless-stopped
 
   # Optional: PostgreSQL service

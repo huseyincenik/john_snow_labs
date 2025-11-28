@@ -1,4 +1,5 @@
 """Pydantic v2 schemas for extraction and consolidation."""
+
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any, Literal
 from datetime import datetime
@@ -6,6 +7,7 @@ from datetime import datetime
 
 class DocumentMetadata(BaseModel):
     """Document metadata."""
+
     patient_id: str
     doc_id: str
     doc_type: str
@@ -16,6 +18,7 @@ class DocumentMetadata(BaseModel):
 
 class SplitInfo(BaseModel):
     """Chunking metadata for tagged documents."""
+
     is_split: bool = False
     split_number: int = 1
     total_splits: int = 1
@@ -24,6 +27,7 @@ class SplitInfo(BaseModel):
 
 class TaggedDocument(BaseModel):
     """Tagged document metadata exposed by the tagger stage."""
+
     doc_id: str
     filename: Optional[str] = None
     doc_type: str
@@ -36,6 +40,7 @@ class TaggedDocument(BaseModel):
 
 class TaggerResult(BaseModel):
     """Chronologically sorted/tagged documents."""
+
     session_id: str
     generated_timestamp: datetime
     stage: Literal["stage_tagger"] = "stage_tagger"
@@ -47,6 +52,7 @@ class TaggerResult(BaseModel):
 
 class FieldEvidence(BaseModel):
     """Evidence for extracted field."""
+
     explanation: str
     inferred: bool = False
     related_entities: List[str] = Field(default_factory=list)
@@ -54,6 +60,7 @@ class FieldEvidence(BaseModel):
 
 class SourceReference(BaseModel):
     """Reference to source document."""
+
     doc_id: str
     split_number: Optional[int] = None
     reasoning_excerpt: str
@@ -61,6 +68,7 @@ class SourceReference(BaseModel):
 
 class ExtractedField(BaseModel):
     """Single extracted field with evidence."""
+
     field_name: str
     category: str
     raw_value: Any
@@ -77,6 +85,7 @@ class ExtractedField(BaseModel):
 
 class DocumentExtraction(BaseModel):
     """Extraction results for a single document."""
+
     doc_id: str
     extracted_fields: List[ExtractedField] = Field(default_factory=list)
     total_fields_extracted: int = 0
@@ -85,6 +94,7 @@ class DocumentExtraction(BaseModel):
 
 class ExtractionResult(BaseModel):
     """Complete extraction result for all documents."""
+
     session_id: str
     generated_timestamp: datetime
     stage: Literal["stage_extractor"] = "stage_extractor"
@@ -97,6 +107,7 @@ class ExtractionResult(BaseModel):
 
 class SupportingEvidence(BaseModel):
     """Supporting evidence for consolidated field."""
+
     snippet: str
     explanation: str
     date: Optional[str] = None
@@ -108,6 +119,7 @@ class SupportingEvidence(BaseModel):
 
 class ConsolidatedField(BaseModel):
     """Consolidated field with evidence."""
+
     field_name: str
     category: str
     consolidated_value: Dict[str, Any]
@@ -122,6 +134,7 @@ class ConsolidatedField(BaseModel):
 
 class PatientConsolidation(BaseModel):
     """Patient-level consolidation result."""
+
     patient_id: str
     consolidated_fields: List[ConsolidatedField] = Field(default_factory=list)
     total_fields_consolidated: int = 0
@@ -130,6 +143,7 @@ class PatientConsolidation(BaseModel):
 
 class ConsolidationResult(BaseModel):
     """Complete consolidation result."""
+
     session_id: str
     generated_timestamp: datetime
     stage: Literal["stage_consolidator"] = "stage_consolidator"
@@ -141,16 +155,20 @@ class ConsolidationResult(BaseModel):
 
 class ProcessingRequest(BaseModel):
     """Request for document processing."""
+
     patient_ids: Optional[List[str]] = None
     doc_ids: Optional[List[str]] = None
     process_all: bool = False
-    llm_provider: Optional[Literal["openai", "qwen", "local"]] = None
+    llm_provider: Optional[Literal["openai", "qwen"]] = None
     llm_model: Optional[str] = None
     max_documents: Optional[int] = None
+    parallel_patients: Optional[int] = None
+    pipeline_threads: Optional[int] = None
 
 
 class ProcessingResponse(BaseModel):
     """Response from processing request."""
+
     session_id: str
     status: Literal["pending", "processing", "completed", "failed"] = "pending"
     message: str
@@ -158,4 +176,3 @@ class ProcessingResponse(BaseModel):
     extraction_result: Optional[ExtractionResult] = None
     consolidation_result: Optional[ConsolidationResult] = None
     created_at: datetime = Field(default_factory=datetime.now)
-

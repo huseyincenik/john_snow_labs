@@ -42,8 +42,11 @@ ENV/
 .env.local
 
 # Logs
-logs/
-*.log
+# logs/ - Removed: logs directory should be tracked in git
+# *.log - Individual log files are still ignored, but logs/ directory structure is tracked
+
+# Input data (tracked in git)
+# input_patient_docs/ - Tracked: sample patient documents should be in git
 
 # Output data (optional - uncomment if you don't want to track output)
 # data/output/

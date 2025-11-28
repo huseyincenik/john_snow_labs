@@ -15,6 +15,7 @@ import argparse
 import asyncio
 import json
 import logging
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Sequence
@@ -94,9 +95,12 @@ async def start_processing(
         payload["llm_model"] = llm_model
     if max_documents is not None and max_documents > 0:
         payload["max_documents"] = max_documents
+    log_payload = dict(payload)
+    if "llm_model" not in log_payload:
+        log_payload["llm_model"] = llm_model or "server-default"
     LOGGER.info(
         "Starting processing with payload: %s",
-        json.dumps(payload, indent=2),
+        json.dumps(log_payload, indent=2),
     )
     response = await client.post(
         f"{base_url}/api/v1/process",
@@ -264,7 +268,10 @@ async def run_demo(args: argparse.Namespace) -> None:
             provider_slug = provider.lower().replace(" ", "_")
             provider_dir = run_dir / f"{index:02d}_{provider_slug}"
             provider_dir.mkdir(parents=True, exist_ok=True)
-            LOGGER.info("=== Provider %s ===", provider)
+
+            # Kullanılan model adını belirle
+            model_name = provider_models.get(provider.lower()) or "server-default"
+            LOGGER.info("=== Provider %s (Model: %s) ===", provider, model_name)
 
             provider_sample_slice, provider_doc_limit = resolve_doc_slice(provider)
             LOGGER.info(
@@ -272,6 +279,9 @@ async def run_demo(args: argparse.Namespace) -> None:
                 provider,
                 len(provider_sample_slice),
             )
+
+            # İşlem başlangıç zamanını kaydet
+            start_time = time.time()
 
             if args.upload:
                 upload_response = await upload_documents(
@@ -318,6 +328,12 @@ async def run_demo(args: argparse.Namespace) -> None:
                     interval=args.poll_interval,
                     timeout=args.poll_timeout,
                 )
+
+            # İşlem bitiş zamanını kaydet ve süreyi hesapla
+            end_time = time.time()
+            elapsed_seconds = end_time - start_time
+            elapsed_minutes = elapsed_seconds / 60.0
+
             save_json(
                 status_response,
                 provider_dir / "03_status_final.json",
@@ -337,9 +353,20 @@ async def run_demo(args: argparse.Namespace) -> None:
                     provider_dir / "consolidation_result.json",
                 )
 
+            # İşlem süresini console'a yazdır
+            print("\n" + "=" * 80)
+            print(f"✅ Model: {model_name}")
+            print(f"⏱️  İşlem Süresi: {elapsed_minutes:.2f} dakika ({elapsed_seconds:.1f} saniye)")
+            print(f"📁 Session ID: {session_id}")
+            print(f"📂 Artifacts: {provider_dir}")
+            print("=" * 80 + "\n")
+
             LOGGER.info(
-                "Provider %s completed. Session ID: %s (artifacts: %s)",
+                "Provider %s (Model: %s) completed in %.2f minutes (%.1f seconds). Session ID: %s (artifacts: %s)",
                 provider,
+                model_name,
+                elapsed_minutes,
+                elapsed_seconds,
                 session_id,
                 provider_dir,
             )
@@ -367,7 +394,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--patient-ids",
         nargs="+",
-        default=["p01"],
+        default=["p01", "p02"],
         help="İşlenecek hasta kimlikleri",
     )
     parser.add_argument(
@@ -430,8 +457,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--qwen-doc-limit",
         type=int,
-        default=1,
-        help="Qwen demosunda işlenecek belge sayısı (1 önerilir)",
+        default=0,
+        help="Qwen demosunda işlenecek belge sayısı (0: tüm belgeler)",
     )
     parser.add_argument(
         "--openai-doc-limit",

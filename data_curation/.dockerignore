@@ -1,0 +1,45 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+
+# Virtual environments
+venv/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs and outputs (will be mounted as volumes)
+logs/
+data/output/
+demo_runs/
+
+# Environment files (will be copied separately)
+.env.local
+
+# Documentation
+*.md
+!README.md
+
+# Tests
+tests/
+*.test.py
+
+# Ollama models (too large, mounted as volume)
+ollama/
+
