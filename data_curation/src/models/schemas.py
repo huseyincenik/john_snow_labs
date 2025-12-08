@@ -87,6 +87,8 @@ class DocumentExtraction(BaseModel):
     """Extraction results for a single document."""
 
     doc_id: str
+    doc_date: Optional[str] = None
+    doc_type: Optional[str] = None
     extracted_fields: List[ExtractedField] = Field(default_factory=list)
     total_fields_extracted: int = 0
     processing_time_seconds: float = 0.0

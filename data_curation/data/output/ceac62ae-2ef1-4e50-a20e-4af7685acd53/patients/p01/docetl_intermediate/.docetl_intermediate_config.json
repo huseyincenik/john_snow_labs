@@ -1,9 +1,0 @@
-{
-  "clinical_registry": {
-    "extract_clinical_fields": "744701780b64c803743427fdf87671babb9f01b6e1688c8884b2d079aa9485aa",
-    "normalize_extractions": "1989cc379d8bc350b607b48cd3ae97550e74c6c0810f56aa556991833c53e104",
-    "explode_field_records": "8d96d0bb7b2c7d596b318c410a3c2ebfdf8944662f1d5fa226ead7d0c9e3594c",
-    "resolve_patient_fields": "5c263e192a7e3f10ce3729ec3c74fd01b96854c2f8403a72e6bb10300a4c7f33",
-    "reduce_patient_summary": "3ffacc61d09d0c670e158b40f3f81f4fef945a73a839a5db3ea29291afb4d02d"
-  }
-}

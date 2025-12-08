@@ -606,6 +606,15 @@ class DocETLPipelineRunner:
             You are a certified oncology registrar. Extract every NAACCR field exactly as
             defined in the ontology below and emit strictly valid JSON.
 
+
+            ⚠️ ANTI-HALLUCINATION RULE: ONLY extract values that ACTUALLY APPEAR in the document.
+            DO NOT invent or guess cancer types, sites, or staging values not mentioned in text.
+            If a value is not in the document, use "Not Reported" - never make up values.
+            
+            ⚠️ DO NOT COPY EXAMPLES: The examples in this prompt (like "March 2010" or "Colon Cancer") are for illustration ONLY.
+            NEVER copy these examples into your output unless they exist verbatim in the document.
+            Use only the text present in the provided document.
+
             ⚠️⚠️⚠️ CRITICAL: CONFIDENCE SCORE RULES - READ THIS FIRST ⚠️⚠️⚠️
             
             **DO NOT DEFAULT TO 1.0!** Most fields should be 0.85-0.94 or lower.
@@ -633,11 +642,11 @@ class DocETLPipelineRunner:
             
             **Step D – Numeric Score Mapping (MANDATORY):**
             - **Explicit & verbatim** (exact term appears):
-              * Start at 0.92
-              * Add +0.03 per corroborating quote (maximum cap: 0.98)
-              * Example: "ECOG 1" appears verbatim → 0.95-0.98
-              * Example: "Gleason Grade Group 3 (3+4)" verbatim → 0.98
-              * **NEVER assign 1.0 unless absolutely certain the EXACT term appears with zero interpretation**
+              * Start at 0.90
+              * Add +0.02 per corroborating quote (maximum cap: 0.95)
+              * Example: "ECOG 1" appears verbatim → 0.92-0.95
+              * Example: "Gleason Grade Group 3 (3+4)" verbatim → 0.95
+              * **1.0 IS FORBIDDEN - NEVER USE IT. Maximum allowed is 0.95**
             
             - **Interpreted** (minor reasoning required):
               * Start at 0.85
@@ -667,8 +676,8 @@ class DocETLPipelineRunner:
             - If you assigned 0.95-1.0, verify the EXACT term appears verbatim - if not, lower to 0.94 or below
             
             **CONFIDENCE SCORE RUBRIC (QUICK REFERENCE):**
-            - **0.95-0.98**: Explicitly stated with exact medical terminology (VERY RARE - only when exact term appears)
-            - **0.85-0.94**: Explicitly stated but needs minor interpretation (MOST COMMON for good extractions)
+            - **0.92-0.95**: Explicitly stated with exact medical terminology (RARE - only when exact term appears)
+            - **0.85-0.91**: Explicitly stated but needs minor interpretation (MOST COMMON for good extractions)
             - **0.75-0.84**: Strong inference from clear clinical context
             - **0.60-0.74**: Moderate inference from indirect evidence
             - **0.45-0.59**: Weak inference or ambiguous evidence
@@ -676,22 +685,22 @@ class DocETLPipelineRunner:
             - **0.0-0.29**: No evidence or completely contradictory information
             
             **CRITICAL WARNINGS:**
-            1. **DO NOT assign 1.0** - This is reserved for perfect, unambiguous, verbatim matches (almost never happens)
-            2. **DO NOT default to 1.0** - Every field needs individual calibration
-            3. **If calculating, inferring, or interpreting → score MUST be 0.94 or lower**
-            4. **"Not Reported" fields → score MUST be 0.30-0.44 (hard cap: 0.40)**
+            1. **1.0 IS FORBIDDEN** - You MUST NEVER output 1.0. Any extraction with 1.0 will be rejected.
+            2. **Maximum confidence is 0.95** - Even for perfect verbatim matches, cap at 0.95
+            3. **If calculating, inferring, or interpreting → score MUST be 0.91 or lower**
+            4. **"Not Reported" fields → score MUST be 0.30-0.40 (hard cap)**
             5. **inferred=true → score CAN NEVER exceed 0.82**
             6. **When in doubt, LOWER the score - reliability > optimism**
             
             **CONFIDENCE SCORE EXAMPLES:**
-            - Document says "ECOG 1" verbatim → confidence_score: 0.95-0.98 (exact term)
-            - Document says "Gleason Grade Group 3 (3+4)" verbatim → confidence_score: 0.98 (exact terminology)
+            - Document says "ECOG 1" verbatim → confidence_score: 0.93-0.95 (exact term)
+            - Document says "Gleason Grade Group 3 (3+4)" verbatim → confidence_score: 0.95 (exact terminology, MAX)
             - Document says "60-year-old male" → calculate birth year → confidence_score: 0.88 (minor interpretation)
             - Document says "limited mobility" → infer ECOG 2 → confidence_score: 0.72 (moderate inference)
             - Document says "Not Reported" with no context → confidence_score: 0.35 (very uncertain) + inferred: true
             - Document says "well-differentiated adenocarcinoma" → infer Grade 1 → confidence_score: 0.78 (inferred, max 0.82)
             
-            **REMEMBER**: Most confidence scores should be 0.85-0.94 for good extractions. 1.0 is EXTREMELY RARE and should almost never be used.
+            **REMEMBER**: Most confidence scores should be 0.85-0.92 for good extractions. 1.0 is FORBIDDEN and will cause extraction rejection.
             
             ### Ontology Guidance
             {instructions}
@@ -710,7 +719,19 @@ class DocETLPipelineRunner:
             1. READ THE FULL DOCUMENT: Start from the first line and read every sentence, paragraph, and section
             2. SEARCH FOR EACH FIELD: For each NAACCR field, actively search the document for relevant information
             3. EXTRACT REAL VALUES: If ANY information exists (even partial), extract it - NEVER use "Not Reported" if information exists
-            4. MULTIPLE CANCERS: If document mentions multiple cancers, extract information for the MOST RECENT or PRIMARY cancer
+            4. **DOCUMENT TOPIC DETECTION (CRITICAL FOR MULTI-CANCER PATIENTS)**:
+               - STEP 4A: READ THE DOCUMENT TITLE - It often indicates the primary cancer being discussed
+               - STEP 4B: IDENTIFY THE MAIN CANCER - Look for which cancer is the PRIMARY TOPIC of THIS document:
+                 * "Prostate Cancer" in title → extract data for Prostate Cancer (C61.9)
+                 * "Colon Cancer" or "Rectal Cancer" in title → extract data for Colon/Rectal (C18.x, C20.x)
+                 * If document discusses multiple cancers, identify which one is the MAIN FOCUS
+               - STEP 4C: EXTRACT DATA ONLY FOR THE PRIMARY CANCER:
+                 * Do NOT mix diagnosis dates between different cancers
+                 * Do NOT apply histology from one cancer to another
+                 * Example: If document is about "Prostate Cancer Follow-Up", extract Prostate's diagnosis date (2015), NOT the historical Rectal Cancer date (1987)
+               - STEP 4D: WHEN IN DOUBT:
+                 * If document title mentions a specific cancer type, use that cancer's data
+                 * If document is a summary mentioning multiple cancers, use "Not Reported" for ambiguous fields (better than contaminating)
             5. VERBATIM QUOTES: Copy the EXACT text from document in `reasoning_excerpt` - never use "Not Reported" as reasoning_excerpt
 
             ### Confidence Score Application (REVIEW ABOVE RULES)
@@ -722,43 +743,55 @@ class DocETLPipelineRunner:
 
             **naaccr_diagnosis_dt (Diagnosis Date):**
             - Search for: "Diagnosed in [year]", "Diagnosis date", "On [date]", "Recently diagnosed in [month] [year]"
-            - Examples from document: "Diagnosed in 1987", "Diagnosed in 2005", "Recently diagnosed in July 2015"
-            - Extract the MOST RECENT diagnosis date if multiple cancers exist
-            - Format: YYYY-MM-DD (e.g., "2015-07-15" for "July 2015")
+            - Examples from document: "Diagnosed in 1987", "Diagnosed in 2005", "Recently diagnosed in March 2010"
+            - **FORMATTING CRITICAL**: Always include space between words and dates/years (e.g., "Diagnosed in 1987" NOT "Diagnosed in1987")
+            - **MULTI-CANCER DATES**: If document mentions MULTIPLE cancers with DIFFERENT diagnosis dates, extract the date for the PRIMARY cancer being discussed in this document
+            - **DO NOT MIX DATES**: If document mentions both "Colon Cancer diagnosed in 1987" and "Prostate Cancer diagnosed in 2010", extract only ONE date per field - the one most relevant to this document's primary topic
+            - Format: YYYY-MM-DD (e.g., "2010-03-15" for "March 2010", "1987-01-01" for just "1987")
+            - **FULL DATE PRIORITY**: If document contains "May 10, 2022", extract "2022-05-10". Do NOT truncate to "2022-01-01".
             - If only month/year given, use 15th day of that month
-            - reasoning_excerpt example: "Recently diagnosed in July 2015 via transperineal biopsy"
+            - If only year given, use January 1st of that year (e.g., "1987" → "1987-01-01") - **ONLY IF NO MONTH/DAY IS AVAILABLE**
+            - reasoning_excerpt example: "Recently diagnosed in March 2010 via core needle biopsy"
 
             **ca_site (Cancer Site):**
             - Search for: Cancer names with ICD-O codes like "Prostate Cancer (C61.9)", "Rectal Cancer (C20.9)", "Appendiceal Cancer (C18.1)"
-            - Extract the MOST RECENT or PRIMARY cancer site
-            - Format: "Site Name (Code)/Malignant" (e.g., "Prostate (C61.9)/Malignant")
+            - **EXTRACT BASED ON DOCUMENT TOPIC**: Use the cancer site that is the PRIMARY TOPIC of this document (see STEP 4 above)
+            - **SUMMARY DOCUMENTS**: If this is a summary mentioning multiple cancers, extract the cancer this document FOCUSES on most (usually by length of discussion)
+            - Format: "Site Name (Code)/Malignant" (e.g., "Colon (C18.9)/Malignant")
             - If code not given, infer from cancer name using ICD-O-3 standards
-            - reasoning_excerpt example: "Prostate Cancer (C61.9): Recently diagnosed in July 2015"
+            - reasoning_excerpt example: "Colon Cancer (C18.9)" or "Patient diagnosed with Colon Cancer"
 
             **naaccr_histology_cd (Histology Code):**
             - Search for: Pathology terms like "adenocarcinoma", "carcinoma", "mucinous adenocarcinoma", "prostatic adenocarcinoma"
             - Look for ICD-O-3 codes or map pathology terms to codes
             - Format: "XXXX/3 - Description" (e.g., "8140/3 - Adenocarcinoma, NOS")
             - Extract from pathology reports, biopsy results, or diagnosis descriptions
-            - reasoning_excerpt example: "Pathology showed prostatic adenocarcinoma, Gleason Grade Group 3"
+            - **SITE-SPECIFIC HISTOLOGY CRITICAL**: Match the histology to the CORRECT cancer site mentioned in the document:
+              * "mucinous adenocarcinoma" is typically for COLON/COLORECTAL cancer (C18.x, C20.x)
+              * "prostatic adenocarcinoma" or "acinar adenocarcinoma" is for PROSTATE cancer (C61.9)
+              * "squamous cell carcinoma" is typically for LUNG cancer (C34.x)
+              * If document discusses multiple cancers, extract the histology for the PRIMARY cancer being discussed
+            - **DO NOT APPLY WRONG HISTOLOGY**: If the document is about Prostate Cancer, do NOT extract "mucinous adenocarcinoma" - look for prostate-specific terms
+            - reasoning_excerpt example: "Pathology showed mucinous adenocarcinoma, Grade 2"
 
             **Staging Fields (ca_clinical_t_stage, ca_clinical_n_stage, ca_clinical_m_stage, ca_path_t_stage, etc.):**
             - Search for: Explicit staging mentions like "pT3", "cT2", "pN0", "cM0", "TNM staging"
             - Clinical staging: Look for "cT", "cN", "cM" prefixes or staging from imaging/clinical exam
             - Pathological staging: Look for "pT", "pN", "pM" prefixes or staging from pathology reports
             - Extract exact values as written in document
-            - reasoning_excerpt example: "Pathology revealed a moderately differentiated mucinous adenocarcinoma, pT3"
+            - reasoning_excerpt example: "Pathology revealed a moderately differentiated adenocarcinoma, pT3"
 
             **ecog (Performance Status):**
+            - REQUIRED: set field_name to "ecog" exactly (do not use "Performance Status")
             - Search for: "ECOG", "performance status", "ECOG 0", "ECOG 1", etc.
-            - Extract numeric value (0-5)
+            - Extract numeric value (0-5) as a STRING (e.g. "1", not 1)
             - If not explicitly stated, infer from activity level descriptions
 
             Return a JSON object with a single key `extractions` that contains one entry for *every* ontology field.
 
             Each extraction object MUST include:
             - `field_name`, `category`, `data_type`
-            - `raw_value`: The EXACT value found in document (e.g., "2015-07-15", "Prostate (C61.9)/Malignant", "8140/3 - Adenocarcinoma, NOS")
+            - `raw_value`: The EXACT value found raw_records in document (e.g., "2015-07-15", "Prostate (C61.9)/Malignant", "8140/3 - Adenocarcinoma, NOS")
             - `normalized_value`: Normalized version following NAACCR/ICD-O-3 standards
             - `units`, `vocabulary_code`: Include ICD-O-3 codes when applicable
             - `reasoning_excerpt`: EXACT verbatim quote from document (e.g., "Recently diagnosed in July 2015 via transperineal biopsy" or "Prostate Cancer (C61.9): Recently diagnosed")
@@ -921,6 +954,7 @@ class DocETLPipelineRunner:
             },
             validate=validation_rules,
             litellm_completion_kwargs=completion_kwargs,
+            passthrough=True,
         )
 
     def _build_normalize_operation(self):
@@ -1061,9 +1095,15 @@ def transform(doc: dict) -> dict:
 
             Evidence set:
             {% for item in inputs %}
-            - Document {{ item.doc_id }} ({{ item.doc_type }}) on {{ item.doc_date or "unknown date" }}
-              raw="{{ item.raw_value }}" | normalized="{{ item.normalized_value }}"
-              confidence={{ item.confidence_score if item.confidence_score is not none else "not provided" }} | reason="{{ item.reasoning_excerpt }}"
+            ---
+            Document ID: {{ item.doc_id }}
+            Date: {{ item.doc_date or "Not Reported" }}
+            Type: {{ item.doc_type }}
+            Raw Value: "{{ item.raw_value }}"
+            Normalized Value: "{{ item.normalized_value }}"
+            Confidence: {{ item.confidence_score if item.confidence_score is not none else "not provided" }}
+            Reasoning: "{{ item.reasoning_excerpt }}"
+            ---
             {% endfor %}
 
             TASK: Resolve conflicts and determine the most reliable value across documents. Apply the following calibration checklist before emitting JSON:
@@ -1091,10 +1131,74 @@ def transform(doc: dict) -> dict:
             `normalized_value`, `resolved_value`, `units`, `vocabulary_code`, `confidence_score`,
             `supporting_docs`, and `consolidation_notes`.
             
+            RESOLVED_VALUE REQUIREMENT:
+            1. START WITH CODE: The `resolved_value` MUST start with the extracted code/score.
+            2. FORMAT: "CODE - Description"
+            3. EXAMPLES:
+               - WRONG: "Patient's ECOG score is 2"
+               - RIGHT: "ECOG 2 - Patient is ambulatory but unable to work"
+               - WRONG: "Pathology confirms pT3"
+               - RIGHT: "pT3 - Pathologic T3 stage, tumor extends beyond prostate"
+               - WRONG: "Diagnosed on 2023-04-12"
+               - RIGHT: "2023-04-12 - Diagnosis date"
+            
+            This format is REQUIRED for downstream processing. Do NOT deviate.
+            
             In `consolidation_notes`, briefly explain:
             - How you resolved any conflicts
             - Why you assigned the confidence_score you chose
             - Which sources were most reliable
+
+            CRITICAL: If some documents contain "Not Reported" but others contain actual clinical values
+            (e.g., "ECOG 2", "Patient is ambulatory", specific dates), ALWAYS choose the actual
+            clinical value over "Not Reported". Only use "Not Reported" when ALL documents
+            report no value for the field.
+            
+            MULTI-CANCER AWARENESS:
+            - Documents may discuss DIFFERENT cancers (e.g., one about Colon Cancer, another about Prostate Cancer)
+            - When resolving values like diagnosis_date or histology, be aware that different documents may contain values for DIFFERENT cancers
+            - Do NOT merge values from different cancer sites into a single resolved value
+            - Preserve the doc_id and cancer site context so downstream consolidation can group values by cancer
+            - If documents mention different diagnosis dates, they may be for different cancers - do not force a single date
+            
+            ALWAYS return a JSON object, even if the resolved value is "Not Reported".
+            Do not skip output for any reason.
+
+            EXAMPLE JSON OUTPUT (Pay attention to doc_date):
+            {
+                "patient_id": "p01",
+                "resolved_value": "Pathologic T3 stage",
+                "supporting_docs": [
+                    {
+                        "doc_id": "doc_abc...",
+                        "doc_date": "2023-05-20",  // MUST match the Date from input evidence
+                        "explanation": "Extracted from pathology report...",
+                        ...
+                    }
+                ],
+                "consolidation_notes": "Resolved based on pathology report..."
+            }
+
+            DATE HANDLING: Always propagate the document date (doc_date) to the output. If a document
+            has a date, include it. Never default dates to "Not Reported" if the source document has a date.
+
+            SUPPORTING DOCS INSTRUCTION:
+            In the `supporting_docs` output array, for each object, you MUST include the `doc_date` field.
+            Copy the date EXACTLY from the "Evidence set" input above.
+            If the evidence says "on 2015-10-01", set `doc_date` to "2015-10-01".
+            Do not omit this field.
+
+            SNIPPET HANDLING: The `reasoning_excerpt` field should contain the VERBATIM text from the
+            original document - the EXACT quote that supports the extraction. Do NOT paraphrase or
+            summarize. Copy the exact text as it appears in the document.
+
+            TNM STAGING RULES - VERY IMPORTANT:
+            - T-stage fields: ONLY describe tumor size. Never mention lymph nodes or metastasis.
+            - N-stage fields: ONLY describe lymph nodes. Never mention tumor size or metastasis.
+            - M-stage fields: ONLY describe metastasis. Never mention tumor or lymph nodes.
+            - stage_group: Describe overall stage.
+            WRONG: N-stage resolved as "Pathology revealed adenocarcinoma, pT3" (mentions tumor!)
+            RIGHT: N-stage resolved as "pN0 - No lymph node involvement"
 
             Preserve every supporting document entry so downstream reducers can trace provenance.
             """
@@ -1213,7 +1317,7 @@ def transform(doc: dict) -> dict:
             {% if item.supporting_docs %}
             {% for doc in item.supporting_docs %}
               {% if doc is mapping %}
-              * Document ID: {{ doc.get('doc_id', 'unknown') }}, Type: {{ doc.get('doc_type', 'unknown') }}, Raw value: "{{ doc.get('raw_value', '') }}", Normalized: "{{ doc.get('normalized_value', '') }}", Confidence: {{ doc.get('confidence_score', 'Not provided') }}
+              * Document ID: {{ doc.get('doc_id', 'unknown') }}, Type: {{ doc.get('doc_type', 'unknown') }}, Date: {{ doc.get('doc_date', 'Not Reported') }}, Raw value: "{{ doc.get('raw_value', '') }}", Normalized: "{{ doc.get('normalized_value', '') }}", Confidence: {{ doc.get('confidence_score', 'Not provided') }}
               {% else %}
               * {{ doc }}
               {% endif %}
@@ -1269,7 +1373,15 @@ def transform(doc: dict) -> dict:
                 },
                 ... (one object for each field in inputs)
               ],
-              "patient_summary": "<short narrative paragraph summarizing staging, therapy, performance status, etc. based on the actual data above>"
+              "patient_summary": "<short narrative paragraph summarizing staging, therapy, performance status, etc. based on the actual data above>",
+              "primary_cancers": [
+                {
+                   "site": "<standardized site code and name, e.g. C18.9 - Colon>",
+                   "histology": "<standardized histology code and name>",
+                   "diagnosis_date": "<earliest valid date for THIS specific cancer>",
+                   "staging": "<summary of stage for this cancer>"
+                }
+              ]
             }
 
             IMPORTANT:
@@ -1277,8 +1389,52 @@ def transform(doc: dict) -> dict:
             - Do NOT drop or reformat the supporting_docs arrays—copy them verbatim from the inputs
             - ALWAYS calculate confidence_score based on evidence quality - do NOT copy input confidence blindly
             - Generate patient_summary based on the ACTUAL data provided, not hypothetical examples
-            - If a field value is "Not Reported", keep it as "Not Reported" in your response
-            - consolidation_notes should explain your confidence assessment and any conflicts you resolved
+            
+            CRITICAL CONSOLIDATION RULES:
+            1. "NOT REPORTED" FILTER:
+               - If the inputs contain ANY actual clinical values (e.g., "pT3", "ECOG 1", "2023-05-12"), you MUST select the actual value.
+               - IGNORE "Not Reported" or null values unless EVERY single input is empty/missing.
+               - "Not Reported" is NOT a vote. Even if 49 documents say "Not Reported" and 1 says "pT3", the final value IS "pT3".
+               
+            2. MULTI-CANCER SEPARATION (CRITICAL - READ CAREFULLY):
+               - Identify distinct primary cancers based on SITE (e.g., C18.9 = Colon, C61.9 = Prostate)
+               - Populate the `primary_cancers` array with ONE entry per unique cancer site
+               - **DATE SEPARATION RULE**: Each cancer MUST have its OWN diagnosis date:
+                 * Group all ca_site, naaccr_diagnosis_dt, naaccr_histology_cd by doc_id
+                 * Documents about Colon Cancer should provide dates/histology for Colon Cancer entry
+                 * Documents about Prostate Cancer should provide dates/histology for Prostate Cancer entry
+                 * DO NOT MIX: If Colon Cancer was diagnosed in 1987 and Prostate in 2010, they MUST have different dates
+                 * **PRESERVE FULL DATE**: Use YYYY-MM-DD format (e.g., "2023-05-15"). DO NOT truncate to Jan 1st (e.g., "2023-01-01") unless the document ONLY mentions the year.
+               - **HISTOLOGY MATCHING RULE**: Each cancer MUST have site-appropriate histology:
+                 * Colon Cancer (C18.x) → "mucinous adenocarcinoma", "adenocarcinoma, NOS"
+                 * Prostate Cancer (C61.9) → "prostatic adenocarcinoma", "acinar adenocarcinoma"
+                 * Lung Cancer (C34.x) → "squamous cell carcinoma", "small cell carcinoma"
+                 * DO NOT apply colon histology to prostate cancer or vice versa
+               - Example output for multi-cancer patient:
+                 ```
+                 "primary_cancers": [
+                   {"site": "C18.9 - Colon", "diagnosis_date": "1987-05-12", "histology": "mucinous adenocarcinoma"},
+                   {"site": "C61.9 - Prostate", "diagnosis_date": "2010-03-15", "histology": "prostatic adenocarcinoma"}
+                 ]
+                 ```
+               
+            3. FORMAT REQUIREMENT (Code - Description):
+               
+            2. FORMAT REQUIREMENT (Code - Description):
+               - The `resolved_value` MUST start with the standardized code/score/date if applicable.
+               - Format: "CODE - Description"
+               - Example: "pT3 - Pathologic T3 stage" (NOT "Pathology reports pT3")
+               - Example: "ECOG 1 - Ambulatory" (NOT "Patient is ambulatory (ECOG 1)")
+               - Example: "2023-05-12 - Date of diagnosis"
+               
+            3. CONFLICT RESOLUTION:
+               - diagnosis_date: Select the EARLIEST valid date.
+               - performance_status: Select the MOST RECENT valid score.
+               - TNM Staging: Prefer the highest stage if conflicting (e.g., pT3 > pT2), or the most frequent valid value.
+               
+            4. consolidation_notes:
+               - List ALL unique values you saw in the input.
+               - Explain why you chose the final value.
             """
         ).strip()
 

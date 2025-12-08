@@ -581,8 +581,14 @@ class Extractor:
                     )
                     continue
 
+            # Extract doc_date and doc_type from the record (passed through from MapOp)
+            doc_date = record.get("doc_date") or None
+            doc_type = record.get("doc_type") or None
+            
             document_extraction = DocumentExtraction(
                 doc_id=doc_id,
+                doc_date=doc_date,
+                doc_type=doc_type,
                 extracted_fields=extracted_fields,
                 total_fields_extracted=len(extracted_fields),
                 processing_time_seconds=0.0,

@@ -1,5 +1,0 @@
-2025-11-28 19:36:58 - f930c7fe-d56b-4f26-b4c7-c7a2a312d6e4_stage_extractor_ - INFO - Launching DocETL pipeline for 50 documents via provider=qwen
-2025-11-28 19:36:58 - f930c7fe-d56b-4f26-b4c7-c7a2a312d6e4_stage_extractor_ - INFO - Running 1 patient batches with up to 1 concurrent DocETL pipelines
-2025-11-28 19:36:58 - f930c7fe-d56b-4f26-b4c7-c7a2a312d6e4_stage_extractor_ - INFO - Running DocETL for patient p01 (50 documents) via model=openrouter/qwen/qwen3-8b
-2025-11-28 19:38:28 - f930c7fe-d56b-4f26-b4c7-c7a2a312d6e4_stage_extractor_ - INFO - DocETL pipeline finished (map=/app/data/output/f930c7fe-d56b-4f26-b4c7-c7a2a312d6e4/docetl_intermediate/clinical_registry/extract_clinical_fields.json, patient=/app/data/output/f930c7fe-d56b-4f26-b4c7-c7a2a312d6e4/docetl_patient_results.json)
-2025-11-28 19:38:29 - f930c7fe-d56b-4f26-b4c7-c7a2a312d6e4_stage_extractor_ - INFO - Extraction complete: 50 docs, 582 fields, 90.33s

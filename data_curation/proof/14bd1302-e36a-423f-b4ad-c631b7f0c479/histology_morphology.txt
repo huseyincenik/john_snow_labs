@@ -1,0 +1,551 @@
+================================================================================
+DOMAIN: DIAGNOSIS DOMAIN
+FIELD: histology_morphology
+  NAACCR Source: naaccr_histology_cd
+================================================================================
+
+────────────────────────────────────────
+PRIMARY CANCERS (Multi-Cancer Support)
+────────────────────────────────────────
+Total Primary Cancers: 2
+
+  [1] CANCER_1 (Site: C18.9)
+      histology_morphology: Pathology showed mucinous adenocarcinoma, Grade2
+      Supporting Documents: 26
+        - doc_041_jsl_p01_041_operative_doc (Date: 2025-01-15)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_026_jsl_p01_026_radiology_doc (Date: 2022-09-10)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_021_jsl_p01_021_pathology_doc (Date: 2020-08-08)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_050_jsl_p01_050_summary_doc (Date: 2025-12-31)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_005_jsl_p01_005_operative_doc (Date: 2016-01-20)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_030_jsl_p01_030_radiology_doc (Date: 2022-12-29)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_009_jsl_p01_009_pathology_doc (Date: 2019-05-05)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_014_jsl_p01_014_operative_doc (Date: 2019-07-20)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_036_jsl_p01_036_clinical_doc (Date: 2023-11-20)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_037_jsl_p01_037_consult_doc (Date: 2024-01-10)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_028_jsl_p01_028_pathology_doc (Date: 2022-11-24)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_027_jsl_p01_027_operative_doc (Date: 2022-11-23)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_025_jsl_p01_025_clinical_doc (Date: 2022-01-28)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_020_jsl_p01_020_operative_doc (Date: 2020-08-07)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_031_jsl_p01_031_summary_doc (Date: 2023-01-15)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_023_jsl_p01_023_radiology_doc (Date: 2021-11-06)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_003_jsl_p01_003_radiology_doc (Date: 2015-10-01)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_043_jsl_p01_043_radiology_doc (Date: 2025-04-01)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_047_jsl_p01_047_radiology_doc (Date: 2025-10-05)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_017_jsl_p01_017_pathology_doc (Date: 2019-11-09)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_019_jsl_p01_019_radiology_doc (Date: 2020-06-25)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_002_jsl_p01_002_radiology_doc (Date: 2015-10-01)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_015_jsl_p01_015_pathology_doc (Date: 2019-07-21)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_024_jsl_p01_024_radiology_doc (Date: 2021-12-11)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_049_jsl_p01_049_clinical_doc (Date: 2025-11-01)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_045_jsl_p01_045_pathology_doc (Date: 2025-09-12)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+
+  [2] CANCER_2 (Site: C61.9)
+      histology_morphology: Pathology showed mucinous adenocarcinoma, Grade2
+      Supporting Documents: 3
+        - doc_034_jsl_p01_034_pathology_doc (Date: 2023-08-04)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_013_jsl_p01_013_pathology_doc (Date: 2019-07-13)
+          Snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        - doc_011_jsl_p01_011_pathology_doc (Date: 2019-06-08)
+          Snippet: Pathology showed prostatic adenocarcinoma, Grade2
+
+────────────────────────────────────────
+RESOLVE OUTPUT (Before Reduce)
+────────────────────────────────────────
+Total records: 50
+
+Unique values:
+  - 'Pathology showed mucinous adenocarcinoma, Grade2' (found in 37 docs)
+      - doc_041_jsl_p01_041_operative_doc
+      - doc_026_jsl_p01_026_radiology_doc
+      - doc_021_jsl_p01_021_pathology_doc
+      - doc_050_jsl_p01_050_summary_doc
+      - doc_005_jsl_p01_005_operative_doc
+      - doc_033_jsl_p01_033_clinical_doc
+      - doc_030_jsl_p01_030_radiology_doc
+      - doc_034_jsl_p01_034_pathology_doc
+      - doc_009_jsl_p01_009_pathology_doc
+      - doc_044_jsl_p01_044_clinical_doc
+      - doc_014_jsl_p01_014_operative_doc
+      - doc_036_jsl_p01_036_clinical_doc
+      - doc_037_jsl_p01_037_consult_doc
+      - doc_029_jsl_p01_029_clinical_doc
+      - doc_028_jsl_p01_028_pathology_doc
+      - doc_027_jsl_p01_027_operative_doc
+      - doc_025_jsl_p01_025_clinical_doc
+      - doc_020_jsl_p01_020_operative_doc
+      - doc_031_jsl_p01_031_summary_doc
+      - doc_023_jsl_p01_023_radiology_doc
+      - doc_003_jsl_p01_003_radiology_doc
+      - doc_043_jsl_p01_043_radiology_doc
+      - doc_006_jsl_p01_006_clinical_doc
+      - doc_047_jsl_p01_047_radiology_doc
+      - doc_013_jsl_p01_013_pathology_doc
+      - doc_032_jsl_p01_032_clinical_doc
+      - doc_017_jsl_p01_017_pathology_doc
+      - doc_019_jsl_p01_019_radiology_doc
+      - doc_046_jsl_p01_046_clinical_doc
+      - doc_002_jsl_p01_002_radiology_doc
+      - doc_015_jsl_p01_015_pathology_doc
+      - doc_024_jsl_p01_024_radiology_doc
+      - doc_010_jsl_p01_010_operative_doc
+      - doc_038_jsl_p01_038_clinical_doc
+      - doc_049_jsl_p01_049_clinical_doc
+      - doc_045_jsl_p01_045_pathology_doc
+      - doc_048_jsl_p01_048_clinical_doc
+  - 'adenocarcinoma' (found in 12 docs)
+      - doc_042_jsl_p01_042_clinical_doc
+      - doc_039_jsl_p01_039_radiology_doc
+      - doc_004_jsl_p01_004_clinical_doc
+      - doc_040_jsl_p01_040_clinical_doc
+      - doc_012_jsl_p01_012_consult_doc
+      - doc_018_jsl_p01_018_clinical_doc
+      - doc_016_jsl_p01_016_clinical_doc
+      - doc_022_jsl_p01_022_clinical_doc
+      - doc_008_jsl_p01_008_radiology_doc
+      - doc_001_jsl_p01_001_summary_doc
+      - doc_007_jsl_p01_007_clinical_doc
+      - doc_035_jsl_p01_035_radiology_doc
+  - 'Pathology showed prostatic adenocarcinoma, Grade2' (found in 1 docs)
+      - doc_011_jsl_p01_011_pathology_doc
+
+Sample records (ALL):
+  [1] doc_id: doc_041_jsl_p01_041_operative_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_041_jsl_p01_041_operative_doc
+
+  [2] doc_id: doc_026_jsl_p01_026_radiology_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_026_jsl_p01_026_radiology_doc
+
+  [3] doc_id: doc_042_jsl_p01_042_clinical_doc
+      raw_value: adenocarcinoma
+      resolved_value: adenocarcinoma
+      confidence: doc_042_jsl_p01_042_clinical_doc
+
+  [4] doc_id: doc_039_jsl_p01_039_radiology_doc
+      raw_value: adenocarcinoma
+      resolved_value: adenocarcinoma
+      confidence: doc_039_jsl_p01_039_radiology_doc
+
+  [5] doc_id: doc_021_jsl_p01_021_pathology_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_021_jsl_p01_021_pathology_doc
+
+  [6] doc_id: doc_050_jsl_p01_050_summary_doc
+      raw_value: adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_050_jsl_p01_050_summary_doc
+
+  [7] doc_id: doc_004_jsl_p01_004_clinical_doc
+      raw_value: adenocarcinoma
+      resolved_value: adenocarcinoma
+      confidence: doc_004_jsl_p01_004_clinical_doc
+
+  [8] doc_id: doc_005_jsl_p01_005_operative_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_005_jsl_p01_005_operative_doc
+
+  [9] doc_id: doc_033_jsl_p01_033_clinical_doc
+      raw_value: adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_033_jsl_p01_033_clinical_doc
+
+  [10] doc_id: doc_030_jsl_p01_030_radiology_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_030_jsl_p01_030_radiology_doc
+
+  [11] doc_id: doc_034_jsl_p01_034_pathology_doc
+      raw_value: adenocarcinoma, Grade2
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_034_jsl_p01_034_pathology_doc
+
+  [12] doc_id: doc_009_jsl_p01_009_pathology_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_009_jsl_p01_009_pathology_doc
+
+  [13] doc_id: doc_040_jsl_p01_040_clinical_doc
+      raw_value: adenocarcinoma
+      resolved_value: adenocarcinoma
+      confidence: doc_040_jsl_p01_040_clinical_doc
+
+  [14] doc_id: doc_012_jsl_p01_012_consult_doc
+      raw_value: adenocarcinoma
+      resolved_value: adenocarcinoma
+      confidence: doc_012_jsl_p01_012_consult_doc
+
+  [15] doc_id: doc_018_jsl_p01_018_clinical_doc
+      raw_value: adenocarcinoma
+      resolved_value: adenocarcinoma
+      confidence: doc_018_jsl_p01_018_clinical_doc
+
+  [16] doc_id: doc_044_jsl_p01_044_clinical_doc
+      raw_value: adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_044_jsl_p01_044_clinical_doc
+
+  [17] doc_id: doc_014_jsl_p01_014_operative_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_014_jsl_p01_014_operative_doc
+
+  [18] doc_id: doc_036_jsl_p01_036_clinical_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_036_jsl_p01_036_clinical_doc
+
+  [19] doc_id: doc_016_jsl_p01_016_clinical_doc
+      raw_value: adenocarcinoma
+      resolved_value: adenocarcinoma
+      confidence: doc_016_jsl_p01_016_clinical_doc
+
+  [20] doc_id: doc_037_jsl_p01_037_consult_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_037_jsl_p01_037_consult_doc
+
+  [21] doc_id: doc_029_jsl_p01_029_clinical_doc
+      raw_value: adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_029_jsl_p01_029_clinical_doc
+
+  [22] doc_id: doc_028_jsl_p01_028_pathology_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_028_jsl_p01_028_pathology_doc
+
+  [23] doc_id: doc_027_jsl_p01_027_operative_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_027_jsl_p01_027_operative_doc
+
+  [24] doc_id: doc_022_jsl_p01_022_clinical_doc
+      raw_value: adenocarcinoma
+      resolved_value: adenocarcinoma
+      confidence: doc_022_jsl_p01_022_clinical_doc
+
+  [25] doc_id: doc_025_jsl_p01_025_clinical_doc
+      raw_value: adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_025_jsl_p01_025_clinical_doc
+
+  [26] doc_id: doc_020_jsl_p01_020_operative_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_020_jsl_p01_020_operative_doc
+
+  [27] doc_id: doc_031_jsl_p01_031_summary_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_031_jsl_p01_031_summary_doc
+
+  [28] doc_id: doc_023_jsl_p01_023_radiology_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_023_jsl_p01_023_radiology_doc
+
+  [29] doc_id: doc_003_jsl_p01_003_radiology_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_003_jsl_p01_003_radiology_doc
+
+  [30] doc_id: doc_043_jsl_p01_043_radiology_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_043_jsl_p01_043_radiology_doc
+
+  [31] doc_id: doc_006_jsl_p01_006_clinical_doc
+      raw_value: adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_006_jsl_p01_006_clinical_doc
+
+  [32] doc_id: doc_047_jsl_p01_047_radiology_doc
+      raw_value: adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_047_jsl_p01_047_radiology_doc
+
+  [33] doc_id: doc_013_jsl_p01_013_pathology_doc
+      raw_value: adenocarcinoma, Grade2
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_013_jsl_p01_013_pathology_doc
+
+  [34] doc_id: doc_032_jsl_p01_032_clinical_doc
+      raw_value: adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_032_jsl_p01_032_clinical_doc
+
+  [35] doc_id: doc_017_jsl_p01_017_pathology_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_017_jsl_p01_017_pathology_doc
+
+  [36] doc_id: doc_019_jsl_p01_019_radiology_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_019_jsl_p01_019_radiology_doc
+
+  [37] doc_id: doc_008_jsl_p01_008_radiology_doc
+      raw_value: adenocarcinoma
+      resolved_value: adenocarcinoma
+      confidence: doc_008_jsl_p01_008_radiology_doc
+
+  [38] doc_id: doc_001_jsl_p01_001_summary_doc
+      raw_value: adenocarcinoma
+      resolved_value: adenocarcinoma
+      confidence: doc_001_jsl_p01_001_summary_doc
+
+  [39] doc_id: doc_046_jsl_p01_046_clinical_doc
+      raw_value: adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_046_jsl_p01_046_clinical_doc
+
+  [40] doc_id: doc_007_jsl_p01_007_clinical_doc
+      raw_value: adenocarcinoma
+      resolved_value: adenocarcinoma
+      confidence: doc_007_jsl_p01_007_clinical_doc
+
+  [41] doc_id: doc_002_jsl_p01_002_radiology_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_002_jsl_p01_002_radiology_doc
+
+  [42] doc_id: doc_015_jsl_p01_015_pathology_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_015_jsl_p01_015_pathology_doc
+
+  [43] doc_id: doc_024_jsl_p01_024_radiology_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_024_jsl_p01_024_radiology_doc
+
+  [44] doc_id: doc_010_jsl_p01_010_operative_doc
+      raw_value: adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_010_jsl_p01_010_operative_doc
+
+  [45] doc_id: doc_011_jsl_p01_011_pathology_doc
+      raw_value: Prostatic adenocarcinoma
+      resolved_value: Pathology showed prostatic adenocarcinoma, Grade2
+      confidence: doc_011_jsl_p01_011_pathology_doc
+
+  [46] doc_id: doc_038_jsl_p01_038_clinical_doc
+      raw_value: adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_038_jsl_p01_038_clinical_doc
+
+  [47] doc_id: doc_035_jsl_p01_035_radiology_doc
+      raw_value: adenocarcinoma
+      resolved_value: adenocarcinoma
+      confidence: doc_035_jsl_p01_035_radiology_doc
+
+  [48] doc_id: doc_049_jsl_p01_049_clinical_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_049_jsl_p01_049_clinical_doc
+
+  [49] doc_id: doc_045_jsl_p01_045_pathology_doc
+      raw_value: mucinous adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_045_jsl_p01_045_pathology_doc
+
+  [50] doc_id: doc_048_jsl_p01_048_clinical_doc
+      raw_value: adenocarcinoma
+      resolved_value: Pathology showed mucinous adenocarcinoma, Grade2
+      confidence: doc_048_jsl_p01_048_clinical_doc
+
+────────────────────────────────────────
+REDUCE OUTPUT (After Consolidation)
+────────────────────────────────────────
+Total Primary Cancers: 2
+
+▶ PRIMARY CANCER #1: CANCER_1 (Site: C18.9)
+  final_value: Pathology showed mucinous adenocarcinoma, Grade2
+  supporting_evidence_count: 26
+  contradictory_evidence_count: 0
+
+  Supporting evidence:
+    [1] source: doc_041_jsl_p01_041_operative_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2025-01-15
+        confidence: 0.9
+
+    [2] source: doc_026_jsl_p01_026_radiology_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2022-09-10
+        confidence: 0.9
+
+    [3] source: doc_021_jsl_p01_021_pathology_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2020-08-08
+        confidence: 0.9
+
+    [4] source: doc_050_jsl_p01_050_summary_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2025-12-31
+        confidence: 0.9
+
+    [5] source: doc_005_jsl_p01_005_operative_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2016-01-20
+        confidence: 0.9
+
+    [6] source: doc_030_jsl_p01_030_radiology_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2022-12-29
+        confidence: 0.9
+
+    [7] source: doc_009_jsl_p01_009_pathology_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2019-05-05
+        confidence: 0.9
+
+    [8] source: doc_014_jsl_p01_014_operative_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2019-07-20
+        confidence: 0.9
+
+    [9] source: doc_036_jsl_p01_036_clinical_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2023-11-20
+        confidence: 0.9
+
+    [10] source: doc_037_jsl_p01_037_consult_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2024-01-10
+        confidence: 0.9
+
+    [11] source: doc_028_jsl_p01_028_pathology_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2022-11-24
+        confidence: 0.9
+
+    [12] source: doc_027_jsl_p01_027_operative_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2022-11-23
+        confidence: 0.9
+
+    [13] source: doc_025_jsl_p01_025_clinical_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2022-01-28
+        confidence: 0.9
+
+    [14] source: doc_020_jsl_p01_020_operative_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2020-08-07
+        confidence: 0.9
+
+    [15] source: doc_031_jsl_p01_031_summary_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2023-01-15
+        confidence: 0.9
+
+    [16] source: doc_023_jsl_p01_023_radiology_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2021-11-06
+        confidence: 0.9
+
+    [17] source: doc_003_jsl_p01_003_radiology_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2015-10-01
+        confidence: 0.9
+
+    [18] source: doc_043_jsl_p01_043_radiology_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2025-04-01
+        confidence: 0.9
+
+    [19] source: doc_047_jsl_p01_047_radiology_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2025-10-05
+        confidence: 0.9
+
+    [20] source: doc_017_jsl_p01_017_pathology_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2019-11-09
+        confidence: 0.9
+
+    [21] source: doc_019_jsl_p01_019_radiology_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2020-06-25
+        confidence: 0.9
+
+    [22] source: doc_002_jsl_p01_002_radiology_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2015-10-01
+        confidence: 0.9
+
+    [23] source: doc_015_jsl_p01_015_pathology_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2019-07-21
+        confidence: 0.9
+
+    [24] source: doc_024_jsl_p01_024_radiology_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2021-12-11
+        confidence: 0.9
+
+    [25] source: doc_049_jsl_p01_049_clinical_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2025-11-01
+        confidence: 0.9
+
+    [26] source: doc_045_jsl_p01_045_pathology_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2025-09-12
+        confidence: 0.9
+
+
+▶ PRIMARY CANCER #2: CANCER_2 (Site: C61.9)
+  final_value: Pathology showed mucinous adenocarcinoma, Grade2
+  supporting_evidence_count: 3
+  contradictory_evidence_count: 0
+
+  Supporting evidence:
+    [1] source: doc_034_jsl_p01_034_pathology_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2023-08-04
+        confidence: 0.9
+
+    [2] source: doc_013_jsl_p01_013_pathology_doc
+        snippet: Pathology showed mucinous adenocarcinoma, Grade2
+        date: 2019-07-13
+        confidence: 0.9
+
+    [3] source: doc_011_jsl_p01_011_pathology_doc
+        snippet: Pathology showed prostatic adenocarcinoma, Grade2
+        date: 2019-06-08
+        confidence: 0.9
+

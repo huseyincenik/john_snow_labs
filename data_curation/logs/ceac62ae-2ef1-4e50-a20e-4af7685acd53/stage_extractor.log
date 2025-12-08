@@ -1,5 +1,0 @@
-2025-11-28 19:38:41 - ceac62ae-2ef1-4e50-a20e-4af7685acd53_stage_extractor_ - INFO - Launching DocETL pipeline for 50 documents via provider=openai
-2025-11-28 19:38:41 - ceac62ae-2ef1-4e50-a20e-4af7685acd53_stage_extractor_ - INFO - Running 1 patient batches with up to 1 concurrent DocETL pipelines
-2025-11-28 19:38:41 - ceac62ae-2ef1-4e50-a20e-4af7685acd53_stage_extractor_ - INFO - Running DocETL for patient p01 (50 documents) via model=openai/gpt-4o-mini
-2025-11-28 19:40:10 - ceac62ae-2ef1-4e50-a20e-4af7685acd53_stage_extractor_ - INFO - DocETL pipeline finished (map=/app/data/output/ceac62ae-2ef1-4e50-a20e-4af7685acd53/docetl_intermediate/clinical_registry/extract_clinical_fields.json, patient=/app/data/output/ceac62ae-2ef1-4e50-a20e-4af7685acd53/docetl_patient_results.json)
-2025-11-28 19:40:10 - ceac62ae-2ef1-4e50-a20e-4af7685acd53_stage_extractor_ - INFO - Extraction complete: 50 docs, 600 fields, 89.02s

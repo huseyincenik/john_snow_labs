@@ -84,6 +84,9 @@ FIELD_NAME_ALIASES = {
     "ca_path_m_stage": "tnm_m_pathologic",
     "ca_gen_sum_stage_2": "stage_group",
     "ecog": "performance_status",
+    "naaccr_diagnosis_dt": "diagnosis_date",
+    "ca_site": "body_site",
+    "naaccr_histology_cd": "histology_morphology",
 }
 
 
@@ -98,6 +101,7 @@ class Consolidator:
     ):
         self.ontology = ontology or OntologyLoader()
         self.provider_label = provider_label
+        self._resolve_records: Optional[List[Dict[str, Any]]] = None  # Cached for multi-cancer detection
 
     async def consolidate(
         self,
@@ -229,6 +233,19 @@ class Consolidator:
 
         return " ".join(part.strip() for part in parts if part and part.strip())
 
+    def _normalize_all_field_names(self, patient_records: List[Dict[str, Any]]) -> None:
+        """Apply FIELD_NAME_ALIASES to all field names in patient records.
+        
+        This is the SINGLE POINT where NAACCR field names are converted to mCODE format.
+        All downstream code can assume field names are already in canonical mCODE format.
+        """
+        for record in patient_records:
+            for field in record.get("consolidated_fields", []):
+                if "_original_field_name" not in field:
+                    field["_original_field_name"] = field.get("field_name")
+                original = field.get("_original_field_name") or field.get("field_name")
+                field["field_name"] = FIELD_NAME_ALIASES.get(original, original)
+
     def _build_fields_from_artifacts(
         self,
         patient_records: List[Dict[str, Any]],
@@ -237,6 +254,8 @@ class Consolidator:
         logger: Optional[logging.Logger] = None,
     ) -> List[ConsolidatedField]:
         """Shape DocETL patient outputs to match the sample consolidation artifact."""
+        # Cache resolve_records for use in _build_primary_cancers_array
+        self._resolve_records = resolve_records
         patient_records = patient_records or []
         if resolve_records and (
             not patient_records
@@ -244,6 +263,10 @@ class Consolidator:
             or not self._records_have_ontology_fields(patient_records)
         ):
             patient_records = self._build_patient_records_from_resolve(resolve_records)
+
+        # Normalize all field names to mCODE format in a SINGLE PASS
+        # This ensures consistent field names regardless of data source
+        self._normalize_all_field_names(patient_records)
 
         if not patient_records:
             return []
@@ -303,7 +326,7 @@ class Consolidator:
                 all_values=[],
                 units=None,
                 vocabulary_code=None,
-                confidence_score=mcode_value["confidence_score"],
+                confidence_score=mcode_value["confidence_score"] or 0.0,
                 source_documents=mcode_value["source_documents"],
                 consolidation_reasoning=mcode_value["consolidation_reasoning"],
                 data_type="object",
@@ -374,6 +397,7 @@ class Consolidator:
                 "grade",
                 "behavior_code",
                 "clinical_or_pathologic_indicator",
+                "diagnosis_date",
             }:
                 diagnosis_fields.append(field_payload)
                 continue
@@ -451,7 +475,8 @@ class Consolidator:
         # Build primary_cancers array (from diagnosis fields)
         if diagnosis_fields:
             primary_cancers = self._build_primary_cancers_array(
-                diagnosis_fields, extraction_result, patient_id
+                diagnosis_fields, extraction_result, patient_id,
+                primary_cancers_guide=record.get("primary_cancers")
             )
             if primary_cancers:
                 mcode_extraction["primary_cancers"] = primary_cancers
@@ -663,52 +688,435 @@ class Consolidator:
         diagnosis_fields: List[Dict[str, Any]],
         extraction_result: Optional[ExtractionResult] = None,
         patient_id: Optional[str] = None,
+        primary_cancers_guide: Optional[List[Dict[str, Any]]] = None,
     ) -> List[Dict[str, Any]]:
-        """Build primary_cancers array structure from diagnosis fields."""
+        """Build primary_cancers array structure from diagnosis fields.
+        
+        CRITICAL: This method now properly identifies MULTIPLE CANCERS per patient.
+        Each unique body_site (cancer location) becomes a separate primary_cancer record.
+        
+        For example, a patient with:
+        - Rectal Cancer (C20.9) diagnosed in 1987
+        - Appendiceal Cancer (C18.1) diagnosed in 2005
+        - Prostate Cancer (C61.9) diagnosed in 2015
+        
+        Will generate THREE separate primary_cancer entries, each with its own
+        diagnosis_date, histology, staging info, etc.
+        """
         if not diagnosis_fields:
             return []
-        # Group diagnosis fields by cancer (based on body_site or diagnosis field)
-        cancers: Dict[str, Dict[str, Any]] = defaultdict(dict)
-        cancer_counter = 1
-
-        for field_payload in diagnosis_fields:
-            if not field_payload or not isinstance(field_payload, dict):
-                continue
-            field_name = field_payload.get("field_name", "unknown_field")
-            body_site = None
-            diagnosis_value = None
-
-            # Try to identify which cancer this belongs to
-            if field_name == "body_site":
-                body_site = field_payload.get("resolved_value") or field_payload.get(
-                    "normalized_value"
-                )
-            elif field_name == "diagnosis":
-                diagnosis_value = field_payload.get("resolved_value") or field_payload.get(
-                    "normalized_value"
-                )
-
-            # Use body_site as key, fallback to diagnosis, then counter
-            cancer_key = body_site or diagnosis_value or f"cancer_{cancer_counter}"
-            if cancer_key not in cancers:
-                cancers[cancer_key] = {"cancer_id": f"cancer_{cancer_counter}"}
-                cancer_counter += 1
-
-            field_summary = self._build_field_summary(field_payload, extraction_result, patient_id)
-            field_entry: Dict[str, Any] = {
-                "final_value": field_summary["final_value"],
-                "supporting_evidence": field_summary["supporting_evidence"],
-                "contradictory_evidence": field_summary["contradictory_evidence"],
+        
+        import re
+        
+        # Helper function to normalize LLM-extracted date values
+        def normalize_date_value(date_str: str) -> str:
+            """Normalize LLM-extracted date values to YYYY-MM-DD format.
+            
+            Fixes common LLM issues like:
+            - "Diagnosed in1987" → "1987-01-01"
+            - "Diagnosed in 1987" → "1987-01-01"
+            - "Recently diagnosed in July 2015" → "2015-07-15"
+            - "2015-07-15" → "2015-07-15" (unchanged)
+            """
+            if not date_str:
+                return "Not Reported"
+            
+            # Already in YYYY-MM-DD format
+            if re.match(r'^\d{4}-\d{2}-\d{2}$', date_str):
+                return date_str
+            
+            # Fix missing space issue: "in1987" → "in 1987"
+            date_str = re.sub(r'in(\d{4})', r'in \1', date_str)
+            
+            # Month name mappings
+            month_names = {
+                'january': '01', 'february': '02', 'march': '03', 'april': '04',
+                'may': '05', 'june': '06', 'july': '07', 'august': '08',
+                'september': '09', 'october': '10', 'november': '11', 'december': '12'
             }
-            # Add normalized_value and normalized_code if present
-            if field_payload.get("normalized_value"):
-                field_entry["normalized_value"] = field_payload.get("normalized_value")
-            if field_payload.get("vocabulary_code"):
-                field_entry["normalized_code"] = field_payload.get("vocabulary_code")
+            
+            # Try "Month YYYY" format (e.g., "July 2015", "Recently diagnosed in July 2015")
+            match = re.search(r'(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{4})', date_str.lower())
+            if match:
+                month = month_names.get(match.group(1), '01')
+                year = match.group(2)
+                return f"{year}-{month}-15"
+            
+            # Try "Diagnosed in YYYY" or just "in YYYY" pattern
+            match = re.search(r'in\s+(\d{4})', date_str, re.IGNORECASE)
+            if match:
+                year = match.group(1)
+                return f"{year}-01-01"
+            
+            # Try just YYYY format
+            match = re.search(r'(\d{4})', date_str)
+            if match:
+                return f"{match.group(1)}-01-01"
+            
+            return date_str  # Return as-is if no pattern matched
+        
+        # Step 1: Collect ALL body_site and diagnosis_date values from resolve_records
+        # This is the PRIMARY source for multi-cancer detection
+        all_site_docs: List[Dict[str, Any]] = []
+        all_date_docs: List[Dict[str, Any]] = []
+        all_histology_docs: List[Dict[str, Any]] = []
+        
+        # Use cached resolve_records if available (primary source)
+        if self._resolve_records:
+            for record in self._resolve_records:
+                field_name = record.get("field_name", "")
+                raw_value = record.get("resolved_value") or record.get("raw_value") or ""
+                doc_id = record.get("doc_id", "")
+                doc_date = record.get("doc_date", "")
+                
+                if field_name == "ca_site" and raw_value and raw_value != "Not Reported":
+                    all_site_docs.append({
+                        "doc_id": doc_id,
+                        "doc_date": doc_date,
+                        "raw_value": raw_value,
+                        "reasoning": record.get("consolidation_notes", ""),
+                    })
+                elif field_name == "naaccr_diagnosis_dt" and raw_value and raw_value != "Not Reported":
+                    all_date_docs.append({
+                        "doc_id": doc_id,
+                        "doc_date": doc_date,  # Include doc_date for evidence dating
+                        "raw_value": raw_value,
+                    })
+                elif field_name == "naaccr_histology_cd" and raw_value and raw_value != "Not Reported":
+                    all_histology_docs.append({
+                        "doc_id": doc_id,
+                        "doc_date": doc_date,  # Include doc_date for evidence dating
+                        "raw_value": raw_value,
+                    })
+        
+        # Fallback: Also check diagnosis_fields if resolve_records didn't provide enough data
+        if not all_site_docs:
+            for field_payload in diagnosis_fields:
+                if not field_payload or not isinstance(field_payload, dict):
+                    continue
+                field_name = field_payload.get("field_name", "unknown_field")
+                raw_value = (
+                    field_payload.get("raw_value") 
+                    or field_payload.get("resolved_value") 
+                    or field_payload.get("normalized_value")
+                )
+                
+                if field_name == "body_site" and raw_value:
+                    # Check supporting_docs first
+                    supporting_docs = field_payload.get("supporting_docs") or []
+                    if supporting_docs:
+                        for doc in supporting_docs:
+                            if isinstance(doc, dict):
+                                all_site_docs.append({
+                                    "doc_id": doc.get("doc_id", ""),
+                                    "doc_date": doc.get("doc_date", ""),
+                                    "raw_value": doc.get("raw_value") or doc.get("normalized_value") or raw_value,
+                                    "reasoning": doc.get("reasoning_excerpt", ""),
+                                })
+                    else:
+                        # Use field payload as single doc
+                        all_site_docs.append({
+                            "doc_id": field_payload.get("doc_id") or "",
+                            "doc_date": field_payload.get("doc_date") or "",
+                            "raw_value": raw_value,
+                            "reasoning": field_payload.get("consolidation_notes") or "",
+                        })
+                        
+                elif field_name == "diagnosis_date" and raw_value:
+                    supporting_docs = field_payload.get("supporting_docs") or []
+                    if supporting_docs:
+                        for doc in supporting_docs:
+                            if isinstance(doc, dict):
+                                all_date_docs.append({
+                                    "doc_id": doc.get("doc_id", ""),
+                                    "raw_value": doc.get("raw_value") or doc.get("normalized_value") or raw_value,
+                                })
+                    else:
+                        all_date_docs.append({
+                            "doc_id": field_payload.get("doc_id") or "",
+                            "raw_value": raw_value,
+                        })
+        
+        # Step 2: Parse all collected site docs to identify unique cancers
+        unique_cancer_sites: Dict[str, Dict[str, Any]] = {}  # site_code -> {docs, diagnosis_dates}
+        
+        for doc in all_site_docs:
+            raw_value = doc.get("raw_value", "")
+            if not raw_value:
+                continue
+            
+            # Parse cancer site from the value (e.g., "Colon Cancer (C18.9)")
+            # Look for ICD-O-3 site codes like C18.1, C20.9, C61.9
+            site_match = re.search(r'\(?(C\d+\.?\d*)\)?', raw_value)
+            if site_match:
+                site_code = site_match.group(1)
+                # Normalize site code (e.g., C61 -> C61.9)
+                if '.' not in site_code:
+                    site_code = f"{site_code}.9"
+                
+                if site_code not in unique_cancer_sites:
+                    unique_cancer_sites[site_code] = {
+                        "site_code": site_code,
+                        "site_name": raw_value,
+                        "docs": [],
+                        "diagnosis_dates": [],
+                        "histology_values": [],  # NEW: Track histology per cancer
+                    }
+                unique_cancer_sites[site_code]["docs"].append(doc)
+        
+        # Step 3: Associate diagnosis_dates with each cancer site based on doc_id matching
+        if all_date_docs and unique_cancer_sites:
+            for date_doc in all_date_docs:
+                doc_id = date_doc.get("doc_id", "")
+                date_value = date_doc.get("raw_value", "")
+                doc_date_value = date_doc.get("doc_date", "")  # Get doc_date for evidence
+                
+                # Find which cancer site this doc belongs to
+                for site_code, site_info in unique_cancer_sites.items():
+                    for site_doc in site_info["docs"]:
+                        if site_doc.get("doc_id") == doc_id:
+                            site_info["diagnosis_dates"].append({
+                                "date": date_value,
+                                "doc_id": doc_id,
+                                "doc_date": doc_date_value,  # Include doc_date for evidence
+                            })
+                            break
+        
+        # Step 3b: Associate histology_morphology with each cancer site based on doc_id matching
+        if all_histology_docs and unique_cancer_sites:
+            for hist_doc in all_histology_docs:
+                doc_id = hist_doc.get("doc_id", "")
+                hist_value = hist_doc.get("raw_value", "")
+                
+                # Find which cancer site this doc belongs to
+                for site_code, site_info in unique_cancer_sites.items():
+                    for site_doc in site_info["docs"]:
+                        if site_doc.get("doc_id") == doc_id:
+                            site_info["histology_values"].append({
+                                "value": hist_value,
+                                "doc_id": doc_id,
+                                "doc_date": hist_doc.get("doc_date", ""),  # Include doc_date for evidence
+                            })
+                            break
+        # Step 4: Build primary_cancer entries for each unique site
+        cancers: List[Dict[str, Any]] = []
+        cancer_counter = 1
+        
+        if unique_cancer_sites:
+            for site_code, site_info in unique_cancer_sites.items():
+                cancer_entry = {
+                    "cancer_id": f"cancer_{cancer_counter}",
+                    "site_code": site_code,
+                }
+                cancer_counter += 1
+                
+                # Build body_site field for this cancer
+                site_evidence = []
+                for doc in site_info["docs"]:
+                    site_evidence.append({
+                        "source_file": self._format_source_file_name(doc["doc_id"], patient_id),
+                        "snippet": doc["raw_value"],
+                        "date": doc["doc_date"],
+                        "confidence": 0.95,
+                    })
+                
+                cancer_entry["body_site"] = {
+                    "final_value": site_info["site_name"],
+                    "supporting_evidence": site_evidence,
+                    "contradictory_evidence": [],
+                    "supporting_evidence_count": len(site_evidence),
+                    "contradictory_evidence_count": 0,
+                }
+                
+                # Build diagnosis_date for this cancer
+                guided_date = None
+                if primary_cancers_guide:
+                    # Find matching guide for this site code
+                    for guide in primary_cancers_guide:
+                        guide_site = guide.get("site", "")
+                        if site_code in guide_site or site_info["site_name"] in guide_site:
+                            guided_date = guide.get("diagnosis_date")
+                            break
+                
+                if guided_date and guided_date != "Not Reported":
+                    # Use LLM-guided date logic
+                    # Find evidence closest to this date
+                    matching_dates = []
+                    
+                    # Normalize guided date for comparison
+                    def extract_sortable_date(date_str: str) -> str:
+                        """Extract a sortable date string (YYYY-MM-DD) from date text."""
+                        import re
+                        if not date_str:
+                            return "9999-99-99"
+                        match = re.search(r'(\d{4})', date_str)
+                        return match.group(1) if match else "9999"
 
-            cancers[cancer_key][field_name] = field_entry
-
-        return list(cancers.values())
+                    guide_year = extract_sortable_date(guided_date)
+                    
+                    for d in site_info["diagnosis_dates"]:
+                        doc_year = extract_sortable_date(d.get("date", ""))
+                        # Allow fuzzy match (same year)
+                        if doc_year == guide_year or guided_date in d.get("date", ""):
+                            matching_dates.append(d)
+                    
+                    if matching_dates:
+                        cancer_entry["diagnosis_date"] = {
+                            "final_value": guided_date,
+                            "supporting_evidence": [{
+                                "source_file": self._format_source_file_name(d["doc_id"], patient_id),
+                                "snippet": d["date"],  # The extracted diagnosis date value
+                                "date": d.get("doc_date") or d["date"],  # Use doc_date if available
+                                "confidence": 0.95,
+                            } for d in matching_dates],
+                            "contradictory_evidence": [],
+                            "supporting_evidence_count": len(matching_dates),
+                            "contradictory_evidence_count": 0,
+                        }
+                    else:
+                        # Fallback if no evidence matches guide
+                         cancer_entry["diagnosis_date"] = {
+                            "final_value": guided_date,
+                            "supporting_evidence": [], # LLM hallucinated date or evidence lost
+                            "contradictory_evidence": [],
+                            "supporting_evidence_count": 0,
+                            "contradictory_evidence_count": 0,
+                        }
+                        
+                elif site_info["diagnosis_dates"]:
+                    # Default logic: Use EARLIEST date
+                    # Helper to extract sortable date from various formats
+                    def extract_sortable_date(date_str: str) -> str:
+                        """Extract a sortable date string (YYYY-MM-DD) from date text."""
+                        import re
+                        if not date_str:
+                            return "9999-99-99"
+                        
+                        # Try YYYY-MM-DD format first
+                        match = re.search(r'(\d{4}-\d{2}-\d{2})', date_str)
+                        if match:
+                            return match.group(1)
+                        
+                        # Try "Month DD, YYYY" format (e.g., "January 10, 2019")
+                        month_names = {
+                            'january': '01', 'february': '02', 'march': '03', 'april': '04',
+                            'may': '05', 'june': '06', 'july': '07', 'august': '08',
+                            'september': '09', 'october': '10', 'november': '11', 'december': '12'
+                        }
+                        match = re.search(r'(\w+)\s+(\d{1,2}),?\s+(\d{4})', date_str, re.IGNORECASE)
+                        if match:
+                            month = month_names.get(match.group(1).lower(), '99')
+                            day = match.group(2).zfill(2)
+                            year = match.group(3)
+                            return f"{year}-{month}-{day}"
+                        
+                        # Try "Month YYYY" format (e.g., "April 2025")
+                        match = re.search(r'(\w+)\s+(\d{4})', date_str, re.IGNORECASE)
+                        if match:
+                            month = month_names.get(match.group(1).lower(), '99')
+                            year = match.group(2)
+                            return f"{year}-{month}-01"
+                        
+                        # Try just YYYY format
+                        match = re.search(r'(\d{4})', date_str)
+                        if match:
+                            return f"{match.group(1)}-01-01"
+                        
+                        return "9999-99-99"
+                    
+                    # Sort by extracted date and take earliest
+                    dates_sorted = sorted(
+                        site_info["diagnosis_dates"],
+                        key=lambda x: extract_sortable_date(x.get("date", ""))
+                    )
+                    earliest = dates_sorted[0] if dates_sorted else None
+                    if earliest:
+                        # Normalize the date value to YYYY-MM-DD format
+                        normalized_date = normalize_date_value(earliest["date"])
+                        cancer_entry["diagnosis_date"] = {
+                            "final_value": normalized_date,
+                            "supporting_evidence": [{
+                                "source_file": self._format_source_file_name(d["doc_id"], patient_id),
+                                "snippet": d["date"],  # Keep original LLM-extracted snippet for reference
+                                "date": d.get("doc_date") or normalize_date_value(d["date"]),  # Use doc_date if available
+                                "confidence": 0.95,
+                            } for d in site_info["diagnosis_dates"]],
+                            "contradictory_evidence": [],
+                            "supporting_evidence_count": len(site_info["diagnosis_dates"]),
+                            "contradictory_evidence_count": 0,
+                        }
+                
+                # Build histology_morphology for this cancer (use most common value)
+                if site_info.get("histology_values"):
+                    # Count occurrences and pick most common
+                    from collections import Counter
+                    value_counts = Counter(h["value"] for h in site_info["histology_values"])
+                    most_common = value_counts.most_common(1)[0][0] if value_counts else "Not Reported"
+                    
+                    cancer_entry["histology_morphology"] = {
+                        "final_value": most_common,
+                        "supporting_evidence": [{
+                            "source_file": self._format_source_file_name(h["doc_id"], patient_id),
+                            "snippet": h["value"],
+                            "date": h.get("doc_date") or "Not Reported",  # Use doc_date from histology record
+                            "confidence": 0.9,
+                        } for h in site_info["histology_values"]],
+                        "contradictory_evidence": [],
+                        "supporting_evidence_count": len(site_info["histology_values"]),
+                        "contradictory_evidence_count": 0,
+                    }
+                
+                cancers.append(cancer_entry)
+        
+        # Fallback: If no unique sites found, use simplified logic
+        if not cancers:
+            # Fallback logic - single cancer record from first available body_site
+            cancer_entry = {"cancer_id": "cancer_1"}
+            for field_payload in diagnosis_fields:
+                if not field_payload or not isinstance(field_payload, dict):
+                    continue
+                field_name = field_payload.get("field_name", "unknown_field")
+                final_value = (
+                    field_payload.get("resolved_value") 
+                    or field_payload.get("normalized_value") 
+                    or field_payload.get("raw_value")
+                    or "Not Reported"
+                )
+                # Build simple evidence from field_payload
+                supporting_docs = field_payload.get("supporting_docs") or []
+                supporting_evidence = []
+                for doc in supporting_docs:
+                    if isinstance(doc, dict):
+                        supporting_evidence.append({
+                            "source_file": self._format_source_file_name(doc.get("doc_id", ""), patient_id),
+                            "snippet": doc.get("raw_value") or final_value,
+                            "date": doc.get("doc_date", "Not Reported"),
+                            "confidence": 0.9,
+                        })
+                if not supporting_evidence:
+                    # Create minimal entry from field_payload itself
+                    supporting_evidence = [{
+                        "source_file": "unknown",
+                        "snippet": final_value,
+                        "date": "Not Reported",
+                        "confidence": 0.9,
+                    }]
+                
+                field_entry: Dict[str, Any] = {
+                    "final_value": final_value,
+                    "supporting_evidence": supporting_evidence,
+                    "contradictory_evidence": [],
+                    "supporting_evidence_count": len(supporting_evidence),
+                    "contradictory_evidence_count": 0,
+                }
+                if field_payload.get("normalized_value"):
+                    field_entry["normalized_value"] = field_payload.get("normalized_value")
+                if field_payload.get("vocabulary_code"):
+                    field_entry["normalized_code"] = field_payload.get("vocabulary_code")
+                cancer_entry[field_name] = field_entry
+            cancers.append(cancer_entry)
+        
+        return cancers
 
     def _build_cancer_stage_domain(
         self,
@@ -772,6 +1180,7 @@ class Consolidator:
                     )
 
         # Build final_stage structure
+        # Field names are already normalized to mCODE format by _normalize_all_field_names()
         stage_field_mapping = {
             "tnm_t_pathologic": "tnm_t_pathologic",
             "tnm_n_pathologic": "tnm_n_pathologic",
@@ -1007,12 +1416,15 @@ class Consolidator:
             "",
         )
 
+        # NOTE: Field names will be normalized by _normalize_all_field_names() after
+        # all records are built, so we keep the original field name here.
         consolidated = {
-            "field_name": field_name,
+            "field_name": field_name,  # Will be normalized by _normalize_all_field_names()
             "category": category,
             "data_type": data_type,
             "normalized_value": normalized_value,
             "resolved_value": resolved_value,
+            "raw_value": extraction.get("raw_value") or record.get("raw_value"),
             "units": units,
             "vocabulary_code": vocabulary_code,
             "confidence_score": confidence,
@@ -1141,6 +1553,9 @@ class Consolidator:
         supporting_docs = field_payload.get("supporting_docs") or []
         evidence = []
         sanitized_docs: List[Dict[str, Any]] = []
+        
+        # Get doc_date from field_payload as fallback (may be at record level)
+        fallback_doc_date = field_payload.get("doc_date") or field_payload.get("date") or "Not Reported"
 
         # If supporting_docs is empty, try to build evidence from extraction_result
         if not supporting_docs and extraction_result:
@@ -1178,10 +1593,20 @@ class Consolidator:
                         else:
                             explanation = f"Information for {field_name} extracted from document."
 
-                    # Get doc_date - try multiple fields
-                    doc_date = doc.get("doc_date") or doc.get("date") or "Not Reported"
-                    if doc_date in (None, "", "null", "None"):
-                        doc_date = "Not Reported"
+                    # Get doc_date - try doc level, then field_payload fallback, then extraction_result lookup
+                    doc_date = doc.get("doc_date") or doc.get("date")
+                    if doc_date in (None, "", "null", "None", "Not Reported"):
+                        doc_date = fallback_doc_date
+                    
+                    # If still not found, try extraction_result lookup by doc_id
+                    if doc_date in (None, "", "null", "None", "Not Reported") and extraction_result:
+                        doc_id_for_lookup = doc.get("doc_id") or doc.get("source_file") or ""
+                        if doc_id_for_lookup:
+                            extracted_date = self._lookup_doc_date_from_extraction(
+                                doc_id_for_lookup, extraction_result
+                            )
+                            if extracted_date:
+                                doc_date = extracted_date
 
                     # Format source_file properly
                     doc_id = doc.get("doc_id") or doc.get("source_file") or "unknown_doc"
@@ -1278,16 +1703,15 @@ class Consolidator:
             field_name = field_payload.get("_original_field_name") or field_payload.get(
                 "field_name", ""
             )
-            resolved_value = (
-                field_payload.get("resolved_value")
-                or field_payload.get("normalized_value")
-                or field_payload.get("raw_value")
-            )
-            baseline = (
-                str(resolved_value).strip().lower()
-                if resolved_value and str(resolved_value).strip()
-                else ""
-            )
+            # Use semantic normalization for comparison to avoid false contradictions
+            # This extracts core values like "cT2" from both "cT2" and "Clinical staging revealed cT2"
+            raw_baseline = field_payload.get("raw_value") 
+            if not raw_baseline:
+                raw_baseline = field_payload.get("normalized_value") or field_payload.get("resolved_value")
+            
+            # Normalize baseline for semantic comparison
+            baseline = self._normalize_value_for_comparison(raw_baseline, field_name)
+            
             contradictions: List[Dict[str, Any]] = []
             seen_contradictions = set()
 
@@ -1296,7 +1720,7 @@ class Consolidator:
                     extracted_fields = doc_result.get("extracted_fields", [])
                     doc_id = doc_result.get("doc_id", "")
                     doc_date = (
-                        doc_result.get("doc_date") or doc_result.get("date") or "Not Reported"
+                        doc_result.get("doc_date") or doc_result.get("date") or fallback_doc_date
                     )
                 else:
                     extracted_fields = getattr(doc_result, "extracted_fields", [])
@@ -1304,16 +1728,19 @@ class Consolidator:
                     doc_date = (
                         getattr(doc_result, "doc_date", None)
                         or getattr(doc_result, "date", None)
-                        or "Not Reported"
+                        or fallback_doc_date
                     )
 
                 for extracted_field in extracted_fields:
                     if isinstance(extracted_field, dict):
                         extracted_field_name = extracted_field.get("field_name", "")
+                        # Get resolved_value separately for snippet (descriptive text)
+                        resolved_val = extracted_field.get("resolved_value") or ""
+                        raw_val = extracted_field.get("raw_value") or ""
                         extracted_value = (
-                            extracted_field.get("resolved_value")
+                            resolved_val
                             or extracted_field.get("normalized_value")
-                            or extracted_field.get("raw_value")
+                            or raw_val
                         )
                         reasoning_excerpt = extracted_field.get("reasoning_excerpt", "")
                         field_evidence = extracted_field.get("field_evidence", {})
@@ -1322,20 +1749,25 @@ class Consolidator:
                             if isinstance(field_evidence, dict)
                             else ""
                         )
-                        confidence_score = extracted_field.get("confidence_score", 0.5)
+                        # Use actual confidence from LLM, None if not provided
+                        confidence_score = extracted_field.get("confidence_score")
                     else:
                         extracted_field_name = getattr(extracted_field, "field_name", "")
+                        # Get resolved_value separately for snippet (descriptive text)
+                        resolved_val = getattr(extracted_field, "resolved_value", None) or ""
+                        raw_val = getattr(extracted_field, "raw_value", None) or ""
                         extracted_value = (
-                            getattr(extracted_field, "resolved_value", None)
+                            resolved_val
                             or getattr(extracted_field, "normalized_value", None)
-                            or getattr(extracted_field, "raw_value", None)
+                            or raw_val
                         )
                         reasoning_excerpt = getattr(extracted_field, "reasoning_excerpt", "")
                         field_evidence = getattr(extracted_field, "field_evidence", None)
                         explanation = (
                             getattr(field_evidence, "explanation", "") if field_evidence else ""
                         )
-                        confidence_score = getattr(extracted_field, "confidence_score", 0.5)
+                        # Use actual confidence from LLM, None if not provided
+                        confidence_score = getattr(extracted_field, "confidence_score", None)
 
                     if extracted_field_name != field_name:
                         continue
@@ -1346,12 +1778,28 @@ class Consolidator:
                     if not extracted_value_str or extracted_value_str.lower() == "not reported":
                         continue
 
-                    extracted_comparable = extracted_value_str.lower()
-                    if baseline and extracted_comparable == baseline:
+                    # Use SEMANTIC normalization for comparison
+                    # This compares core values like "cT2" regardless of whether it came from 
+                    # raw "cT2" or resolved "Clinical staging revealed cT2"
+                    extracted_normalized = self._normalize_value_for_comparison(extracted_value_str, field_name)
+                    
+                    # Also try normalizing the raw value in case resolved contains different info
+                    if raw_val:
+                        raw_normalized = self._normalize_value_for_comparison(raw_val, field_name)
+                        # Use raw_normalized if it's more specific (non-empty and different)
+                        if raw_normalized and raw_normalized != extracted_normalized:
+                            extracted_normalized = raw_normalized
+                    
+                    # If baseline is missing, we can't determine contradiction, so skip
+                    if not baseline:
+                        continue
+                    
+                    # Semantic comparison: if normalized values match, not a contradiction
+                    if extracted_normalized == baseline:
                         continue
 
                     source_file = self._format_source_file_name(doc_id, patient_id)
-                    signature = (source_file, extracted_comparable)
+                    signature = (source_file, extracted_normalized)
                     if signature in seen_contradictions:
                         continue
                     seen_contradictions.add(signature)
@@ -1369,9 +1817,21 @@ class Consolidator:
 
                     # Use actual confidence from LLM, not default
                     conf_val = confidence_score if confidence_score is not None else None
+                    
+                    # Better snippet selection:
+                    # 1. Reasoning Excerpt (best context)
+                    # 2. Resolved Value (descriptive)
+                    # 3. Extracted Value (might be raw)
+                    snippet_text = reasoning_excerpt
+                    if not snippet_text:
+                        if resolved_val and len(str(resolved_val)) > len(str(raw_val)):
+                             snippet_text = str(resolved_val)
+                        else:
+                             snippet_text = str(extracted_value)
+
                     contradictions.append(
                         {
-                            "snippet": reasoning_excerpt or "",
+                            "snippet": snippet_text,
                             "explanation": explanation,
                             "date": doc_date,
                             "source_file": source_file,
@@ -1730,6 +2190,45 @@ class Consolidator:
                 doc_ids.append(doc_id_str)
         return sorted(set(doc_ids))
 
+    def _lookup_doc_date_from_extraction(
+        self,
+        doc_id: str,
+        extraction_result: Optional[ExtractionResult],
+    ) -> Optional[str]:
+        """Lookup doc_date from extraction_result by doc_id.
+        
+        This is used as a fallback when supporting_docs from DocETL
+        don't contain doc_date (LLM may not always propagate it).
+        """
+        if not extraction_result or not extraction_result.document_results:
+            return None
+        
+        # Normalize doc_id for comparison (handle various formats)
+        normalized_doc_id = doc_id.lower().strip()
+        
+        for doc_result in extraction_result.document_results:
+            if isinstance(doc_result, dict):
+                result_doc_id = doc_result.get("doc_id", "")
+                result_doc_date = doc_result.get("doc_date")
+            else:
+                result_doc_id = getattr(doc_result, "doc_id", "")
+                result_doc_date = getattr(doc_result, "doc_date", None)
+            
+            # Compare normalized doc_ids
+            if result_doc_id and result_doc_id.lower().strip() == normalized_doc_id:
+                if result_doc_date and result_doc_date not in ("", "null", "None", "Not Reported"):
+                    return result_doc_date
+            
+            # Also try partial match (e.g., "doc_001" vs "doc_001_jsl_p01_001_summary_doc")
+            if result_doc_id and (
+                normalized_doc_id in result_doc_id.lower() or 
+                result_doc_id.lower() in normalized_doc_id
+            ):
+                if result_doc_date and result_doc_date not in ("", "null", "None", "Not Reported"):
+                    return result_doc_date
+        
+        return None
+
     @staticmethod
     def _clamp_confidence(value: Any, default: Optional[float] = None) -> Optional[float]:
         """
@@ -1807,6 +2306,155 @@ class Consolidator:
 
         return max(0.0, min(1.0, final_score))
 
+    @staticmethod
+    def _normalize_value_for_comparison(value: Any, field_name: str = "") -> str:
+        """Normalize a value for semantic comparison.
+        
+        Extracts the core semantic value from both raw values (like "cT2", "1", "2015-07-15")
+        and resolved values (like "Clinical staging revealed cT2", "ECOG 1", "Diagnosed in July 2015").
+        
+        This prevents false contradictions caused by format differences.
+        """
+        if value is None:
+            return ""
+        
+        val_str = str(value).strip().lower()
+        if not val_str or val_str in ("not reported", "null", "none", "n/a"):
+            return ""
+        
+        import re
+        
+        # Roman numeral to Arabic conversion
+        roman_to_arabic = {
+            'i': '1', 'ii': '2', 'iii': '3', 'iv': '4', 'v': '5',
+            'vi': '6', 'vii': '7', 'viii': '8', 'ix': '9', 'x': '10'
+        }
+        
+        field_lower = field_name.lower()
+        
+        # Stage group: handle various formats including Roman numerals and TNM combinations
+        # Match: "Stage III", "Stage 3", "stage iii", "III", "3", "Summary Stage3", "pT3, pN0, pM0"
+        if "stage" in field_lower:
+            # First try to find Roman numeral stage
+            roman_pattern = r'\b(?:stage\s*)?(i{1,3}|iv|v|vi{0,3}|ix|x)\b'
+            roman_match = re.search(roman_pattern, val_str, re.IGNORECASE)
+            if roman_match:
+                roman_val = roman_match.group(1).lower()
+                return roman_to_arabic.get(roman_val, roman_val)
+            
+            # Then try Arabic numeral (standalone or after "stage")
+            arabic_pattern = r'\b(?:stage\s*)?([0-9])\b'
+            arabic_match = re.search(arabic_pattern, val_str, re.IGNORECASE)
+            if arabic_match:
+                return arabic_match.group(1)
+            
+            # Fallback: extract stage from TNM combination like "pT3, pN0, pM0" or "T3N0M0"
+            # Use the T-stage number as the stage group indicator
+            tnm_stage_pattern = r'\b[cp]?[tT]([0-4x])(?:[abc])?\b'
+            tnm_stage_match = re.search(tnm_stage_pattern, val_str)
+            if tnm_stage_match:
+                return tnm_stage_match.group(1)
+        
+        # TNM staging: extract the stage value and handle c/p prefix based on field type
+        # For clinical fields: cT3 and T3 (no prefix) are equivalent, but pT3 is DIFFERENT
+        # For pathologic fields: pT3 is expected, cT3 and T3 are DIFFERENT
+        tnm_pattern = r'\b([cp])?([tnm][0-4x](?:[abc])?)\b'
+        tnm_match = re.search(tnm_pattern, val_str, re.IGNORECASE)
+        if tnm_match:
+            prefix = (tnm_match.group(1) or '').lower()
+            stage_value = tnm_match.group(2).lower()
+            
+            # Check if this is a clinical or pathologic field
+            is_clinical_field = 'clinical' in field_lower or '_clinical' in field_lower
+            is_pathologic_field = 'pathologic' in field_lower or '_pathologic' in field_lower or 'path' in field_lower
+            
+            if is_clinical_field:
+                # For clinical fields: c prefix or no prefix = "c_<stage>", p prefix = "p_<stage>"
+                # This way cT3 and T3 match, but pT3 does not
+                if prefix == 'p':
+                    return f"p_{stage_value}"  # Will NOT match clinical values
+                else:
+                    return f"c_{stage_value}"  # cT3 and T3 both become "c_t3"
+            elif is_pathologic_field:
+                # For pathologic fields: p prefix = "p_<stage>", c prefix or no prefix = "c_<stage>"
+                # This way pT3 matches, but cT3 and T3 do not
+                if prefix == 'p':
+                    return f"p_{stage_value}"  # pT3 becomes "p_t3"
+                else:
+                    return f"c_{stage_value}"  # Will NOT match pathologic values
+            else:
+                # Generic TNM field - keep old behavior (strip prefix)
+                return stage_value
+        
+        # ECOG/Performance/KPS status: extract just the number
+        if any(x in field_lower for x in ["ecog", "performance", "kps"]):
+            # For KPS, values are typically 0-100 in increments of 10
+            if "kps" in field_lower:
+                kps_pattern = r'\b([1-9]?[0-9]0|100)\b'
+                kps_match = re.search(kps_pattern, val_str)
+                if kps_match:
+                    return kps_match.group(1)
+            # For ECOG, values are 0-5
+            ecog_pattern = r'\b([0-5])\b'
+            ecog_match = re.search(ecog_pattern, val_str)
+            if ecog_match:
+                return ecog_match.group(1)
+        
+        # Date: normalize to YYYY-MM format
+        date_pattern = r'(\d{4})-(\d{2})-(\d{2})'
+        date_match = re.search(date_pattern, val_str)
+        if date_match:
+            return f"{date_match.group(1)}-{date_match.group(2)}"
+        
+        # Month year format: "July 2015" -> "2015-07" or "July2015" -> "2015-07"
+        month_names = {
+            'january': '01', 'february': '02', 'march': '03', 'april': '04',
+            'may': '05', 'june': '06', 'july': '07', 'august': '08',
+            'september': '09', 'october': '10', 'november': '11', 'december': '12'
+        }
+        month_year_pattern = r'(january|february|march|april|may|june|july|august|september|october|november|december)\s*(\d{4})'
+        month_match = re.search(month_year_pattern, val_str, re.IGNORECASE)
+        if month_match:
+            month_num = month_names.get(month_match.group(1).lower(), "00")
+            return f"{month_match.group(2)}-{month_num}"
+        
+        # ICD-O codes: extract just the code (C61.9, C34.9, etc.)
+        icd_pattern = r'\b([cC]\d{1,2}(?:\.\d)?)\b'
+        icd_match = re.search(icd_pattern, val_str)
+        if icd_match:
+            return icd_match.group(1).lower()
+        
+        # Histology/Morphology: extract the ICD-O-3 morphology code (8140/3, etc.)
+        # or normalize common histology terms to their ICD-O codes
+        if "histology" in field_lower or "morphology" in field_lower:
+            # First try to find ICD-O-3 morphology code directly
+            morphology_pattern = r'\b(\d{4}/\d)\b'
+            morph_match = re.search(morphology_pattern, val_str)
+            if morph_match:
+                return morph_match.group(1)
+            
+            # Map common histology terms to ICD-O-3 codes
+            # This allows "prostatic adenocarcinoma" to match "8140/3 - Adenocarcinoma, NOS"
+            histology_mappings = {
+                'adenocarcinoma': '8140/3',
+                'squamous cell carcinoma': '8070/3',
+                'small cell carcinoma': '8041/3',
+                'large cell carcinoma': '8012/3',
+                'ductal carcinoma': '8500/3',
+                'lobular carcinoma': '8520/3',
+                'melanoma': '8720/3',
+                'sarcoma': '8800/3',
+                'lymphoma': '9590/3',
+                'leukemia': '9800/3',
+            }
+            
+            for term, code in histology_mappings.items():
+                if term in val_str:
+                    return code
+        
+        # Fallback: return cleaned value
+        return val_str
+
     def _normalize_category(self, category: Optional[str], field_name: str) -> str:
         """Normalize raw category strings into ontology-friendly groups."""
         if category:
@@ -1822,12 +2470,27 @@ class Consolidator:
         """Determine mCODE domain for a field using ontology + fallback mapping."""
         field_name = field_payload.get("_original_field_name") or field_payload.get("field_name")
         definition = self.ontology.get_field_definition(field_name) if field_name else None
+        
+        # 1. Check if ontology explicitly defines a domain
         if definition and definition.get("domain"):
             domain_value = str(definition["domain"]).lower()
             return ONTOLOGY_DOMAIN_TO_MCODE_DOMAIN.get(
                 domain_value, CATEGORY_TO_DOMAIN.get(domain_value, "extensions")
             )
-        return CATEGORY_TO_DOMAIN.get(normalized_category, "extensions")
+
+        # 2. Check if normalized_category maps to a known domain
+        domain = CATEGORY_TO_DOMAIN.get(normalized_category)
+        if domain:
+            return domain
+            
+        # 3. Fallback: check definition category logic if payload category is garbage (e.g. "p01")
+        if definition and definition.get("category"):
+             def_cat = str(definition["category"]).lower().replace("-", "_").replace(" ", "_")
+             domain = CATEGORY_TO_DOMAIN.get(def_cat)
+             if domain:
+                 return domain
+
+        return "extensions"
 
     @staticmethod
     def _is_synthetic_field(field_payload: Dict[str, Any]) -> bool:

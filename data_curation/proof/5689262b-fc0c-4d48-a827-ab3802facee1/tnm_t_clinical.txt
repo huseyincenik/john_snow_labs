@@ -1,0 +1,638 @@
+================================================================================
+DOMAIN: CLINICAL STAGING DOMAIN
+FIELD: tnm_t_clinical
+  NAACCR Source: ca_clinical_t_stage
+================================================================================
+
+────────────────────────────────────────
+RESOLVE OUTPUT (Before Reduce)
+────────────────────────────────────────
+Total records: 50
+
+Unique values:
+  - 'Clinical staging indicated cT2 based on imaging results.' (found in 2 docs)
+      - doc_041_jsl_p01_041_operative_doc
+      - doc_010_jsl_p01_010_operative_doc
+  - 'Not Reported' (found in 21 docs)
+      - doc_019_jsl_p01_019_radiology_doc
+      - doc_038_jsl_p01_038_clinical_doc
+      - doc_018_jsl_p01_018_clinical_doc
+      - doc_032_jsl_p01_032_clinical_doc
+      - doc_029_jsl_p01_029_clinical_doc
+      - doc_028_jsl_p01_028_pathology_doc
+      - doc_008_jsl_p01_008_radiology_doc
+      - doc_033_jsl_p01_033_clinical_doc
+      - doc_022_jsl_p01_022_clinical_doc
+      - doc_023_jsl_p01_023_radiology_doc
+      - doc_035_jsl_p01_035_radiology_doc
+      - doc_009_jsl_p01_009_pathology_doc
+      - doc_034_jsl_p01_034_pathology_doc
+      - doc_039_jsl_p01_039_radiology_doc
+      - doc_026_jsl_p01_026_radiology_doc
+      - doc_001_jsl_p01_001_summary_doc
+      - doc_040_jsl_p01_040_clinical_doc
+      - doc_011_jsl_p01_011_pathology_doc
+      - doc_046_jsl_p01_046_clinical_doc
+      - doc_043_jsl_p01_043_radiology_doc
+      - doc_047_jsl_p01_047_radiology_doc
+  - 'Not specified in the document' (found in 1 docs)
+      - doc_013_jsl_p01_013_pathology_doc
+  - 'Clinical staging revealed cT2' (found in 17 docs)
+      - doc_031_jsl_p01_031_summary_doc
+      - doc_006_jsl_p01_006_clinical_doc
+      - doc_045_jsl_p01_045_pathology_doc
+      - doc_016_jsl_p01_016_clinical_doc
+      - doc_017_jsl_p01_017_pathology_doc
+      - doc_007_jsl_p01_007_clinical_doc
+      - doc_012_jsl_p01_012_consult_doc
+      - doc_014_jsl_p01_014_operative_doc
+      - doc_015_jsl_p01_015_pathology_doc
+      - doc_044_jsl_p01_044_clinical_doc
+      - doc_042_jsl_p01_042_clinical_doc
+      - doc_002_jsl_p01_002_radiology_doc
+      - doc_004_jsl_p01_004_clinical_doc
+      - doc_025_jsl_p01_025_clinical_doc
+      - doc_048_jsl_p01_048_clinical_doc
+      - doc_049_jsl_p01_049_clinical_doc
+      - doc_050_jsl_p01_050_summary_doc
+  - 'No clinical T stage was mentioned in the document.' (found in 1 docs)
+      - doc_027_jsl_p01_027_operative_doc
+  - 'Clinical staging shows cT2 for the tumor size.' (found in 1 docs)
+      - doc_037_jsl_p01_037_consult_doc
+  - 'Clinical staging shows cT2 for the tumor.' (found in 1 docs)
+      - doc_005_jsl_p01_005_operative_doc
+  - 'No clinical T stage mentioned in the document.' (found in 2 docs)
+      - doc_030_jsl_p01_030_radiology_doc
+      - doc_020_jsl_p01_020_operative_doc
+  - 'Not mentioned in the document' (found in 2 docs)
+      - doc_024_jsl_p01_024_radiology_doc
+      - doc_036_jsl_p01_036_clinical_doc
+  - 'Clinical staging shows cT2' (found in 1 docs)
+      - doc_003_jsl_p01_003_radiology_doc
+  - 'Clinical T stage was noted as cT2' (found in 1 docs)
+      - doc_021_jsl_p01_021_pathology_doc
+
+Sample records (ALL):
+  [1] doc_id: doc_041_jsl_p01_041_operative_doc
+      raw_value: cT2
+      resolved_value: Clinical staging indicated cT2 based on imaging results.
+      confidence: doc_041_jsl_p01_041_operative_doc
+
+  [2] doc_id: doc_019_jsl_p01_019_radiology_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_019_jsl_p01_019_radiology_doc
+
+  [3] doc_id: doc_013_jsl_p01_013_pathology_doc
+      raw_value: Not Reported
+      resolved_value: Not specified in the document
+      confidence: doc_013_jsl_p01_013_pathology_doc
+
+  [4] doc_id: doc_031_jsl_p01_031_summary_doc
+      raw_value: cT2
+      resolved_value: Clinical staging revealed cT2
+      confidence: doc_031_jsl_p01_031_summary_doc
+
+  [5] doc_id: doc_038_jsl_p01_038_clinical_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_038_jsl_p01_038_clinical_doc
+
+  [6] doc_id: doc_018_jsl_p01_018_clinical_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_018_jsl_p01_018_clinical_doc
+
+  [7] doc_id: doc_006_jsl_p01_006_clinical_doc
+      raw_value: cT2
+      resolved_value: Clinical staging revealed cT2
+      confidence: doc_006_jsl_p01_006_clinical_doc
+
+  [8] doc_id: doc_032_jsl_p01_032_clinical_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_032_jsl_p01_032_clinical_doc
+
+  [9] doc_id: doc_029_jsl_p01_029_clinical_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_029_jsl_p01_029_clinical_doc
+
+  [10] doc_id: doc_028_jsl_p01_028_pathology_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_028_jsl_p01_028_pathology_doc
+
+  [11] doc_id: doc_045_jsl_p01_045_pathology_doc
+      raw_value: cT2
+      resolved_value: Clinical staging revealed cT2
+      confidence: doc_045_jsl_p01_045_pathology_doc
+
+  [12] doc_id: doc_016_jsl_p01_016_clinical_doc
+      raw_value: cT2
+      resolved_value: Clinical staging revealed cT2
+      confidence: doc_016_jsl_p01_016_clinical_doc
+
+  [13] doc_id: doc_008_jsl_p01_008_radiology_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_008_jsl_p01_008_radiology_doc
+
+  [14] doc_id: doc_033_jsl_p01_033_clinical_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_033_jsl_p01_033_clinical_doc
+
+  [15] doc_id: doc_022_jsl_p01_022_clinical_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_022_jsl_p01_022_clinical_doc
+
+  [16] doc_id: doc_023_jsl_p01_023_radiology_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_023_jsl_p01_023_radiology_doc
+
+  [17] doc_id: doc_017_jsl_p01_017_pathology_doc
+      raw_value: cT2
+      resolved_value: Clinical staging revealed cT2
+      confidence: doc_017_jsl_p01_017_pathology_doc
+
+  [18] doc_id: doc_007_jsl_p01_007_clinical_doc
+      raw_value: cT2
+      resolved_value: Clinical staging revealed cT2
+      confidence: doc_007_jsl_p01_007_clinical_doc
+
+  [19] doc_id: doc_035_jsl_p01_035_radiology_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_035_jsl_p01_035_radiology_doc
+
+  [20] doc_id: doc_027_jsl_p01_027_operative_doc
+      raw_value: Not Reported
+      resolved_value: No clinical T stage was mentioned in the document.
+      confidence: doc_027_jsl_p01_027_operative_doc
+
+  [21] doc_id: doc_037_jsl_p01_037_consult_doc
+      raw_value: cT2
+      resolved_value: Clinical staging shows cT2 for the tumor size.
+      confidence: doc_037_jsl_p01_037_consult_doc
+
+  [22] doc_id: doc_012_jsl_p01_012_consult_doc
+      raw_value: cT2
+      resolved_value: Clinical staging revealed cT2
+      confidence: doc_012_jsl_p01_012_consult_doc
+
+  [23] doc_id: doc_009_jsl_p01_009_pathology_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_009_jsl_p01_009_pathology_doc
+
+  [24] doc_id: doc_014_jsl_p01_014_operative_doc
+      raw_value: cT2
+      resolved_value: Clinical staging revealed cT2
+      confidence: doc_014_jsl_p01_014_operative_doc
+
+  [25] doc_id: doc_005_jsl_p01_005_operative_doc
+      raw_value: cT2
+      resolved_value: Clinical staging shows cT2 for the tumor.
+      confidence: doc_005_jsl_p01_005_operative_doc
+
+  [26] doc_id: doc_015_jsl_p01_015_pathology_doc
+      raw_value: cT2
+      resolved_value: Clinical staging revealed cT2
+      confidence: doc_015_jsl_p01_015_pathology_doc
+
+  [27] doc_id: doc_010_jsl_p01_010_operative_doc
+      raw_value: cT2
+      resolved_value: Clinical staging indicated cT2 based on imaging results.
+      confidence: doc_010_jsl_p01_010_operative_doc
+
+  [28] doc_id: doc_034_jsl_p01_034_pathology_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_034_jsl_p01_034_pathology_doc
+
+  [29] doc_id: doc_039_jsl_p01_039_radiology_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_039_jsl_p01_039_radiology_doc
+
+  [30] doc_id: doc_044_jsl_p01_044_clinical_doc
+      raw_value: cT2
+      resolved_value: Clinical staging revealed cT2
+      confidence: doc_044_jsl_p01_044_clinical_doc
+
+  [31] doc_id: doc_030_jsl_p01_030_radiology_doc
+      raw_value: Not Reported
+      resolved_value: No clinical T stage mentioned in the document.
+      confidence: doc_030_jsl_p01_030_radiology_doc
+
+  [32] doc_id: doc_042_jsl_p01_042_clinical_doc
+      raw_value: cT2
+      resolved_value: Clinical staging revealed cT2
+      confidence: doc_042_jsl_p01_042_clinical_doc
+
+  [33] doc_id: doc_002_jsl_p01_002_radiology_doc
+      raw_value: cT2
+      resolved_value: Clinical staging revealed cT2
+      confidence: doc_002_jsl_p01_002_radiology_doc
+
+  [34] doc_id: doc_026_jsl_p01_026_radiology_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_026_jsl_p01_026_radiology_doc
+
+  [35] doc_id: doc_024_jsl_p01_024_radiology_doc
+      raw_value: Not Reported
+      resolved_value: Not mentioned in the document
+      confidence: doc_024_jsl_p01_024_radiology_doc
+
+  [36] doc_id: doc_003_jsl_p01_003_radiology_doc
+      raw_value: cT2
+      resolved_value: Clinical staging shows cT2
+      confidence: doc_003_jsl_p01_003_radiology_doc
+
+  [37] doc_id: doc_004_jsl_p01_004_clinical_doc
+      raw_value: cT2
+      resolved_value: Clinical staging revealed cT2
+      confidence: doc_004_jsl_p01_004_clinical_doc
+
+  [38] doc_id: doc_001_jsl_p01_001_summary_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_001_jsl_p01_001_summary_doc
+
+  [39] doc_id: doc_040_jsl_p01_040_clinical_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_040_jsl_p01_040_clinical_doc
+
+  [40] doc_id: doc_021_jsl_p01_021_pathology_doc
+      raw_value: cT2
+      resolved_value: Clinical T stage was noted as cT2
+      confidence: doc_021_jsl_p01_021_pathology_doc
+
+  [41] doc_id: doc_025_jsl_p01_025_clinical_doc
+      raw_value: cT2
+      resolved_value: Clinical staging revealed cT2
+      confidence: doc_025_jsl_p01_025_clinical_doc
+
+  [42] doc_id: doc_020_jsl_p01_020_operative_doc
+      raw_value: Not Reported
+      resolved_value: No clinical T stage mentioned in the document.
+      confidence: doc_020_jsl_p01_020_operative_doc
+
+  [43] doc_id: doc_036_jsl_p01_036_clinical_doc
+      raw_value: Not Reported
+      resolved_value: Not mentioned in the document
+      confidence: doc_036_jsl_p01_036_clinical_doc
+
+  [44] doc_id: doc_011_jsl_p01_011_pathology_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_011_jsl_p01_011_pathology_doc
+
+  [45] doc_id: doc_046_jsl_p01_046_clinical_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_046_jsl_p01_046_clinical_doc
+
+  [46] doc_id: doc_048_jsl_p01_048_clinical_doc
+      raw_value: cT2
+      resolved_value: Clinical staging revealed cT2
+      confidence: doc_048_jsl_p01_048_clinical_doc
+
+  [47] doc_id: doc_049_jsl_p01_049_clinical_doc
+      raw_value: cT2
+      resolved_value: Clinical staging revealed cT2
+      confidence: doc_049_jsl_p01_049_clinical_doc
+
+  [48] doc_id: doc_043_jsl_p01_043_radiology_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_043_jsl_p01_043_radiology_doc
+
+  [49] doc_id: doc_050_jsl_p01_050_summary_doc
+      raw_value: cT2
+      resolved_value: Clinical staging revealed cT2
+      confidence: doc_050_jsl_p01_050_summary_doc
+
+  [50] doc_id: doc_047_jsl_p01_047_radiology_doc
+      raw_value: Not Reported
+      resolved_value: Not Reported
+      confidence: doc_047_jsl_p01_047_radiology_doc
+
+────────────────────────────────────────
+REDUCE OUTPUT (After Consolidation)
+────────────────────────────────────────
+final_value: Not Reported
+supporting_evidence_count: 51
+contradictory_evidence_count: 0
+
+Supporting evidence (ALL):
+  [1] source: doc_047_jsl_p01_047_radiology_doc
+      snippet: p01
+      explanation: No clinical T stage mentioned in the document
+      date: 2025-10-05
+      confidence: 0.3
+
+  [2] source: doc_001_jsl_p01_001_summary_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document
+      date: 2015-09-15
+      confidence: 0.15
+
+  [3] source: doc_002_jsl_p01_002_radiology_doc
+      snippet: Clinical staging revealed cT2
+      explanation: Extracted from clinical staging information
+      date: 2015-10-01
+      confidence: 0.97
+
+  [4] source: doc_003_jsl_p01_003_radiology_doc
+      snippet: Clinical staging shows cT2
+      explanation: Extracted from clinical staging information in the document
+      date: 2015-10-01
+      confidence: 0.97
+
+  [5] source: doc_004_jsl_p01_004_clinical_doc
+      snippet: Clinical staging revealed cT2
+      explanation: Extracted from the clinical staging section of the document.
+      date: 2015-10-15
+      confidence: 0.97
+
+  [6] source: doc_005_jsl_p01_005_operative_doc
+      snippet: Clinical staging shows cT2 for the tumor.
+      explanation: Extracted from the clinical staging section of the report.
+      date: 2016-01-20
+      confidence: 0.99
+
+  [7] source: doc_006_jsl_p01_006_clinical_doc
+      snippet: Clinical staging revealed cT2
+      explanation: Extracted from the clinical staging section of the document.
+      date: 2016-08-11
+      confidence: 0.97
+
+  [8] source: doc_007_jsl_p01_007_clinical_doc
+      snippet: Clinical staging revealed cT2
+      explanation: Extracted from the clinical staging section of the document.
+      date: 2019-02-15
+      confidence: 0.97
+
+  [9] source: doc_008_jsl_p01_008_radiology_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document
+      date: 2019-03-30
+      confidence: 0.15
+
+  [10] source: doc_009_jsl_p01_009_pathology_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document.
+      date: 2019-05-05
+      confidence: 0.15
+
+  [11] source: doc_010_jsl_p01_010_operative_doc
+      snippet: Clinical staging indicated cT2 based on imaging results.
+      explanation: Extracted from the clinical staging section of the report.
+      date: 2019-06-07
+      confidence: 0.89
+
+  [12] source: doc_011_jsl_p01_011_pathology_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document
+      date: 2019-06-08
+      confidence: 0.15
+
+  [13] source: doc_012_jsl_p01_012_consult_doc
+      snippet: Clinical staging revealed cT2
+      explanation: Extracted from the clinical staging section of the document.
+      date: 2019-07-10
+      confidence: 0.97
+
+  [14] source: doc_013_jsl_p01_013_pathology_doc
+      snippet: Not specified in the document
+      explanation: No clinical T stage mentioned in the pathology report
+      date: 2019-07-13
+      confidence: 0.3
+
+  [15] source: doc_014_jsl_p01_014_operative_doc
+      snippet: Clinical staging revealed cT2
+      explanation: Extracted from clinical staging information
+      date: 2019-07-20
+      confidence: 0.97
+
+  [16] source: doc_015_jsl_p01_015_pathology_doc
+      snippet: Clinical staging revealed cT2
+      explanation: Extracted from the clinical staging section of the report
+      date: 2019-07-21
+      confidence: 0.97
+
+  [17] source: doc_016_jsl_p01_016_clinical_doc
+      snippet: Clinical staging revealed cT2
+      explanation: Extracted from the clinical staging section of the document
+      date: 2019-08-16
+      confidence: 0.97
+
+  [18] source: doc_017_jsl_p01_017_pathology_doc
+      snippet: Clinical staging revealed cT2
+      explanation: Extracted from clinical notes indicating the T stage of the tumor.
+      date: 2019-11-09
+      confidence: 0.97
+
+  [19] source: doc_018_jsl_p01_018_clinical_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document.
+      date: 2020-03-11
+      confidence: 0.15
+
+  [20] source: doc_019_jsl_p01_019_radiology_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document
+      date: 2020-06-25
+      confidence: 0.15
+
+  [21] source: doc_020_jsl_p01_020_operative_doc
+      snippet: No clinical T stage mentioned in the document.
+      explanation: Clinical T stage was not provided in the operative report.
+      date: 2020-08-07
+      confidence: 0.35
+
+  [22] source: doc_021_jsl_p01_021_pathology_doc
+      snippet: Clinical T stage was noted as cT2
+      explanation: Extracted from the clinical staging section of the report
+      date: 2020-08-08
+      confidence: 0.97
+
+  [23] source: doc_022_jsl_p01_022_clinical_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document
+      date: 2021-10-28
+      confidence: 0.15
+
+  [24] source: doc_023_jsl_p01_023_radiology_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document
+      date: 2021-11-06
+      confidence: 0.15
+
+  [25] source: doc_024_jsl_p01_024_radiology_doc
+      snippet: Not mentioned in the document
+      explanation: No clinical T stage was provided in the document
+      date: 2021-12-11
+      confidence: 0.3
+
+  [26] source: doc_025_jsl_p01_025_clinical_doc
+      snippet: Clinical staging revealed cT2
+      explanation: Extracted from the clinical staging section of the document.
+      date: 2022-01-28
+      confidence: 0.97
+
+  [27] source: doc_026_jsl_p01_026_radiology_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document
+      date: 2022-09-10
+      confidence: 0.15
+
+  [28] source: doc_027_jsl_p01_027_operative_doc
+      snippet: No clinical T stage was mentioned in the document.
+      explanation: The document did not provide any information regarding the clinical T stage.
+      date: 2022-11-23
+      confidence: 0.35
+
+  [29] source: doc_028_jsl_p01_028_pathology_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document.
+      date: 2022-11-24
+      confidence: 0.15
+
+  [30] source: doc_029_jsl_p01_029_clinical_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document
+      date: 2022-12-08
+      confidence: 0.15
+
+  [31] source: doc_030_jsl_p01_030_radiology_doc
+      snippet: No clinical T stage mentioned in the document.
+      explanation: The document does not provide any clinical T stage information.
+      date: 2022-12-29
+      confidence: 0.3
+
+  [32] source: doc_031_jsl_p01_031_summary_doc
+      snippet: Clinical staging revealed cT2
+      explanation: Extracted from clinical staging section
+      date: 2023-01-15
+      confidence: 0.97
+
+  [33] source: doc_032_jsl_p01_032_clinical_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document.
+      date: 2023-04-12
+      confidence: 0.15
+
+  [34] source: doc_034_jsl_p01_034_pathology_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document.
+      date: 2023-08-04
+      confidence: 0.15
+
+  [35] source: doc_033_jsl_p01_033_clinical_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document.
+      date: 2023-08-10
+      confidence: 0.15
+
+  [36] source: doc_035_jsl_p01_035_radiology_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document
+      date: 2023-09-21
+      confidence: 0.15
+
+  [37] source: doc_036_jsl_p01_036_clinical_doc
+      snippet: Not mentioned in the document
+      explanation: No clinical T stage was provided in the document.
+      date: 2023-11-20
+      confidence: 0.3
+
+  [38] source: doc_037_jsl_p01_037_consult_doc
+      snippet: Clinical staging shows cT2 for the tumor size.
+      explanation: Extracted from the clinical staging section of the document.
+      date: 2024-01-10
+      confidence: 0.89
+
+  [39] source: doc_038_jsl_p01_038_clinical_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document
+      date: 2024-02-15
+      confidence: 0.15
+
+  [40] source: doc_039_jsl_p01_039_radiology_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document
+      date: 2024-08-20
+      confidence: 0.15
+
+  [41] source: doc_040_jsl_p01_040_clinical_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document
+      date: 2024-09-05
+      confidence: 0.15
+
+  [42] source: doc_041_jsl_p01_041_operative_doc
+      snippet: Clinical staging indicated cT2 based on imaging results.
+      explanation: Extracted from the clinical staging section of the report.
+      date: 2025-01-15
+      confidence: 0.97
+
+  [43] source: doc_042_jsl_p01_042_clinical_doc
+      snippet: Clinical staging revealed cT2
+      explanation: Extracted from the clinical staging section of the document
+      date: 2025-03-10
+      confidence: 0.97
+
+  [44] source: doc_043_jsl_p01_043_radiology_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document
+      date: 2025-04-01
+      confidence: 0.15
+
+  [45] source: doc_044_jsl_p01_044_clinical_doc
+      snippet: Clinical staging revealed cT2
+      explanation: Extracted from the clinical staging section of the document.
+      date: 2025-04-15
+      confidence: 0.97
+
+  [46] source: doc_045_jsl_p01_045_pathology_doc
+      snippet: Clinical staging revealed cT2
+      explanation: Extracted from the clinical staging section of the report.
+      date: 2025-09-12
+      confidence: 0.97
+
+  [47] source: doc_046_jsl_p01_046_clinical_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document
+      date: 2025-09-18
+      confidence: 0.15
+
+  [48] source: doc_047_jsl_p01_047_radiology_doc
+      snippet: Not Reported
+      explanation: No clinical T stage mentioned in the document
+      date: 2025-10-05
+      confidence: 0.15
+
+  [49] source: doc_048_jsl_p01_048_clinical_doc
+      snippet: Clinical staging revealed cT2
+      explanation: Extracted from the clinical staging section of the document
+      date: 2025-10-20
+      confidence: 0.98
+
+  [50] source: doc_049_jsl_p01_049_clinical_doc
+      snippet: Clinical staging revealed cT2
+      explanation: Extracted from the clinical staging section of the document
+      date: 2025-11-01
+      confidence: 0.97
+
+  [51] source: doc_050_jsl_p01_050_summary_doc
+      snippet: Clinical staging revealed cT2
+      explanation: Extracted from clinical staging section
+      date: 2025-12-31
+      confidence: 0.89

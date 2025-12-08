@@ -1,0 +1,57 @@
+================================================================================
+PATIENT CANCER REGISTRY SUMMARY
+================================================================================
+
+────────────────────────────────────────
+PRIMARY CANCERS IDENTIFIED
+────────────────────────────────────────
+Total Primary Cancers: 2
+
+  [1] CANCER_1
+      Site Code: C18.9
+      Body Site: Colon Cancer (C18.9)
+      Diagnosis Date: 1987-01-01
+      Supporting Documents: 26
+
+  [2] CANCER_2
+      Site Code: C61.9
+      Body Site: Prostate Cancer (C61.9)
+      Diagnosis Date: 1987-01-01
+      Supporting Documents: 3
+
+
+────────────────────────────────────────
+ONTOLOGY DOMAIN STRUCTURE
+────────────────────────────────────────
+
+▶ DIAGNOSIS DOMAIN
+  Profile: PrimaryCancerCondition, CancerDiagnosis, DiagnosticReport
+  Fields:
+    • naaccr_diagnosis_dt → diagnosis_date
+    • ca_site → body_site
+    • naaccr_histology_cd → histology_morphology
+
+▶ CLINICAL STAGING DOMAIN
+  Profile: TNMClinicalStageGroup, CancerStage
+  Fields:
+    • ca_clinical_t_stage → tnm_t_clinical
+    • ca_clinical_n_stage → tnm_n_clinical
+    • ca_clinical_m_stage → tnm_m_clinical
+
+▶ PATHOLOGICAL STAGING DOMAIN
+  Profile: TNMPathologicStageGroup, PathologyReport
+  Fields:
+    • ca_path_t_stage → tnm_t_pathologic
+    • ca_path_n_stage → tnm_n_pathologic
+    • ca_path_m_stage → tnm_m_pathologic
+
+▶ SUMMARY STAGING DOMAIN
+  Profile: CancerStageGroup, SEERSummaryStage
+  Fields:
+    • ca_gen_sum_stage_2 → stage_group
+
+▶ PERFORMANCE STATUS DOMAIN
+  Profile: PerformanceStatus, ECOGStatus, KarnofskyStatus
+  Fields:
+    • ecog → performance_status
+    • kps → kps

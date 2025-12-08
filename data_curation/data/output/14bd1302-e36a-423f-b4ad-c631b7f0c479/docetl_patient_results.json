@@ -1,0 +1,17 @@
+[
+  {
+    "field_name": "ca_path_t_stage",
+    "category": "p01",
+    "data_type": "p01",
+    "normalized_value": "p01",
+    "resolved_value": "pT3 - Pathologic T3 stage",
+    "units": "AJCC",
+    "vocabulary_code": "doc_041_jsl_p01_041_operative_doc",
+    "confidence_score": 0.95,
+    "consolidation_notes": "Multiple high-quality pathology documents consistently report pT3. No conflicting values.",
+    "patient_id": "p01",
+    "_counts_prereduce_reduce_patient_summary": 597,
+    "consolidated_fields": [],
+    "patient_summary": ""
+  }
+]
