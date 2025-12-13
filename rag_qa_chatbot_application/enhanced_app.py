@@ -647,11 +647,6 @@ class ChatbotApp:
 
     def _render_system_info_section(self):
         """Render system information section"""
-        st.subheader("📊 System Info")
-
-        # Get current DB mode and new vector store
-        db_mode = st.session_state.get("db_mode", "current")
-        new_vector_store = st.session_state.get("new_vector_store", None)
 
         # Helper function to get chunk count from vector store
         def get_chunk_count(store):
@@ -733,129 +728,10 @@ class ChatbotApp:
                 self.logger.debug(f"Could not calculate in-memory index size: {e}")
                 return 0
 
-        # Render based on DB mode
-        if db_mode == "current":
-            # Show only current DB
-            vector_info = self.vector_store_manager.get_store_info()
-            if vector_info:
-                # Use cached value if available, otherwise use vector_info
-                total_docs = (
-                    self.vector_store_manager._cached_total_documents
-                    if self.vector_store_manager._cached_total_documents is not None
-                    else vector_info.total_documents
-                )
-                st.write(f"📚 Total Documents: {total_docs}")
+        # Create container for stats (Visually at top)
+        stats_container = st.container()
 
-                # Get chunk count
-                actual_chunks = get_chunk_count(self.vector_store_manager.vector_store)
-                if actual_chunks == 0:
-                    actual_chunks = vector_info.total_chunks
-
-                # Cache chunk count
-                if actual_chunks > 0:
-                    if (
-                        "total_chunks_cached" not in st.session_state
-                        or actual_chunks >= st.session_state.total_chunks_cached
-                    ):
-                        st.session_state.total_chunks_cached = actual_chunks
-
-                st.write(
-                    f"🧩 Total Chunks: {st.session_state.get('total_chunks_cached', actual_chunks)}"
-                )
-                st.write(
-                    f"💾 Index Size: {format_file_size(vector_info.index_size_bytes)}"
-                )
-            else:
-                st.write("📭 No vector store found")
-
-        elif db_mode == "new":
-            # Show only new DB
-            if new_vector_store:
-                new_chunks = get_chunk_count(new_vector_store)
-                new_docs = get_new_doc_count(new_vector_store)
-                new_index_size = get_in_memory_index_size(new_vector_store)
-
-                st.write(f"📚 Total Documents: {new_docs}")
-                st.write(f"🧩 Total Chunks: {new_chunks}")
-                st.write(
-                    f"💾 Index Size: {format_file_size(new_index_size)} (in-memory)"
-                )
-            else:
-                st.write("📭 No vector store found")
-
-        elif db_mode == "current+new":
-            # Show combined stats
-            vector_info = self.vector_store_manager.get_store_info()
-
-            current_docs = 0
-            current_chunks = 0
-            current_index_size = 0
-
-            if vector_info:
-                current_docs = (
-                    self.vector_store_manager._cached_total_documents
-                    if self.vector_store_manager._cached_total_documents is not None
-                    else vector_info.total_documents
-                )
-                current_chunks = get_chunk_count(self.vector_store_manager.vector_store)
-                if current_chunks == 0:
-                    current_chunks = vector_info.total_chunks
-                current_index_size = vector_info.index_size_bytes
-
-            new_docs = 0
-            new_chunks = 0
-            new_index_size = 0
-
-            if new_vector_store:
-                new_chunks = get_chunk_count(new_vector_store)
-                new_docs = get_new_doc_count(new_vector_store)
-                new_index_size = get_in_memory_index_size(new_vector_store)
-
-            total_docs = current_docs + new_docs
-            total_chunks = current_chunks + new_chunks
-            total_index_size = current_index_size + new_index_size
-
-            if total_docs > 0 or total_chunks > 0:
-                st.write(
-                    f"📚 Total Documents: {total_docs} (Current: {current_docs}, New: {new_docs})"
-                )
-                st.write(
-                    f"🧩 Total Chunks: {total_chunks} (Current: {current_chunks}, New: {new_chunks})"
-                )
-                if total_index_size > 0:
-                    size_info = f"💾 Index Size: {format_file_size(total_index_size)}"
-                    if current_index_size > 0 and new_index_size > 0:
-                        size_info += f" (Current: {format_file_size(current_index_size)}, New: {format_file_size(new_index_size)} in-memory)"
-                    elif current_index_size > 0:
-                        size_info += f" (Current: {format_file_size(current_index_size)}, New: {format_file_size(new_index_size)} in-memory)"
-                    elif new_index_size > 0:
-                        size_info += " (in-memory only)"
-                    st.write(size_info)
-                elif current_index_size > 0:
-                    st.write(
-                        f"💾 Index Size: {format_file_size(current_index_size)} (Current DB only)"
-                    )
-            else:
-                st.write("📭 No vector store found")
-
-        # Cache statistics
-        st.markdown("---")
-        st.subheader("💾 Cache Info")
-        cache_stats = self.vector_store_manager.get_cache_stats()
-        if cache_stats["enabled"]:
-            st.write(f"✅ Cache: Enabled")
-            st.write(
-                f"📦 Cached Entries: {cache_stats['total_entries']}/{cache_stats['max_size']}"
-            )
-            st.write(f"🎯 Cache Hits: {cache_stats['hits']}")
-            st.write(f"❌ Cache Misses: {cache_stats['misses']}")
-            if cache_stats["total_queries"] > 0:
-                st.write(f"📈 Hit Rate: {cache_stats['hit_rate']:.1f}%")
-            st.write(f"⏱️ TTL: {cache_stats['ttl_seconds']}s")
-        else:
-            st.write("⚠️ Cache: Disabled")
-
-        # System management buttons
+        # System management buttons (Defined here but stats will render above due to container)
         st.markdown("---")
         st.subheader("🔧 System Management")
 
@@ -878,6 +754,137 @@ class ChatbotApp:
         with col4:
             if st.button("🧹 Clear Cache", use_container_width=True):
                 self._clear_cache()
+
+        # Render stats into container (runs AFTER buttons to reflect new state)
+        with stats_container:
+            st.subheader("📊 System Info")
+            
+            # Fetch current state (inside with block to get latest values)
+            db_mode = st.session_state.get("db_mode", "current")
+            new_vector_store = st.session_state.get("new_vector_store", None)
+
+            # Render based on DB mode
+            if db_mode == "current":
+                # Show only current DB
+                vector_info = self.vector_store_manager.get_store_info()
+                if vector_info:
+                    # Use cached value if available, otherwise use vector_info
+                    total_docs = (
+                        self.vector_store_manager._cached_total_documents
+                        if self.vector_store_manager._cached_total_documents is not None
+                        else vector_info.total_documents
+                    )
+                    st.write(f"📚 Total Documents: {total_docs}")
+
+                    # Get chunk count
+                    actual_chunks = get_chunk_count(self.vector_store_manager.vector_store)
+                    if actual_chunks == 0:
+                        actual_chunks = vector_info.total_chunks
+
+                    # Cache chunk count
+                    if actual_chunks > 0:
+                        if (
+                            "total_chunks_cached" not in st.session_state
+                            or actual_chunks >= st.session_state.total_chunks_cached
+                        ):
+                            st.session_state.total_chunks_cached = actual_chunks
+
+                    st.write(
+                        f"🧩 Total Chunks: {st.session_state.get('total_chunks_cached', actual_chunks)}"
+                    )
+                    st.write(
+                        f"💾 Index Size: {format_file_size(vector_info.index_size_bytes)}"
+                    )
+                else:
+                    st.write("📭 No vector store found")
+
+            elif db_mode == "new":
+                # Show only new DB
+                if new_vector_store:
+                    new_chunks = get_chunk_count(new_vector_store)
+                    new_docs = get_new_doc_count(new_vector_store)
+                    new_index_size = get_in_memory_index_size(new_vector_store)
+
+                    st.write(f"📚 Total Documents: {new_docs}")
+                    st.write(f"🧩 Total Chunks: {new_chunks}")
+                    st.write(
+                        f"💾 Index Size: {format_file_size(new_index_size)} (in-memory)"
+                    )
+                else:
+                    st.write("📭 No vector store found")
+
+            elif db_mode == "current+new":
+                # Show combined stats
+                vector_info = self.vector_store_manager.get_store_info()
+
+                current_docs = 0
+                current_chunks = 0
+                current_index_size = 0
+
+                if vector_info:
+                    current_docs = (
+                        self.vector_store_manager._cached_total_documents
+                        if self.vector_store_manager._cached_total_documents is not None
+                        else vector_info.total_documents
+                    )
+                    current_chunks = get_chunk_count(self.vector_store_manager.vector_store)
+                    if current_chunks == 0:
+                        current_chunks = vector_info.total_chunks
+                    current_index_size = vector_info.index_size_bytes
+
+                new_docs = 0
+                new_chunks = 0
+                new_index_size = 0
+
+                if new_vector_store:
+                    new_chunks = get_chunk_count(new_vector_store)
+                    new_docs = get_new_doc_count(new_vector_store)
+                    new_index_size = get_in_memory_index_size(new_vector_store)
+
+                total_docs = current_docs + new_docs
+                total_chunks = current_chunks + new_chunks
+                total_index_size = current_index_size + new_index_size
+
+                if total_docs > 0 or total_chunks > 0:
+                    st.write(
+                        f"📚 Total Documents: {total_docs} (Current: {current_docs}, New: {new_docs})"
+                    )
+                    st.write(
+                        f"🧩 Total Chunks: {total_chunks} (Current: {current_chunks}, New: {new_chunks})"
+                    )
+                    if total_index_size > 0:
+                        size_info = f"💾 Index Size: {format_file_size(total_index_size)}"
+                        if current_index_size > 0 and new_index_size > 0:
+                            size_info += f" (Current: {format_file_size(current_index_size)}, New: {format_file_size(new_index_size)} in-memory)"
+                        elif current_index_size > 0:
+                            size_info += f" (Current: {format_file_size(current_index_size)}, New: {format_file_size(new_index_size)} in-memory)"
+                        elif new_index_size > 0:
+                            size_info += " (in-memory only)"
+                        st.write(size_info)
+                    elif current_index_size > 0:
+                        st.write(
+                            f"💾 Index Size: {format_file_size(current_index_size)} (Current DB only)"
+                        )
+                else:
+                    st.write("📭 No vector store found")
+
+            # Cache statistics
+            st.markdown("---")
+            st.subheader("💾 Cache Info")
+            cache_stats = self.vector_store_manager.get_cache_stats()
+            if cache_stats["enabled"]:
+                st.write(f"✅ Cache: Enabled")
+                st.write(
+                    f"📦 Cached Entries: {cache_stats['total_entries']}/{cache_stats['max_size']}"
+                )
+                st.write(f"🎯 Cache Hits: {cache_stats['hits']}")
+                st.write(f"❌ Cache Misses: {cache_stats['misses']}")
+                if cache_stats["total_queries"] > 0:
+                    st.write(f"📈 Hit Rate: {cache_stats['hit_rate']:.1f}%")
+                st.write(f"⏱️ TTL: {cache_stats['ttl_seconds']}s")
+            else:
+                st.write("⚠️ Cache: Disabled")
+
 
     def _render_social_links(self):
         """Render social media links"""
@@ -1110,7 +1117,7 @@ class ChatbotApp:
                                 file_options.append(f"{file_name} Page: {page}")
                         
                         # Use Streamlit's built-in key mechanism to preserve selection
-                        selectbox_key = f"pdf_select_hist_{assistant_message.id}"
+                        selectbox_key = f"pdf_select_{assistant_message.id}"
                         
                         # Ensure current selection is valid, if not set to first option
                         if selectbox_key not in st.session_state or st.session_state[selectbox_key] not in file_options:
@@ -2075,7 +2082,7 @@ class ChatbotApp:
                                 file_options.append(f"{file_name} Page: {page}")
                         
                         # Use Streamlit's built-in key mechanism to preserve selection
-                        selectbox_key = f"pdf_select_new_{assistant_message.id}"
+                        selectbox_key = f"pdf_select_{assistant_message.id}"
                         
                         # Ensure current selection is valid, if not set to first option
                         if selectbox_key not in st.session_state or st.session_state[selectbox_key] not in file_options:
@@ -2742,9 +2749,6 @@ class ChatbotApp:
                 "✅ New DB chunks deleted successfully! Current DB remains intact."
             )
 
-            # Force rerun to update UI
-            st.rerun()
-
         except Exception as e:
             st.error(f"❌ Error deleting chunks: {str(e)}")
 
@@ -2761,9 +2765,6 @@ class ChatbotApp:
             st.success(
                 f"✅ Cache cleared successfully! Removed {entries_count} cached entries."
             )
-
-            # Force rerun to update UI
-            st.rerun()
 
         except Exception as e:
             st.error(f"❌ Error clearing cache: {str(e)}")
