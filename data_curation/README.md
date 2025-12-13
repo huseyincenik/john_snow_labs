@@ -1431,25 +1431,55 @@ The specific documents (003 and 004) were processed through the Data Curation Pi
 
 ---
 
-## Ontology Configuration (`cancer_registry_fields.yaml`)
 
-The pipeline uses a strict YAML ontology to define valid values and mapping logic. Below is the configuration for Performance Status, showing the "mapping dictionaries" used to standardize text descriptions into numeric scores:
+---
+
+## Schema & Ontology Mappings
+
+The pipeline relies on strict schemas and mapping definitions to ensure data interoperability and standardization. These mappings are defined in two key configuration files.
+
+### 1. Date Normalization Logic
+**Source:** [`data/ontology/cancer_registry_fields.yaml`](data/ontology/cancer_registry_fields.yaml) (Lines 13-18)
+
+Dates are critical for longitudinal analysis. The pipeline is explicitly instructed to extract and normalize all dates to the **ISO 8601 (YYYY-MM-DD)** format to ensure consistency across different medical record styles (e.g., "Oct 15, 2015" → "2015-10-15").
 
 ```yaml
-  # ========== PERFORMANCE STATUS DOMAIN ==========
-  performance_status:
-    profile: "PerformanceStatus, ECOGStatus, KarnofskyStatus"
-    fields:
-      - name: ecog
-        description: "ECOG Performance Status (0-5)"
-        data_type: integer
-        instructions: "Extract ECOG Performance Status score. Valid values: 0 (Fully active), 1 (Restricted in strenuous activity), 2 (Ambulatory, unable to work), 3 (Limited self-care, >50% in bed), 4 (Completely disabled, totally confined), 5 (Dead). If only KPS present, infer ECOG: KPS 90-100→0, KPS 70-80→1, KPS 50-60→2, KPS 30-40→3, KPS ≤20→4."
-
-      - name: kps
-        description: "Karnofsky Performance Score (0-100)"
-        data_type: integer
-        instructions: "Extract Karnofsky Performance Score. Valid values: 0-100 in increments of 10. 100 (Normal), 90 (Minor symptoms), 80 (Some symptoms), 70 (Cares for self), 60 (Occasional assistance), 50 (Considerable assistance), 40 (Disabled), 30 (Severely disabled), 20 (Very sick), 10 (Moribund), 0 (Dead). If only ECOG present, infer KPS: ECOG 0→90-100, ECOG 1→70-80, ECOG 2→50-60, ECOG 3→30-40, ECOG 4→≤20."
+fields:
+  - name: naaccr_diagnosis_dt
+    instructions: "Extract the earliest date of cancer diagnosis in YYYY-MM-DD format. Prefer pathological confirmation date over clinical diagnosis date..."
 ```
+
+### 2. Performance Status Logic (ECOG & KPS)
+**Source:** [`data/ontology/cancer_registry_fields.yaml`](data/ontology/cancer_registry_fields.yaml) (Lines 103-111)
+
+To handle varying documentation standards, the pipeline includes "mapping dictionaries" in the prompt instructions. This allows it to infer a numeric score even if the clinical note only provides a text description (e.g., "patient is fully active").
+
+*   **ECOG Mapping**: `Found "ambulatory" -> Mapped to Score 0/1 -> Inferred Score 0`
+*   **KPS Mapping**: `Found ECOG 0 -> Mapped to KPS 90-100 -> Inferred Score 90`
+
+```yaml
+instructions: "Extract ECOG Performance Status score. Valid values: 0 (Fully active)... If only KPS present, infer ECOG: KPS 90-100→0... Return null if not found."
+```
+
+### 3. mCODE Structure Mapping
+**Source:** [`src/pipeline/mcode_template.py`](src/pipeline/mcode_template.py)
+
+While the extraction phase yields flat key-value pairs (e.g., `ca_site: Prostate`), the final output must conform to the nested **mCODE (minimal Common Oncology Data Elements)** standard. The `mcode_template.py` file defines this target schema.
+
+**Mapping Example:**
+*   Flat Field: `ca_site` + `naaccr_histology_cd` + `naaccr_diagnosis_dt`
+*   Target mCODE Structure:
+    ```python
+    "primary_cancers": [
+        {
+            "site": { ... },      # populated from ca_site
+            "histology": { ... }, # populated from naaccr_histology_cd
+            "diagnosis_date": ... # populated from naaccr_diagnosis_dt
+        }
+    ]
+    ```
+
+This separation of concerns—flat extraction vs. nested consolidation—allows the pipeline to be flexible with input formats while remaining strict with output standards.
 
 **Process Summary for Docs 003 & 004:**
 1. **Filter**: Script selected `jsl_p01_003_radiology_doc.txt` and `jsl_p01_004_clinical_doc.txt`.
