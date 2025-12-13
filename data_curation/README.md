@@ -161,6 +161,390 @@ This repository contains a complete DocETL-powered **Data Curation Service** tha
 └──────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
+### Pipeline Stage Details with Examples
+
+| Stage | Source File | Output File | Sample Data |
+|-------|-------------|-------------|-------------|
+| **INPUT** | `input_patient_docs/*.txt` | - | Raw TXT/PDF documents |
+| **TAGGER** | `src/pipeline/tagger.py` | `tagger_result.json` | Sorted documents with confidence |
+| **EXTRACTOR** | `src/pipeline/extractor.py` | `extraction_result.json` | NAACCR field extractions |
+| **CONSOLIDATOR** | `src/pipeline/consolidator.py` | `consolidation_result.json` | mCODE patient records |
+
+---
+
+#### 📁 INPUT: Raw Documents
+
+**File Path:** `input_patient_docs/jsl_p01_003_radiology_doc.txt`
+
+```text
+===== Document 003 =====
+Patient Id: p01
+Doc Id: 003
+Doc Type: radiology
+Date: 2015-10-01
+Title: NM BONE SCAN, WHOLE BODY
+---
+CLINICAL STATEMENT: Prostate cancer, Gleason score 7. Staging evaluation.
+
+IMPRESSION: No scintigraphic evidence of osseous metastatic disease.
+```
+
+---
+
+#### 📁 STAGE 1: TAGGER Output
+
+**Source:** `src/pipeline/tagger.py` → **Output:** `demo_runs/*/tagger_result.json`
+
+```json
+{
+  "patient_id": "p01",
+  "documents": [
+    {
+      "doc_id": "doc_003_jsl_p01_003_radiology_doc",
+      "doc_type": "radiology",
+      "doc_date": "2015-10-01",
+      "type_confidence": 0.95,
+      "date_confidence": 0.92,
+      "sort_order": 1
+    },
+    {
+      "doc_id": "doc_004_jsl_p01_004_clinical_doc",
+      "doc_type": "clinical",
+      "doc_date": "2015-10-15",
+      "type_confidence": 0.97,
+      "date_confidence": 0.95,
+      "sort_order": 2
+    }
+  ],
+  "total_documents": 2,
+  "processing_time_ms": 1250
+}
+```
+
+---
+
+#### 📁 STAGE 2: EXTRACTOR Output
+
+**Source:** `src/pipeline/extractor.py` + `src/pipeline/docetl_runner.py` → **Output:** `demo_runs/*/extraction_result.json`
+
+```json
+{
+  "patient_id": "p01",
+  "doc_id": "doc_003_jsl_p01_003_radiology_doc",
+  "extractions": [
+    {
+      "field_name": "ca_site",
+      "category": "diagnosis",
+      "raw_value": "Prostate cancer",
+      "normalized_value": "Prostate (C61.9)/Malignant",
+      "vocabulary_code": "C61.9",
+      "reasoning_excerpt": "CLINICAL STATEMENT: Prostate cancer, Gleason score 7",
+      "confidence_score": 0.92,
+      "inferred": false
+    },
+    {
+      "field_name": "ca_clinical_m_stage",
+      "category": "clinical_staging",
+      "raw_value": "No osseous metastatic disease",
+      "normalized_value": "cM0",
+      "vocabulary_code": "cM0",
+      "reasoning_excerpt": "No scintigraphic evidence of osseous metastatic disease",
+      "confidence_score": 0.88,
+      "inferred": true
+    },
+    {
+      "field_name": "ecog",
+      "category": "performance",
+      "raw_value": "Not Reported",
+      "normalized_value": "Not Reported",
+      "reasoning_excerpt": "",
+      "confidence_score": 0.35,
+      "inferred": false
+    }
+  ]
+}
+```
+
+---
+
+#### 📁 STAGE 3: CONSOLIDATOR Output
+
+**Source:** `src/pipeline/consolidator.py` → **Output:** `demo_runs/*/consolidation_result.json`
+
+```json
+{
+  "patient_id": "p01",
+  "consolidated_fields": [
+    {
+      "field_name": "ca_site",
+      "category": "diagnosis",
+      "normalized_value": "Prostate (C61.9)/Malignant",
+      "resolved_value": "C61.9 - Prostate, primary malignant site",
+      "confidence_score": 0.95,
+      "supporting_docs": [
+        {"doc_id": "doc_003", "doc_type": "radiology", "doc_date": "2015-10-01"},
+        {"doc_id": "doc_004", "doc_type": "clinical", "doc_date": "2015-10-15"}
+      ],
+      "consolidation_notes": "2 agreeing sources (radiology + clinical)"
+    },
+    {
+      "field_name": "naaccr_diagnosis_dt",
+      "category": "diagnosis",
+      "normalized_value": "2015-07-15",
+      "resolved_value": "2015-07-15 - Initial diagnosis date",
+      "confidence_score": 0.92
+    }
+  ],
+  "primary_cancers": [
+    {
+      "site": "C61.9 - Prostate",
+      "histology": "8140/3 - Adenocarcinoma, NOS",
+      "diagnosis_date": "2015-07-15",
+      "staging": "Gleason 3+4=7, unfavorable intermediate-risk"
+    }
+  ],
+  "patient_summary": "60-year-old male with unfavorable intermediate-risk prostate cancer (Gleason 3+4=7, PSA 15.7 ng/mL) diagnosed July 2015. Bone scan negative for metastatic disease. ECOG 1."
+}
+```
+
+---
+
+### Key File Paths Reference
+
+| Category | File Path | Description |
+|----------|-----------|-------------|
+| **Ontology** | `cancer_registry_fields.yaml` | NAACCR field definitions |
+| **Settings** | `config/settings.py` | Application configuration |
+| **Environment** | `config/.env` | API keys and secrets |
+| **Tagger** | `src/pipeline/tagger.py` | Document classification & sorting |
+| **Extractor** | `src/pipeline/extractor.py` | Field extraction orchestration |
+| **DocETL Runner** | `src/pipeline/docetl_runner.py` | Map/Unnest/Resolve/Reduce operators |
+| **Consolidator** | `src/pipeline/consolidator.py` | Patient-level aggregation |
+| **API Routes** | `src/api/routes.py` | FastAPI endpoints |
+| **Main App** | `src/main.py` | FastAPI application entry |
+| **Sample Docs** | `input_patient_docs/*.txt` | Raw medical documents |
+| **Demo Outputs** | `demo_runs/demo_run_*/` | Pipeline run artifacts |
+
+---
+
+### LLM Prompts Reference
+
+The following prompts are used by DocETL operators to interact with LLM models. These are defined in `src/pipeline/docetl_runner.py`.
+
+#### 🔹 MAP PROMPT (extract_clinical_fields)
+
+Used by the **Map Operator** to extract NAACCR fields from each document:
+
+```text
+You are a certified oncology registrar. Extract every NAACCR field exactly as
+defined in the ontology below and emit strictly valid JSON.
+
+⚠️ ANTI-HALLUCINATION RULE: ONLY extract values that ACTUALLY APPEAR in the document.
+DO NOT invent or guess cancer types, sites, or staging values not mentioned in text.
+If a value is not in the document, use "Not Reported" - never make up values.
+
+⚠️ DO NOT COPY EXAMPLES: The examples in this prompt are for illustration ONLY.
+NEVER copy these examples into your output unless they exist verbatim in the document.
+
+ONTOLOGY FIELDS TO EXTRACT:
+├── naaccr_diagnosis_dt (Date of diagnosis in YYYY-MM-DD)
+├── ca_site (Anatomical site with ICD-O-3 code)
+├── naaccr_histology_cd (Histology/morphology code)
+├── ca_clinical_t_stage (Clinical T stage)
+├── ca_clinical_n_stage (Clinical N stage)
+├── ca_clinical_m_stage (Clinical M stage)
+├── ca_path_t_stage (Pathological T stage)
+├── ca_path_n_stage (Pathological N stage)
+├── ca_path_m_stage (Pathological M stage)
+├── ca_gen_sum_stage_2 (SEER Summary Stage)
+├── ecog (ECOG Performance Status 0-5)
+└── kps (Karnofsky Performance Score 0-100)
+
+CONFIDENCE SCORE CALIBRATION:
+┌────────────────┬────────────────────────────────────────────────┬──────────┐
+│ Score Range    │ Evidence Type                                  │ Frequency│
+├────────────────┼────────────────────────────────────────────────┼──────────┤
+│ 0.92-0.95      │ Explicit & verbatim (exact term in document)   │ RARE     │
+│ 0.85-0.91      │ Explicit but interpreted (minor calculation)   │ COMMON   │
+│ 0.75-0.84      │ Strong inference from clinical context         │ MEDIUM   │
+│ 0.60-0.74      │ Moderate inference from indirect evidence      │ MEDIUM   │
+│ 0.30-0.40      │ "Not Reported" or minimal evidence (HARD CAP)  │ LOW      │
+└────────────────┴────────────────────────────────────────────────┴──────────┘
+
+OUTPUT SCHEMA:
+{
+  "extractions": [
+    {
+      "field_name": "ca_site",
+      "category": "diagnosis",
+      "raw_value": "Prostate cancer",
+      "normalized_value": "Prostate (C61.9)/Malignant",
+      "vocabulary_code": "C61.9",
+      "reasoning_excerpt": "EXACT quote from document",
+      "confidence_score": 0.92,
+      "inferred": false
+    }
+  ]
+}
+```
+
+---
+
+#### 🔹 COMPARISON PROMPT (resolve_patient_fields)
+
+Used by the **Resolve Operator** for pairwise matching of candidate values:
+
+```text
+You are comparing two candidate values for the same oncology registry field.
+
+Field 1 ({{ input1.field_name }}) from {{ input1.doc_id }}:
+- Patient: {{ input1.patient_id }}
+- Value: {{ input1.normalized_value or input1.raw_value }}
+- Evidence: {{ input1.reasoning_excerpt }}
+- Explanation: {{ input1.explanation }}
+
+Field 2 ({{ input2.field_name }}) from {{ input2.doc_id }}:
+- Patient: {{ input2.patient_id }}
+- Value: {{ input2.normalized_value or input2.raw_value }}
+- Evidence: {{ input2.reasoning_excerpt }}
+- Explanation: {{ input2.explanation }}
+
+Respond with JSON: {"is_match": true} when both entries represent the same
+registry fact after normalization, else {"is_match": false}.
+```
+
+**Example Input:**
+```json
+{
+  "input1": {
+    "field_name": "ca_site",
+    "doc_id": "doc_003",
+    "patient_id": "p01",
+    "normalized_value": "Prostate (C61.9)/Malignant",
+    "reasoning_excerpt": "Prostate cancer, Gleason score 7"
+  },
+  "input2": {
+    "field_name": "ca_site",
+    "doc_id": "doc_004",
+    "patient_id": "p01",
+    "normalized_value": "Prostate (C61.9)/Malignant",
+    "reasoning_excerpt": "60-year-old male with prostate cancer"
+  }
+}
+```
+
+**Example Output:**
+```json
+{"is_match": true}
+```
+
+---
+
+#### 🔹 RESOLUTION PROMPT (resolve_patient_fields)
+
+Used by the **Resolve Operator** to pick the canonical value from matched clusters:
+
+```text
+You are consolidating oncology registry evidence for patient {{ inputs[0].patient_id }}
+and field {{ inputs[0].field_name }}.
+
+Evidence set:
+{% for item in inputs %}
+---
+Document ID: {{ item.doc_id }}
+Date: {{ item.doc_date or "Not Reported" }}
+Type: {{ item.doc_type }}
+Raw Value: "{{ item.raw_value }}"
+Normalized Value: "{{ item.normalized_value }}"
+Confidence: {{ item.confidence_score }}
+Reasoning: "{{ item.reasoning_excerpt }}"
+---
+{% endfor %}
+
+TASK: Resolve conflicts and determine the most reliable value.
+
+CALIBRATION CHECKLIST:
+1. Consistency Audit: Are values identical, compatible, or conflicting?
+2. Source Tiering: Pathology > Operative > Imaging > Clinical > Administrative
+3. Specificity & Timeliness: Prefer precise dates/codes and recent records
+4. Conflict Penalty: Subtract 0.08 for each contradiction you override
+
+CONFIDENCE SCORE ANCHORS:
+┌────────────────┬────────────────────────────────────────────────────────────┐
+│ 0.95-0.99      │ 3+ agreeing sources OR 2 high-quality identical language  │
+│ 0.85-0.94      │ Clear agreement, limited sources                          │
+│ 0.75-0.84      │ Majority consensus with minor interpretation              │
+│ 0.60-0.74      │ Conflicts exist, one source clearly superior              │
+│ 0.45-0.59      │ Significant ambiguity, pick one but warn                  │
+│ 0.30-0.44      │ Barely any evidence, mostly inferred                      │
+└────────────────┴────────────────────────────────────────────────────────────┘
+
+CRITICAL RULES:
+- If some docs have "Not Reported" but others have actual values, ALWAYS use actual values
+- Do NOT merge values from different cancer sites
+- RESOLVED_VALUE must start with CODE: "C61.9 - Prostate, primary site"
+
+OUTPUT SCHEMA:
+{
+  "patient_id": "p01",
+  "field_name": "ca_site",
+  "normalized_value": "Prostate (C61.9)/Malignant",
+  "resolved_value": "C61.9 - Prostate, primary malignant site",
+  "confidence_score": 0.95,
+  "supporting_docs": [
+    {"doc_id": "doc_003", "doc_date": "2015-10-01", "doc_type": "radiology"}
+  ],
+  "consolidation_notes": "2 agreeing sources, boosted confidence"
+}
+```
+
+---
+
+#### 🔹 REDUCE PROMPT (reduce_patient_summary)
+
+Used by the **Reduce Operator** to generate patient-level mCODE records:
+
+```text
+You are a certified oncology registrar consolidating patient-level data.
+
+RESOLVED FIELD EXTRACTIONS FOR PATIENT {{ inputs[0].patient_id }}:
+
+{% for field in inputs %}
+Field: {{ field.field_name }} (Category: {{ field.category }})
+- Normalized value: {{ field.normalized_value }}
+- Resolved value: {{ field.resolved_value }}
+- Confidence: {{ field.confidence_score }}
+- Supporting docs: {{ field.supporting_docs | length }} documents
+{% endfor %}
+
+TASK: Generate patient-level mCODE registry with:
+1. consolidated_fields array (all resolved fields)
+2. primary_cancers array (one per unique cancer site)
+3. patient_summary narrative (2-3 sentences)
+
+MULTI-CANCER RULES:
+- Each cancer gets its OWN entry in primary_cancers
+- Do NOT mix diagnosis dates from different cancers
+- Use site-appropriate histology codes
+
+OUTPUT SCHEMA:
+{
+  "patient_id": "p01",
+  "consolidated_fields": [...],
+  "primary_cancers": [
+    {
+      "site": "C61.9 - Prostate",
+      "histology": "8140/3 - Adenocarcinoma, NOS",
+      "diagnosis_date": "2015-07-15",
+      "staging": "Gleason 3+4=7, unfavorable intermediate-risk"
+    }
+  ],
+  "patient_summary": "60-year-old male with unfavorable intermediate-risk..."
+}
+```
+
+---
+
 ### Input Format
 
 Documents are stored in `input_patient_docs/` with standardized header metadata:
@@ -1101,11 +1485,8 @@ ResolveOp(
 │  │  │   │ OpenAI Models   │     │ Open Source     │                    │ │   │
 │  │  │   │ ┌─────────────┐ │     │ ┌─────────────┐ │                    │ │   │
 │  │  │   │ │ GPT-4o-mini │ │     │ │ Qwen 3 8B   │ │                    │ │   │
-│  │  │   │ │ GPT-4o      │ │     │ │ Qwen 2.5 7B │ │                    │ │   │
-│  │  │   │ │ GPT-4-turbo │ │     │ │ DeepSeek    │ │                    │ │   │
-│  │  │   │ └─────────────┘ │     │ │ Yi-Large    │ │                    │ │   │
-│  │  │   └─────────────────┘     │ └─────────────┘ │                    │ │   │
-│  │  │                           └─────────────────┘                    │ │   │
+│  │  │   │ └─────────────┘ │     │ └─────────────┘ │                    │ │   │
+│  │  │   └─────────────────┘     └─────────────────┘                    │ │   │
 │  │  └───────────────────────────────────────────────────────────────────┘ │   │
 │  │                                                                         │   │
 │  └─────────────────────────────────────────────────────────────────────────┘   │
@@ -1125,8 +1506,6 @@ ResolveOp(
 |----------|-------|----------|-------|------|
 | **OpenAI** | `openai/gpt-4o-mini` | Default extraction | Fast | $$ |
 | **Qwen** | `openrouter/qwen/qwen3-8b` | Budget option | Very Fast | $ |
-| **Qwen** | `openrouter/qwen/qwen-2.5-7b-instruct` | Alternative | Fast | $ |
-| **DeepSeek** | `openrouter/deepseek/deepseek-chat` | Complex reasoning | Medium | $$ |
 
 ---
 
