@@ -1188,10 +1188,11 @@ After extensive discussion, the patient expresses his preference to proceed with
 ```
 
 ### Step 2: Tagger Stage
-*Output File References: `data/output/use_case/tagger_result.json`*
+*Output File Reference: `data/output/use_case/tagger_result.json`*
 
-The Tagger assigns a confidence score to the document type and date, ensuring we prioritize high-quality data.
+The Tagger processes the raw text to determine the document type (e.g., `radiology`, `pathology`, `clinical`) and the document date. This content-aware tagging is crucial for downstream logic like conflict resolution (preferring recent documents) and source hierarchy.
 
+**Tagger Output Snippet:**
 ```json
 {
   "sorted_documents": [
@@ -1199,13 +1200,15 @@ The Tagger assigns a confidence score to the document type and date, ensuring we
       "doc_id": "doc_003",
       "doc_type": "radiology",
       "doc_date": "2015-10-01",
-      "confidence": { "type": 0.95, "date": 0.92 }
+      "confidence": { "type": 0.95, "date": 0.92 },
+      "filename": "jsl_p01_003_radiology_doc.txt"
     },
     {
       "doc_id": "doc_004",
       "doc_type": "clinical",
       "doc_date": "2015-10-15",
-      "confidence": { "type": 0.97, "date": 0.95 }
+      "confidence": { "type": 0.97, "date": 0.95 },
+      "filename": "jsl_p01_004_clinical_doc.txt"
     }
   ]
 }
@@ -1214,10 +1217,28 @@ The Tagger assigns a confidence score to the document type and date, ensuring we
 ### Step 3: Map Operator (Extraction)
 *Output File Reference: `data/output/use_case/map_output.json`*
 
-The Map operator extracts NAACCR fields from each document independently. Note how different fields are captured from different documents based on their content.
+The Map operator extracts specific cancer registry fields (defined in `naaccr_fields.yaml`) from each document independently.
 
-**Extraction from doc_003 (Radiology)**:
-Because this is a bone scan, it provides critical evidence for **M Stage** (Metastasis) but might be less specific about histology.
+**Example 1: Diagnosis Date (`naaccr_diagnosis_dt`) from Doc 004**
+The clinical note explicitly mentions the diagnosis context.
+```json
+{
+  "doc_id": "doc_004",
+  "extractions": [
+    {
+      "field_name": "naaccr_diagnosis_dt",
+      "raw_value": "2015-10-15",
+      "normalized_value": "2015-10-15",
+      "reasoning_excerpt": "Diagnosed on 2015-10-15",
+      "confidence_score": 0.92,
+      "category": "PrimaryCancerCondition"
+    }
+  ]
+}
+```
+
+**Example 2: Primary Site (`ca_site`) from Doc 003**
+The bone scan clearly identifies the primary cancer being evaluated.
 ```json
 {
   "doc_id": "doc_003",
@@ -1225,46 +1246,9 @@ Because this is a bone scan, it provides critical evidence for **M Stage** (Meta
     {
       "field_name": "ca_site",
       "raw_value": "Prostate cancer",
-      "normalized_value": "Prostate (C61.9)/Malignant",
+      "normalized_value": "Prostate (C61.9)",
       "reasoning_excerpt": "CLINICAL STATEMENT: Prostate cancer, Gleason score 7.",
       "confidence_score": 0.92
-    },
-    {
-      "field_name": "ca_clinical_m_stage",
-      "raw_value": "No scintigraphic evidence of osseous metastatic disease",
-      "normalized_value": "cM0",
-      "reasoning_excerpt": "IMPRESSION: No scintigraphic evidence of osseous metastatic disease.",
-      "confidence_score": 0.88,
-      "category": "staging"
-    }
-  ]
-}
-```
-
-**Extraction from doc_004 (Clinical)**:
-This document is rich in history and planning details, providing **Histology**, **PSA**, and **Treatment Plan**.
-```json
-{
-  "doc_id": "doc_004",
-  "extractions": [
-    {
-      "field_name": "ca_site",
-      "normalized_value": "Prostate (C61.9)/Malignant",
-      "confidence_score": 0.94
-    },
-    {
-      "field_name": "naaccr_histology_cd",
-      "raw_value": "Gleason 3+4=7",
-      "normalized_value": "8140/3 - Adenocarcinoma, NOS",
-      "reasoning_excerpt": "new diagnosis of prostate cancer (Gleason 3+4=7)",
-      "confidence_score": 0.91
-    },
-    {
-      "field_name": "ecog",
-      "raw_value": "ambulatory",
-      "normalized_value": "0",
-      "reasoning_excerpt": "Patient is 60-year-old male... reluctant to undergo surgery... Proceed with CT simulation",
-      "confidence_score": 0.85
     }
   ]
 }
@@ -1272,48 +1256,35 @@ This document is rich in history and planning details, providing **Histology**, 
 
 ### Step 4: Unnest Operator
 *Output File Reference: `data/output/use_case/explode_field_records.json`*
-*Result*: A flattened "Feature Store" view of all extractions.
 
-The Unnest operator takes the document-level extractions and flattens them into a normalized list of records. This prepares the data for the resolution phase by grouping every extraction by `(patient_id, field_name)`.
+The Unnest operator flattens the document-centric view into a "Feature Store" view, grouping extractions by `(patient_id, field_name)`. This allows the system to see all values for "Diagnosis Date" or "Tumor Site" side-by-side.
 
-**Expanded Unnest Output (Partial View):**
+**Unnest Output (Feature Store View):**
 ```json
 [
-  {
-    "patient_id": "p01",
-    "field_name": "ca_site",
-    "normalized_value": "Prostate (C61.9)",
-    "source_doc_id": "doc_003",
-    "doc_type": "radiology",
-    "extraction_confidence": 0.92,
-    "context": "Prostate cancer, Gleason score 7"
-  },
-  {
-    "patient_id": "p01",
-    "field_name": "ca_site",
-    "normalized_value": "Prostate (C61.9)",
-    "source_doc_id": "doc_004",
-    "doc_type": "clinical",
-    "extraction_confidence": 0.94,
-    "context": "60-year-old male with prostate cancer"
-  },
-  {
-    "patient_id": "p01",
-    "field_name": "ca_clinical_m_stage",
-    "normalized_value": "cM0",
-    "source_doc_id": "doc_003",
-    "doc_type": "radiology",
-    "extraction_confidence": 0.88,
-    "context": "No scintigraphic evidence of osseous metastatic disease"
-  },
   {
     "patient_id": "p01",
     "field_name": "naaccr_diagnosis_dt",
     "normalized_value": "2015-10-15",
     "source_doc_id": "doc_004",
     "doc_type": "clinical",
-    "extraction_confidence": 0.85,
-    "context": "Date of consult"
+    "extraction_confidence": 0.92
+  },
+  {
+    "patient_id": "p01",
+    "field_name": "ca_site",
+    "normalized_value": "Prostate (C61.9)",
+    "source_doc_id": "doc_003",
+    "doc_type": "radiology",
+    "extraction_confidence": 0.92
+  },
+  {
+    "patient_id": "p01",
+    "field_name": "ca_site",
+    "normalized_value": "Prostate (C61.9)",
+    "source_doc_id": "doc_004",
+    "doc_type": "clinical",
+    "extraction_confidence": 0.94
   }
 ]
 ```
@@ -1321,94 +1292,61 @@ The Unnest operator takes the document-level extractions and flattens them into 
 ### Step 5: Resolve Operator (Conflict Detection & Resolution)
 *Output File Reference: `data/output/use_case/resolve_output.json`*
 
-This stage is critical. The LLM analyzes all values for a specific field `(p01, ca_site)` to determine the final truth.
+This stage resolves conflicts or confirms agreement between multiple sources.
 
-#### Scenario A: Supporting Evidence (Agreement)
-When multiple documents agree, the system **boosts the confidence score** and links all supporting evidence.
+**Scenario 1: Resolving Diagnosis Date**
+*   **Input**: Doc 004 has "2015-10-15", Doc 003 does not mention a diagnosis date ("Not Reported").
+*   **Action**: System ignores "Not Reported" and accepts the valid date found in Doc 004.
+```json
+{
+  "field_name": "naaccr_diagnosis_dt",
+  "resolved_value": "2015-10-15",
+  "confidence_score": 0.92,
+  "consolidation_notes": "Extracted from clinical consult note (doc_004). No conflicting date in radiology."
+}
+```
 
-*   **Group**: `(p01, ca_site)`
-*   **Values**:
-    1.  `doc_003`: "Prostate (C61.9)" (Conf: 0.92)
-    2.  `doc_004`: "Prostate (C61.9)" (Conf: 0.94)
-*   **Resolution Output**:
-    ```json
-    {
-      "field_name": "ca_site",
-      "resolved_value": "Prostate (C61.9)/Malignant",
-      "confidence_score": 0.96, // Boosted due to multi-source verification
-      "supporting_evidence": [
-        { "doc_id": "doc_003", "excerpt": "Prostate cancer, Gleason..." },
-        { "doc_id": "doc_004", "excerpt": "new diagnosis of prostate cancer..." }
-      ],
-      "consolidation_notes": "Strong consensus. Identified as primary site in both Radiology (Bone Scan) and Clinical Oncology notes."
-    }
-    ```
+**Scenario 2: Resolving Primary Site (Agreement)**
+*   **Input**: Both Doc 003 and Doc 004 identify "Prostate (C61.9)".
+*   **Action**: System detects agreement or "Supporting Evidence" and boosts the confidence score using `ConsensusBooster`.
+```json
+{
+  "field_name": "ca_site",
+  "resolved_value": "Prostate (C61.9)",
+  "confidence_score": 0.97, // Boosted from 0.92/0.94
+  "supporting_evidence": ["doc_003", "doc_004"],
+  "consolidation_notes": "Strong consensus. Identified as primary site in both Radiology and Clinical notes."
+}
+```
 
-#### Scenario B: Contradictory / Varying Evidence (Resolution)
-Sometimes documents differ in specificity or imply conflicts. The pipeline uses source hierarchy (Pathology > Radiology > Clinical) and recency.
-
-*   **Group**: `(p01, ca_clinical_m_stage)`
-*   **Values**:
-    1.  `doc_003` (Radiology): **"cM0"** (Evidence: "No scintigraphic evidence...")
-    2.  `doc_004` (Clinical): **"Unknown / Not Reported"** (Initial text might vary or simply imply absence)
-*   **Resolution Logic**:
-    *   *Conflict*: One doc is specific (Bone Scan explicitly says "No mets"), the other is general.
-    *   *Decision*: Prefer the **Radiology Report** (`doc_003`) over the Clinical Note for osseous metastases because it is the **primary diagnostic source** for this specific question.
-*   **Resolution Output**:
-    ```json
-    {
-      "field_name": "ca_clinical_m_stage",
-      "resolved_value": "cM0",
-      "confidence_score": 0.90,
-      "contradictory_evidence": [], // No direct contradiction, just differing specificity
-      "consolidation_notes": "Resolved to cM0 based on definitive negative Bone Scan (doc_003) which overrides general clinical context.",
-      "primary_source": "doc_003"
-    }
-    ```
-
-**Conflict Resolution Policies:**
-| Scenario | Policy |
-|----------|---------------------|
-| **Values Agree** | Boost confidence, link all sources. |
-| **Values Conflict** | Hierarchy: Pathology > Operative > Radiology > Clinical. Recency: Newer > Older. |
-| **"Not Reported" vs Value** | Always prefer the explicit extraction (e.g., if Doc A says "NR" and Doc B has a date). |
-| **Multi-Cancer** | If documents discuss different cancers (e.g., Rectal vs Prostate), they are split into distinct tumor groups. |
-
-### Step 6: Reduce Operator (Patient-Level mCODE)
+### Step 6: Reduce Operator (Consolidation)
 *Output File Reference: `data/output/use_case/final_output.json`*
 
-The final stage consolidates the resolved fields into the nested mCODE schema. It explicitly lists the `primary_cancers` identified.
+The details are merged into the final mCODE compliant Schema.
 
+**Final Patient Record Snippet:**
 ```json
 {
   "patient_id": "p01",
-  "generated_at": "2025-12-14",
-  "data_completeness": "High",
   "primary_cancers": [
     {
       "site": {
         "code": "C61.9",
-        "label": "Prostate",
-        "primary_source": "doc_003, doc_004"
+        "display": "Prostate"
+      },
+      "diagnosis_date": "2015-10-15",
+      "staging": {
+        "clinical_m": "cM0" // Derived from doc_003 Bone Scan
       },
       "histology": {
         "code": "8140/3",
-        "label": "Adenocarcinoma, NOS",
-        "primary_source": "doc_004"
-      },
-      "diagnosis_date": "2015-10-15", // From Doc 004
-      "staging": {
-        "clinical_t": null,
-        "clinical_n": null,
-        "clinical_m": "cM0", // From Doc 003 (Bone Scan)
-        "grade": "Gleason Score 7 (3+4)"
+        "display": "Adenocarcinoma, NOS"
       }
     }
   ],
-  "patient_summary": "60-year-old male presenting with unfavorable intermediate-risk prostate cancer (Gleason 7). Staging evaluation (Bone Scan, 2015-10-01) rules out osseous metastases (cM0). Patient has a relevant history of Rectal Cancer (1987). Current plan involves EBRT and ADT.",
-  "provenance": {
-    "doc_count": 2,
-    "sources": ["radiology", "clinical"]
+  "job_metadata": {
+    "generated_at": "2025-12-14",
+    "input_doc_count": 2
   }
 }
 ```
