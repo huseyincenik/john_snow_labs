@@ -1355,20 +1355,20 @@ The details are merged into the final mCODE compliant Schema.
 
 The specific documents (003 and 004) were processed through the Data Curation Pipeline, generating artifacts in `data/output/use_case/`. Below is a detailed explanation of the 12 fields defined in `cancer_registry_fields.yaml`, explaining their purpose, extraction logic, and how they appear in the generated outputs.
 
-| Field | Description & Extraction Logic | Output Value | mCODE / FHIR Mapping | Verification Note |
-|-------|--------------------------------|--------------|----------------------|-------------------|
-| **naaccr_diagnosis_dt** | **Date of Initial Diagnosis**.<br>Extracts earliest YYYY-MM-DD. Prefers pathological confirmation. | `2015-10-15` | `PrimaryCancerCondition.onsetTime` | **Verified**: Extracted from Doc 004. Pipeline ignored missing date in Doc 003. |
-| **ca_site** | **Primary Site (ICD-O-3)**.<br>Identifies the organ of origin (e.g., Prostate C61.9). | `Prostate (C61.9)` | `PrimaryCancerCondition.bodySite` | **Verified**: Strong consensus. Found in both Bone Scan (Doc 003) and Consult Note (Doc 004). |
-| **naaccr_histology_cd** | **Histology (ICD-O-3)**.<br>Maps text description to code. | `8140/3` | `PrimaryCancerCondition.histology` | **Verified**: Mapped "Adenocarcinoma" from "Gleason 3+4=7" context in Doc 004. |
-| **ca_clinical_t_stage** | **Clinical T Stage (Tumor)**.<br>Extent of primary tumor *before* surgery. | `Not Reported` | `TNMClinicalPrognosticFactor(T)` | **Verified**: Doc 004 states "local staging is limited by artifact", so no specific T-stage assigned. |
-| **ca_clinical_n_stage** | **Clinical N Stage (Nodes)**.<br>Lymph node involvement. | `Not Reported` | `TNMClinicalPrognosticFactor(N)` | **Verified**: No explicit mention of lymphadenopathy in input docs. |
-| **ca_clinical_m_stage** | **Clinical M Stage (Mets)**.<br>Distant metastasis (cM0/cM1). | `cM0` | `TNMClinicalPrognosticFactor(M)` | **Verified**: Doc 003 (Bone Scan) explicitly rules out osseous metastases ("No scintigraphic evidence"). |
-| **ca_path_t_stage** | **Pathological T Stage**.<br>Requires surgical resection pathology. | `Not Reported` | `TNMPathologicPrognosticFactor(T)` | **Verified**: Patient Plan is EBRT (Radiation), not Surgery (RP), so no pathology report exists. |
-| **ca_path_n_stage** | **Pathological N Stage**.<br>Requires lymph node dissection. | `Not Reported` | `TNMPathologicPrognosticFactor(N)` | **Verified**: Consistent with non-surgical management plan. |
-| **ca_path_m_stage** | **Pathological M Stage**.<br>Microscopic confirmation of distant mets. | `Not Reported` | `TNMPathologicPrognosticFactor(M)` | **Verified**: No biopsy of distant sites performed. |
-| **ca_gen_sum_stage_2** | **SEER Summary Stage**.<br>Simplified staging (Localized, Regional, Distant). | `Localized` | `TNMStageGroup.value` | **Verified**: Inferred from cM0 and absence of regional node involvement. |
-| **ecog** | **ECOG Performance Status**.<br>Score 0-5 (Functional status). | `0` | `PerformanceStatus(ECOG)` | **Verified**: Inferred from "ambulatory" and "Start ADT" plan in Doc 004. |
-| **kps** | **Karnofsky Performance Score**.<br>Scale 0-100. | `90` | `PerformanceStatus(Karnofsky)` | **Verified**: Alternative scoring extracted/mapped alongside ECOG. |
+| Field | Output Value | Supporting Evidence | Contradictory Evidence | mCODE / FHIR Mapping | Verification Note |
+|-------|--------------|---------------------|------------------------|----------------------|-------------------|
+| **naaccr_diagnosis_dt** | `2015-10-15` | Doc 004 | None | `PrimaryCancerCondition.onsetTime` | **Verified**: Extracted from Doc 004. Pipeline ignored missing date in Doc 003. |
+| **ca_site** | `Prostate (C61.9)` | Doc 003, Doc 004 | None | `PrimaryCancerCondition.bodySite` | **Verified**: Strong consensus. Found in both Bone Scan (Doc 003) and Consult Note (Doc 004). |
+| **naaccr_histology_cd** | `8140/3` | Doc 004 | None | `PrimaryCancerCondition.histology` | **Verified**: Mapped "Adenocarcinoma" from "Gleason 3+4=7" context in Doc 004. |
+| **ca_clinical_t_stage** | `Not Reported` | None | None | `TNMClinicalPrognosticFactor(T)` | **Verified**: Doc 004 states "local staging is limited by artifact", so no specific T-stage assigned. |
+| **ca_clinical_n_stage** | `Not Reported` | None | None | `TNMClinicalPrognosticFactor(N)` | **Verified**: No explicit mention of lymphadenopathy in input docs. |
+| **ca_clinical_m_stage** | `cM0` | Doc 003, Doc 004 | None | `TNMClinicalPrognosticFactor(M)` | **Verified**: Doc 003 (Bone Scan) explicitly rules out osseous metastases ("No scintigraphic evidence"). |
+| **ca_path_t_stage** | `Not Reported` | None | None | `TNMPathologicPrognosticFactor(T)` | **Verified**: Patient Plan is EBRT (Radiation), not Surgery (RP), so no pathology report exists. |
+| **ca_path_n_stage** | `Not Reported` | None | None | `TNMPathologicPrognosticFactor(N)` | **Verified**: Consistent with non-surgical management plan. |
+| **ca_path_m_stage** | `Not Reported` | None | None | `TNMPathologicPrognosticFactor(M)` | **Verified**: No biopsy of distant sites performed. |
+| **ca_gen_sum_stage_2** | `Localized` | Inferred (Doc 003/004) | None | `TNMStageGroup.value` | **Verified**: Inferred from cM0 and absence of regional node involvement. |
+| **ecog** | `0` | Doc 004 | None | `PerformanceStatus(ECOG)` | **Verified**: Inferred from "ambulatory" and "Start ADT" plan in Doc 004. |
+| **kps** | `90` | Doc 004 | None | `PerformanceStatus(Karnofsky)` | **Verified**: Alternative scoring extracted/mapped alongside ECOG. |
 
 **Process Summary for Docs 003 & 004:**
 1. **Filter**: Script selected `jsl_p01_003_radiology_doc.txt` and `jsl_p01_004_clinical_doc.txt`.
