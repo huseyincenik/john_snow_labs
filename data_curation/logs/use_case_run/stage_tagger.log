@@ -1,0 +1,15 @@
+2025-12-13 21:00:14 - use_case_run_stage_tagger_ - INFO - Starting tagger for 2 documents via provider=openai
+2025-12-13 21:00:17 - use_case_run_stage_tagger_ - DEBUG - LLM confidence response for doc 004: { "type_confidence": 0.95, "date_confidence": 0.90, "reasoning": "The document type is explicitly stated as 'clinical' in the metadata, which aligns with the content discussing patient management and 
+2025-12-13 21:00:17 - use_case_run_stage_tagger_ - DEBUG - Parsed confidence scores for doc 004: type=0.95, date=0.90
+2025-12-13 21:00:17 - use_case_run_stage_tagger_ - DEBUG - LLM confidence response for doc 003: {
+    "type_confidence": 0.95,
+    "date_confidence": 0.90,
+    "reasoning": "The document type is explicitly stated as 'radiology' in the metadata and the content clearly describes a radiology examin
+2025-12-13 21:00:17 - use_case_run_stage_tagger_ - DEBUG - Parsed confidence scores for doc 003: type=0.95, date=0.90
+2025-12-13 21:00:17 - use_case_run_stage_tagger_ - INFO - Tagger completed: 2 documents processed in 2.66 seconds
+2025-12-13 21:00:52 - use_case_run_stage_tagger_ - INFO - Starting tagger for 2 documents via provider=openai
+2025-12-13 21:00:55 - use_case_run_stage_tagger_ - DEBUG - LLM confidence response for doc 003: { "type_confidence": 0.95, "date_confidence": 0.90, "reasoning": "The document type is explicitly stated as 'radiology' in the metadata, and the content preview contains terminology and structure typi
+2025-12-13 21:00:55 - use_case_run_stage_tagger_ - DEBUG - Parsed confidence scores for doc 003: type=0.95, date=0.90
+2025-12-13 21:00:55 - use_case_run_stage_tagger_ - DEBUG - LLM confidence response for doc 004: { "type_confidence": 0.95, "date_confidence": 0.90, "reasoning": "The document type is explicitly stated as 'clinical' in the metadata, which aligns with the content discussing patient management and 
+2025-12-13 21:00:55 - use_case_run_stage_tagger_ - DEBUG - Parsed confidence scores for doc 004: type=0.95, date=0.90
+2025-12-13 21:00:55 - use_case_run_stage_tagger_ - INFO - Tagger completed: 2 documents processed in 2.93 seconds

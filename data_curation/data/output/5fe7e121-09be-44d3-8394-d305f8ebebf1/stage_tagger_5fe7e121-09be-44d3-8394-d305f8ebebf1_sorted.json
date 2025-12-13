@@ -1,0 +1,760 @@
+{
+  "session_id": "5fe7e121-09be-44d3-8394-d305f8ebebf1",
+  "generated_timestamp": "2025-12-08T18:28:13.778458",
+  "stage": "stage_tagger",
+  "total_documents": 50,
+  "sorted_documents": [
+    {
+      "doc_id": "doc_001_jsl_p01_001_summary_doc",
+      "filename": "jsl_p01_001_summary_doc.txt",
+      "doc_type": "summary",
+      "doc_date": "2015-09-15",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 001 =====\nPatient Id: p01\nDoc Id: 001\nFilename: p01/jsl_p01_001_summary_doc.txt\nDoc Type: summary\nDate: 2015-09-15\nTitle: Oncology Initial Evaluation Summary\n---\nPATIENT: Patient\nID: p01\nDOB: [REDACTED]\n\nATTENDING: Dr. Smith, MD (Medical Oncology)\n\nCOMPREHENSIVE ONCOLOGY HISTORY:\n\nThis is a 60-year-old male with a significant personal and family history of cancer, consistent with a hereditary cancer syndrome.\n\n1.  **Rectal Cancer (C20.9):** Diagnosed in 1987. He was treated at an outside facility with neoadjuvant chemoradiation (5-FU/Mitomycin and 3000 cGy pelvic radiation) followed by an abdominoperineal resection (APR) resulting in a permanent end colostomy. He is considered cured but with significant long-term effects from pelvic radiation.\n\n2.  **Appendiceal Cancer (C18.1):** Diagnosed in 2005 after presenting with symptoms leading to a laparoscopic appendectomy. Pathology revealed a moderately differentiated mucinous adenocarcinoma, pT3. He declined a recommended right hemicolectomy and was treated with adjuvant capecitabine in 2006. He is currently considered to have no evidence of disease (NED) from this primary.\n\n3.  **Prostate Cancer (C61.9):** Recently diagnosed in July 2015 via transperineal biopsy, prompted by a rising PSA (14.7 ng/mL). Pathology showed prostatic adenocarcinoma, Gleason Grade Group 3 (3+4), involving 1 of 6 cores (45% of core).\n\n4.  **Hereditary Cancer Syndrome:** His history of three separate primary cancers (rectal, appendiceal, prostate) is highly suspicious for Lynch Syndrome (HNPCC). His family history is also significant for a father who died of colon cancer and a sister who died of metastatic cancer. Formal genetics consultation and testing will be strongly recommended.\n\nCURRENT PRESENTATION:\nThe patient is referred to JSL Medical Center for management of his newly diagnosed, unfavorable intermediate-risk prostate cancer. The key challenge in his management is his prior pelvic radiation, which significantly constrains treatment options.\n\nASSESSMENT & PLAN:\n1.  **Prostate Cancer:** The patient is not a candidate for brachytherapy due to his absent rectum and prior pelvic radiation. Treatment options discussed are radical prostatectomy (RP) vs. external beam radiation therapy (EBRT) with androgen deprivation therapy (ADT). Given his surgical history and prior radiation, both options carry increased risk of morbidity. He is leaning towards radiation-based treatment.\n2.  **Genetic Counseling:** Urgent referral to the Cancer Genetics clinic to discuss testing for Lynch Syndrome. This has significant implications for his future cancer risk (e.g., bladder, urothelial, gastric) and for his family members.\n3.  **Staging:** Proceed with staging workup for the prostate cancer, including a bone scan and a pelvic MRI to better define the local extent of the disease.\n4.  **Multidisciplinary Review:** His case will be presented at the next Genitourinary (GU) Oncology Tumor Board to discuss the complexities of his treatment.\n\nThis patient represents a complex clinical case requiring careful multidisciplinary management to navigate his multiple cancer diagnoses and treatment-related constraints.",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 796
+      }
+    },
+    {
+      "doc_id": "doc_002_jsl_p01_002_radiology_doc",
+      "filename": "jsl_p01_002_radiology_doc.txt",
+      "doc_type": "radiology",
+      "doc_date": "2015-10-01",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 002 =====\nPatient Id: p01\nDoc Id: 002\nFilename: p01/jsl_p01_002_radiology_doc.txt\nDoc Type: radiology\nDate: 2015-10-01\nTitle: MRI PROSTATE W/WO CONTRAST\n---\nEXAMINATION: MRI PROSTATE W/WO CONTRAST\nCLINICAL STATEMENT: Prostate cancer, PSA 15.7 ng/mL. Biopsy in July 2015 showed Gleason 3+4=7. History of Lynch Syndrome (HNPCC), status post APR for rectal cancer in 1987. Staging evaluation.\n\nTECHNIQUE: Multiplanar, multisequence images of the prostate and pelvis were obtained at 3T without and with intravenous administration of gadolinium-based contrast.\n\nCOMPARISON: MRI from outside hospital dated May 20, 2015.\n\nFINDINGS:\nPROSTATE GLAND: The prostate gland is small, with an estimated volume of 8 cc. Anatomy is distorted due to post-surgical changes from the prior abdominoperineal resection. Extensive metallic artifact from surgical clips limits evaluation, particularly of the gland's posterior aspects and seminal vesicles.\n\nPROSTATE LESIONS:\nCompared to the prior study, there are more conspicuous, ill-defined areas of T2 hypointensity with restricted diffusion and early focal enhancement, suspicious for tumor. These are located in:\n1. The right base, involving the posterior peripheral and transition zones.\n2. The left posterior peripheral zone at the apex.\n\nEXTRACAPSULAR EXTENSION (ECE): Evaluation is severely limited by artifact and distorted anatomy. There is broad abutment of the tumor with the capsule in the right base and left apex posteriorly. No definitive ECE is identified.\n\nSEMINAL VESICLES (SV): The seminal vesicles are not clearly visualized due to post-surgical changes and artifact. SV invasion cannot be excluded.\n\nLYMPH NODES: No pelvic lymphadenopathy is identified.\n\nBONES: A tiny sclerotic lesion is noted in the proximal right femoral diaphysis, likely benign (enostosis). No acute or suspicious osseous lesion to suggest metastasis.\n\nOTHER: Status post-APR with end colostomy noted.\n\nIMPRESSION:\n1. Findings suspicious for multifocal prostate cancer, with dominant lesions in the right base and left apex, showing interval increase in conspicuity since the prior MRI from May 2015.\n2. Assessment for extracapsular extension and seminal vesicle invasion is severely limited by post-surgical artifact and anatomical distortion. No gross ECE is seen.\n3. No evidence of pelvic lymphadenopathy or osseous metastases.\n\nElectronically Signed,\nDr. Davis, MD\nJSL Medical Center, Department of Radiology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 612
+      }
+    },
+    {
+      "doc_id": "doc_003_jsl_p01_003_radiology_doc",
+      "filename": "jsl_p01_003_radiology_doc.txt",
+      "doc_type": "radiology",
+      "doc_date": "2015-10-01",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 003 =====\nPatient Id: p01\nDoc Id: 003\nFilename: p01/jsl_p01_003_radiology_doc.txt\nDoc Type: radiology\nDate: 2015-10-01\nTitle: NM BONE SCAN, WHOLE BODY\n---\nEXAMINATION: NM BONE SCAN, WHOLE BODY\nCLINICAL STATEMENT: Prostate cancer, Gleason score 7. Staging evaluation for osseous metastasis.\n\nTECHNIQUE: Following the intravenous injection of 20.1 mCi of Technetium-99m MDP, whole-body planar images were acquired.\n\nCOMPARISON: None.\n\nFINDINGS:\nThere is symmetric and homogeneous uptake of radiotracer throughout the axial and appendicular skeleton.\nNo focal areas of abnormally increased uptake are seen to suggest osteoblastic metastatic disease.\nMild degenerative changes are noted in the shoulders, hips, and spine.\nRenal excretion is symmetric. Activity is seen in the urinary bladder.\n\nIMPRESSION:\nNo scintigraphic evidence of osseous metastatic disease.\n\nElectronically Signed,\nDr. Wilson, MD\nJSL Medical Center, Department of Radiology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 239
+      }
+    },
+    {
+      "doc_id": "doc_004_jsl_p01_004_clinical_doc",
+      "filename": "jsl_p01_004_clinical_doc.txt",
+      "doc_type": "clinical",
+      "doc_date": "2015-10-15",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 004 =====\nPatient Id: p01\nDoc Id: 004\nFilename: p01/jsl_p01_004_clinical_doc.txt\nDoc Type: clinical\nDate: 2015-10-15\nTitle: Radiation Oncology Consultation Note\n---\nPATIENT: Patient\nID: p01\n\nREASON FOR CONSULTATION: Management of unfavorable intermediate-risk prostate cancer.\n\nHISTORY OF PRESENT ILLNESS: The patient is a 60-year-old male with a complex oncologic history, most notably rectal cancer in 1987 treated with neoadjuvant chemoradiation (30 Gy) and APR, and now a new diagnosis of prostate cancer (Gleason 3+4=7, PSA 15.7 ng/mL). He has known Lynch Syndrome. Staging workup (MRI, bone scan) is negative for metastatic disease, though local staging is limited by artifact. He is reluctant to undergo surgery.\n\nASSESSMENT:\nThe patient has unfavorable intermediate-risk prostate cancer. His prior pelvic radiation presents a significant challenge. The rectum is absent, precluding brachytherapy. The main options are radical prostatectomy or external beam radiation therapy (EBRT).\n\nDISCUSSION:\nWe discussed treatment options at length.\n1.  **Surgery (RP):** This remains a valid option, but the risks of urinary incontinence and erectile dysfunction are high, and the procedure is technically challenging given his prior APR and pelvic scarring.\n2.  **EBRT:** This is a feasible alternative. Given his unfavorable-risk features, treatment would be combined with androgen deprivation therapy (ADT) for 6 months. We discussed the increased risk of late GU and GI toxicity due to re-irradiation of the pelvis, even with modern techniques. The prior 30 Gy is a significant dose, and further radiation must be planned meticulously to minimize overlap and spare organs at risk, particularly the bladder. There is also a theoretical increased risk of a second malignancy (e.g., bladder cancer) in a patient with Lynch Syndrome receiving pelvic radiation, although the absolute risk is low.\n\nPLAN:\nAfter extensive discussion, the patient expresses his preference to proceed with EBRT and ADT. He understands the risks, including the potential for significant long-term urinary toxicity.\n1.  Initiate ADT (e.g., Leuprolide) for 6 months.\n2.  Proceed with CT simulation for radiation planning. We will plan for a dose of 75.6 Gy in 42 fractions to the prostate.\n3.  Place fiducial markers in the prostate for image guidance during treatment.\n4.  Continue multidisciplinary management with Urology and Medical Oncology.\n\nElectronically Signed,\nDr. Brown, MD\nJSL Medical Center, Department of Radiation Oncology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 631
+      }
+    },
+    {
+      "doc_id": "doc_005_jsl_p01_005_operative_doc",
+      "filename": "jsl_p01_005_operative_doc.txt",
+      "doc_type": "operative",
+      "doc_date": "2016-01-20",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 005 =====\nPatient Id: p01\nDoc Id: 005\nFilename: p01/jsl_p01_005_operative_doc.txt\nDoc Type: operative\nDate: 2016-01-20\nTitle: CT-Guided Fiducial Marker Placement\n---\nPRE-PROCEDURE DIAGNOSIS: Prostate Cancer (C61.9)\n\nPOST-PROCEDURE DIAGNOSIS: Same\n\nPROCEDURE: CT-guided placement of three periprostatic fiducial markers.\n\nINDICATION: Patient undergoing external beam radiation therapy for prostate cancer. Markers are for image-guided radiation therapy (IGRT).\n\nOPERATOR: Dr. Davis, MD (Interventional Radiology)\n\nPROCEDURE DETAILS:\nThe patient was placed in the prone position on the CT scanner table. After sterile prep and drape, local anesthesia was administered.\nUnder CT guidance, three solid gold fiducial markers were placed via a transgluteal approach using 18-gauge needles.\nThe markers were positioned as follows:\n- One marker at the prostatic apex.\n- One marker at the right prostatic base.\n- One marker at the left prostatic base.\n\nPost-procedure imaging confirmed satisfactory placement of all three markers in the periprostatic tissue.\n\nCOMPLICATIONS: None. The patient tolerated the procedure well.\n\nIMPRESSION:\nSuccessful CT-guided placement of three periprostatic fiducial markers in preparation for EBRT.\n\nElectronically Signed,\nDr. Davis, MD\nJSL Medical Center, Department of Interventional Radiology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 333
+      }
+    },
+    {
+      "doc_id": "doc_006_jsl_p01_006_clinical_doc",
+      "filename": "jsl_p01_006_clinical_doc.txt",
+      "doc_type": "clinical",
+      "doc_date": "2016-08-11",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 006 =====\nPatient Id: p01\nDoc Id: 006\nFilename: p01/jsl_p01_006_clinical_doc.txt\nDoc Type: clinical\nDate: 2016-08-11\nTitle: Urology Follow-Up Note\n---\nPATIENT: Patient\nID: p01\n\nSUBJECTIVE:\nPatient is a 61-year-old male seen for his first post-treatment follow-up. He completed a course of EBRT (75.6 Gy in 42 fractions) for prostate cancer on April 15, 2016. This was combined with 6 months of ADT (last Lupron injection January 28, 2016).\nHis oncologic history is notable for Lynch syndrome, rectal cancer s/p APR, and appendiceal cancer.\nHe reports doing reasonably well. He has ongoing fatigue which he attributes to the ADT, but notes it is slowly improving.\nUrinary: IPSS is 9/2 (previously 5/3 pre-treatment), mainly frequency which he associates with caffeine. No hematuria or incontinence.\nSexual: IIEF is 5 (previously 6).\nBowel: Ostomy output is normal.\n\nOBJECTIVE:\nVitals: Stable.\nLabs:\n- PSA (07/28/2016): <0.05 ng/mL (Nadir)\n- Testosterone (07/28/2016): 58 ng/dL (still castrate)\n\nASSESSMENT:\n1.  **Prostate Cancer (C61.9):** Status post definitive EBRT and ADT. Excellent response with PSA nadir <0.05 ng/mL. Currently NED.\n2.  **Lynch Syndrome (HNPCC):** Stable. Requires ongoing multi-system surveillance.\n3.  **Treatment-related side effects:** Mild urinary frequency (cystitis) and fatigue/sexual dysfunction secondary to ADT.\n\nPLAN:\n1.  Continue to monitor PSA and testosterone levels. Next check in 6 months.\n2.  Recommend continued surveillance for other Lynch-associated cancers, including annual colonoscopy (of stoma/remaining colon) and continued urologic surveillance.\n3.  Manage side effects symptomatically. Advised to reduce caffeine intake.\n4.  Return to clinic in 9-12 months, or sooner if any issues arise.\n\nElectronically Signed,\nDr. Johnson, MD\nJSL Medical Center, Department of Urology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 458
+      }
+    },
+    {
+      "doc_id": "doc_007_jsl_p01_007_clinical_doc",
+      "filename": "jsl_p01_007_clinical_doc.txt",
+      "doc_type": "clinical",
+      "doc_date": "2019-02-15",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 007 =====\nPatient Id: p01\nDoc Id: 007\nFilename: p01/jsl_p01_007_clinical_doc.txt\nDoc Type: clinical\nDate: 2019-02-15\nTitle: Radiation Oncology Follow-Up\n---\nPATIENT: Patient\nID: p01\n\nSUBJECTIVE:\nPatient is a 64-year-old male, s/p EBRT (75.6 Gy) and ADT for prostate cancer, completed in April 2016. He has a history of Lynch syndrome with prior rectal and appendiceal cancers. He presents for routine follow-up.\nHe reports feeling well overall. However, he notes an episode of gross hematuria approximately one month ago. This was a single episode, which self-resolved. He was seen at a local clinic and given antibiotics, though no formal diagnosis was made.\nAn MRI of the abdomen, done for his routine colon cancer surveillance in late 2018, incidentally noted a \"0.8 cm lesion along the posterior bladder wall.\" He has not had specific follow-up for this finding yet.\nHis PSA has been slowly rising but remains low.\n\nOBJECTIVE:\nLabs:\n- PSA (02/02/2019): 0.23 ng/mL (Previous: 0.11 in Jan 2018)\n- Testosterone (02/02/2019): 374 ng/dL (Recovered)\n\nASSESSMENT:\n1.  **Prostate Cancer (C61.9):** Biochemical recurrence (BCR). His PSA is slowly rising from its nadir of <0.05. The doubling time is long, and the absolute value is still very low. This is consistent with a local recurrence.\n2.  **New Bladder Lesion / Hematuria:** The combination of gross hematuria and an enhancing bladder lesion on MRI in a patient with Lynch Syndrome and a history of pelvic radiation is highly concerning for a new primary bladder cancer (urothelial carcinoma). This requires urgent evaluation. The history of pelvic radiation is a known risk factor, as is Lynch Syndrome itself.\n\nPLAN:\n1.  **Prostate Cancer:** Continue active surveillance with serial PSA monitoring every 6 months. No intervention is indicated at this time for the slow BCR.\n2.  **Bladder Lesion:**\n    - Urgent referral back to Urology (Dr. Johnson).\n    - Recommend CT Urogram to evaluate the entire urinary tract.\n    - Recommend urine cytology.\n    - He will almost certainly require a cystoscopy with biopsy/resection of the bladder lesion.\n3.  Reinforced the importance of the urologic evaluation given his multiple risk factors for urothelial carcinoma.\n\nElectronically Signed,\nDr. Brown, MD\nJSL Medical Center, Department of Radiation Oncology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 579
+      }
+    },
+    {
+      "doc_id": "doc_008_jsl_p01_008_radiology_doc",
+      "filename": "jsl_p01_008_radiology_doc.txt",
+      "doc_type": "radiology",
+      "doc_date": "2019-03-30",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 008 =====\nPatient Id: p01\nDoc Id: 008\nFilename: p01/jsl_p01_008_radiology_doc.txt\nDoc Type: radiology\nDate: 2019-03-30\nTitle: CT UROGRAM W/WO CONTRAST\n---\nEXAMINATION: CT UROGRAM W/WO CONTRAST\nCLINICAL STATEMENT: 64-year-old male with history of Lynch syndrome, prior pelvic radiation, and prostate cancer. Recent gross hematuria and 0.8 cm bladder lesion on prior MRI. Evaluate for urothelial carcinoma.\n\nTECHNIQUE: Multiphase CT imaging of the abdomen and pelvis was performed without and with intravenous contrast, including non-contrast, nephrographic, and excretory phases.\n\nCOMPARISON: Abdominal MRI from 2018.\n\nFINDINGS:\nKIDNEYS/URETERS: No hydronephrosis or hydroureter. No filling defects in the upper tracts. Bilateral simple renal cysts are noted.\n\nBLADDER: There is a new, avidly enhancing soft tissue nodule in the left posterior bladder wall, near the trigone. It measures 1.2 x 1.1 cm in maximal dimensions. This corresponds to the lesion seen on the prior MRI and has increased in size. The bladder wall is otherwise mildly trabeculated, consistent with post-radiation changes.\n\nPROSTATE: Status post radiation changes. Fiducial markers are present.\n\nOTHER: Status post-APR with end colostomy. No abdominopelvic lymphadenopathy. Degenerative changes in the spine.\n\nIMPRESSION:\n1.  A 1.2 x 1.1 cm enhancing nodule in the left posterior bladder wall, suspicious for urothelial carcinoma.\n2.  No evidence of upper tract urothelial disease.\n3.  No pelvic lymphadenopathy or distant metastatic disease.\n\nRECOMMENDATION:\nCystoscopy with biopsy is recommended for definitive diagnosis.\n\nElectronically Signed,\nDr. Davis, MD\nJSL Medical Center, Department of Radiology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 422
+      }
+    },
+    {
+      "doc_id": "doc_009_jsl_p01_009_pathology_doc",
+      "filename": "jsl_p01_009_pathology_doc.txt",
+      "doc_type": "pathology",
+      "doc_date": "2019-05-05",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 009 =====\nPatient Id: p01\nDoc Id: 009\nFilename: p01/jsl_p01_009_pathology_doc.txt\nDoc Type: pathology\nDate: 2019-05-05\nTitle: Urine Cytology Report\n---\nPATIENT: Patient\nID: p01\nACCESSION: [REDACTED]\n\nCLINICAL HISTORY: 64-year-old male with bladder mass, history of Lynch syndrome.\n\nSPECIMEN SOURCE: Bladder, Urine, Voided\n\nFINAL DIAGNOSIS:\nAtypical urothelial cells present.\n\nCOMMENT:\nThe specimen contains rare clusters of urothelial cells with enlarged nuclei, irregular nuclear contours, and hyperchromasia. These findings are atypical and suspicious, but not definitive for high-grade urothelial carcinoma. Degenerative changes and inflammation are present, which may be contributing to the atypia. Clinical and cystoscopic correlation is required.\n\nElectronically Signed,\nDr. Miller, MD\nJSL Lab, Department of Pathology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 209
+      }
+    },
+    {
+      "doc_id": "doc_010_jsl_p01_010_operative_doc",
+      "filename": "jsl_p01_010_operative_doc.txt",
+      "doc_type": "operative",
+      "doc_date": "2019-06-07",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 010 =====\nPatient Id: p01\nDoc Id: 010\nFilename: p01/jsl_p01_010_operative_doc.txt\nDoc Type: operative\nDate: 2019-06-07\nTitle: Operative Report - Cystoscopy and TURBT\n---\nPRE-OPERATIVE DIAGNOSIS: Bladder tumor\n\nPOST-OPERATIVE DIAGNOSIS: Bladder tumor\n\nPROCEDURE:\n1.  Cystoscopy\n2.  Transurethral Resection of Bladder Tumor (TURBT)\n\nSURGEON: Dr. Johnson, MD\n\nANESTHESIA: General\n\nFINDINGS:\nFlexible cystoscopy was performed. The urethra showed some mild stricturing but was traversable. The bladder mucosa showed diffuse post-radiation changes. A solitary, approximately 1.5 cm papillary tumor was identified on the posterior wall, to the left of the midline. The remainder of the bladder was clear.\n\nPROCEDURE DESCRIPTION:\nAfter induction of general anesthesia, the patient was placed in the dorsal lithotomy position. The resectoscope was introduced into the bladder. The papillary tumor identified on the posterior wall was resected in a fractionated manner. Papillary components were resected first, followed by a deep resection of the tumor base to include muscularis propria. Hemostasis was achieved with fulguration. The resected tissue was sent to pathology in separate containers (\"papillary tumor\" and \"deep base\"). At the end of the case, the bladder was irrigated clear. A Foley catheter was placed for continuous drainage.\n\nThe patient tolerated the procedure well and was transferred to the recovery room in stable condition.\n\nSPECIMENS SENT:\n1.  Bladder tumor, papillary component\n2.  Bladder tumor, deep base\n\nElectronically Signed,\nDr. Johnson, MD\nJSL Medical Center, Department of Urology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 404
+      }
+    },
+    {
+      "doc_id": "doc_011_jsl_p01_011_pathology_doc",
+      "filename": "jsl_p01_011_pathology_doc.txt",
+      "doc_type": "pathology",
+      "doc_date": "2019-06-08",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 011 =====\nPatient Id: p01\nDoc Id: 011\nFilename: p01/jsl_p01_011_pathology_doc.txt\nDoc Type: pathology\nDate: 2019-06-08\nTitle: Surgical Pathology Report - TURBT\n---\nPATIENT: Patient\nID: p01\nACCESSION: [REDACTED]\n\nCLINICAL HISTORY: Bladder tumor; history of Lynch syndrome, prior pelvic radiation.\n\nSPECIMENS:\n1. Bladder tumor, papillary component\n2. Bladder tumor, deep base\n\nFINAL DIAGNOSIS:\n1. Bladder, papillary tumor: INVASIVE UROTHELIAL CARCINOMA, HIGH GRADE, with invasion into the lamina propria. No muscularis propria is identified in this specimen.\n\n2. Bladder, deep base: INVASIVE UROTHELIAL CARCINOMA, HIGH GRADE. Muscularis propria is present and is NOT involved by carcinoma.\n\nPATHOLOGIC STAGE: pT1\n\nTUMOR SUMMARY:\nTumor Type: Invasive urothelial carcinoma\nHistologic Grade: High Grade\nNon-invasive component: Papillary configuration is present.\nSites of Invasion: Lamina propria.\nMuscularis Propria: Present in the deep base specimen and is free of tumor.\nLymphovascular Invasion: Not identified.\n\nCOMMENT: The findings are of high-grade invasive urothelial carcinoma invading the lamina propria without extension into the muscularis propria. The presence of Lynch Syndrome in this patient is a significant contributing etiological factor.\n\nElectronically Signed,\nDr. Miller, MD\nJSL Lab, Department of Pathology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 334
+      }
+    },
+    {
+      "doc_id": "doc_012_jsl_p01_012_consult_doc",
+      "filename": "jsl_p01_012_consult_doc.txt",
+      "doc_type": "consult",
+      "doc_date": "2019-07-10",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 012 =====\nPatient Id: p01\nDoc Id: 012\nFilename: p01/jsl_p01_012_consult_doc.txt\nDoc Type: consult\nDate: 2019-07-10\nTitle: Genetics Consultation Note\n---\nPATIENT: Patient\nID: p01\n\nREASON FOR CONSULTATION: Personal history of multiple primary cancers for evaluation of hereditary cancer syndrome.\n\nBACKGROUND: This is a 64-year-old gentleman with a remarkable personal history of multiple malignancies, including:\n- Rectal adenocarcinoma in 1987 (age 32)\n- Appendiceal adenocarcinoma in 2005 (age 50)\n- Prostate adenocarcinoma in 2015 (age 60)\n- Newly diagnosed high-grade urothelial bladder cancer in 2019 (age 64)\n\nFAMILY HISTORY: Significant for father with colon cancer and a sister with metastatic cancer of unknown primary.\n\nASSESSMENT: The patient's personal and family history are highly suggestive of Lynch Syndrome (Hereditary Non-Polyposis Colorectal Cancer). His constellation of tumors (colorectal, appendiceal, urothelial, prostate) fits the spectrum of Lynch-associated malignancies. We discussed the implications of this diagnosis, including the need for lifelong surveillance and the potential risk for his family members.\n\nPLAN:\n1.  Proceed with germline genetic testing via a multi-gene panel (JSL-IMPACT) to identify a causative mutation. We specifically discussed looking for mutations in mismatch repair (MMR) genes (MLH1, MSH2, MSH6, PMS2).\n2.  Patient provided informed consent for testing.\n3.  Will schedule a follow-up visit to discuss the results and their implications for his future care and for his family.\n\nElectronically Signed,\nDr. Garcia, MD\nJSL Medical Center, Cancer Genetics Service",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 408
+      }
+    },
+    {
+      "doc_id": "doc_013_jsl_p01_013_pathology_doc",
+      "filename": "jsl_p01_013_pathology_doc.txt",
+      "doc_type": "pathology",
+      "doc_date": "2019-07-13",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 013 =====\nPatient Id: p01\nDoc Id: 013\nFilename: p01/jsl_p01_013_pathology_doc.txt\nDoc Type: pathology\nDate: 2019-07-13\nTitle: JSL-IMPACT Secondary Germline Analysis Report\n---\nPATIENT: Patient\nID: p01\nACCESSION: [REDACTED]\n\nTEST PERFORMED: Secondary Germline UPJHC-IMPACT (Analysis of 88 cancer predisposition genes)\n\nSPECIMEN: DNA from Peripheral Blood\n\nRESULTS: POSITIVE. A pathogenic variant was detected in the MSH2 gene.\n\nVARIANT DETECTED:\nGene: MSH2 (NM_000251)\nVariant: c.2038C>T (p.Arg680*)\nZygosity: Heterozygous\nClassification: Pathogenic\n\nINTERPRETATION:\nThis result confirms a diagnosis of Lynch Syndrome. The identified MSH2 nonsense variant (p.Arg680*) is a known pathogenic mutation that leads to a truncated, non-functional protein. Pathogenic variants in MSH2 are associated with a significantly increased lifetime risk for colorectal, endometrial, gastric, ovarian, urothelial, and other cancers.\n\nThis finding explains the patient's extensive personal history of multiple primary malignancies.\n\nRECOMMENDATIONS:\n-   Lifelong, enhanced surveillance for Lynch-associated cancers is critical.\n-   Cascade testing for first-degree relatives is strongly recommended.\n-   This information should guide all future oncologic management.\n\nElectronically Signed,\nDr. Roberts, PhD\nJSL Lab, Molecular Diagnostics",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 333
+      }
+    },
+    {
+      "doc_id": "doc_014_jsl_p01_014_operative_doc",
+      "filename": "jsl_p01_014_operative_doc.txt",
+      "doc_type": "operative",
+      "doc_date": "2019-07-20",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 014 =====\nPatient Id: p01\nDoc Id: 014\nFilename: p01/jsl_p01_014_operative_doc.txt\nDoc Type: operative\nDate: 2019-07-20\nTitle: Operative Report - Re-staging TURBT\n---\nPRE-OPERATIVE DIAGNOSIS: High-grade pT1 urothelial carcinoma of the bladder.\n\nPOST-OPERATIVE DIAGNOSIS: Same.\n\nPROCEDURE: Re-staging Transurethral Resection of Bladder Tumor (TURBT).\n\nSURGEON: Dr. Johnson, MD\n\nINDICATION: Per standard of care, a re-staging TURBT is performed within 6 weeks of an initial pT1 diagnosis to ensure accurate staging and clear any residual disease before starting intravesical therapy.\n\nFINDINGS AND PROCEDURE:\nCystoscopy revealed post-resection changes at the prior tumor site on the posterior wall. There was some erythematous and bullous-appearing tissue at the margins of the resection bed. The area was re-resected, taking care to obtain tissue from the margins and the deep base of the prior resection site. Hemostasis was achieved. A Foley catheter was placed.\n\nSPECIMENS SENT:\n1. Bladder, posterior wall re-resection\n\nPLAN: Patient will be scheduled to begin a 6-week induction course of intravesical Bacillus Calmette-Guérin (BCG) therapy following this procedure, pending pathology results.\n\nElectronically Signed,\nDr. Johnson, MD\nJSL Medical Center, Department of Urology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 323
+      }
+    },
+    {
+      "doc_id": "doc_015_jsl_p01_015_pathology_doc",
+      "filename": "jsl_p01_015_pathology_doc.txt",
+      "doc_type": "pathology",
+      "doc_date": "2019-07-21",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 015 =====\nPatient Id: p01\nDoc Id: 015\nFilename: p01/jsl_p01_015_pathology_doc.txt\nDoc Type: pathology\nDate: 2019-07-21\nTitle: Surgical Pathology Report - Re-staging TURBT\n---\nPATIENT: Patient\nID: p01\nACCESSION: [REDACTED]\n\nCLINICAL HISTORY: Re-staging TURBT for pT1 high-grade bladder cancer.\n\nSPECIMEN: Bladder, posterior wall re-resection\n\nFINAL DIAGNOSIS:\nResidual NON-INVASIVE papillary urothelial carcinoma, HIGH GRADE (pTa).\nMuscularis propria is present and is not involved.\nExtensive therapy-related changes and inflammation are noted.\n\nCOMMENT: The findings indicate residual high-grade, but non-invasive (pTa), disease. The absence of residual T1 disease is a favorable prognostic factor. The patient is clear to proceed with planned adjuvant intravesical therapy.\n\nElectronically Signed,\nDr. Miller, MD\nJSL Lab, Department of Pathology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 215
+      }
+    },
+    {
+      "doc_id": "doc_016_jsl_p01_016_clinical_doc",
+      "filename": "jsl_p01_016_clinical_doc.txt",
+      "doc_type": "clinical",
+      "doc_date": "2019-08-16",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 016 =====\nPatient Id: p01\nDoc Id: 016\nFilename: p01/jsl_p01_016_clinical_doc.txt\nDoc Type: clinical\nDate: 2019-08-16\nTitle: Urology Note - BCG Initiation\n---\nPATIENT: Patient\nID: p01\n\nSUBJECTIVE:\nPatient presents to initiate intravesical therapy for high-grade non-muscle invasive bladder cancer. He has recovered well from his re-staging TURBT on 07/20/2019. Pathology confirmed residual pTa high-grade disease. He has also been formally diagnosed with Lynch Syndrome (MSH2 mutation).\n\nASSESSMENT:\n- High-Grade Non-Muscle Invasive Bladder Cancer (NMIBC), s/p TURBT x2. Ready for adjuvant therapy.\n- Lynch Syndrome (MSH2 mutation).\n\nPLAN:\n1.  **BCG Therapy:** Begin 6-week induction course of intravesical BCG (Bacillus Calmette-Guérin). Today marks Cycle 1 of 6.\n2.  **Procedure:** The patient voided prior to the procedure. 50 mg of BCG in 50 mL saline was instilled into the bladder via a sterile catheter. The catheter was removed. The patient was instructed to retain the solution for 2 hours if possible, changing position every 15 minutes.\n3.  **Side Effects:** Counseled on potential side effects, including urinary frequency, urgency, dysuria, hematuria, and low-grade fever. Advised on hygiene measures to prevent transmission.\n4.  **Schedule:** He will return weekly for the next 5 weeks to complete the induction course.\n5.  **Surveillance:** First surveillance cystoscopy will be scheduled 6 weeks after completion of the induction course.\n\nElectronically Signed,\nDr. Johnson, MD\nJSL Medical Center, Department of Urology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 387
+      }
+    },
+    {
+      "doc_id": "doc_017_jsl_p01_017_pathology_doc",
+      "filename": "jsl_p01_017_pathology_doc.txt",
+      "doc_type": "pathology",
+      "doc_date": "2019-11-09",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 017 =====\nPatient Id: p01\nDoc Id: 017\nFilename: p01/jsl_p01_017_pathology_doc.txt\nDoc Type: pathology\nDate: 2019-11-09\nTitle: Urine Cytology Report\n---\nPATIENT: Patient\nID: p01\nACCESSION: [REDACTED]\n\nCLINICAL HISTORY: 64-year-old male, s/p TURBT and induction BCG for high-grade bladder cancer. Surveillance.\n\nSPECIMEN SOURCE: Bladder, Urine, Voided\n\nFINAL DIAGNOSIS:\nNegative for high-grade urothelial carcinoma.\n\nCOMMENT:\nThe specimen shows marked acute and chronic inflammation and reactive urothelial changes, consistent with recent BCG therapy. No malignant cells are identified.\n\nElectronically Signed,\nDr. Miller, MD\nJSL Lab, Department of Pathology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 167
+      }
+    },
+    {
+      "doc_id": "doc_018_jsl_p01_018_clinical_doc",
+      "filename": "jsl_p01_018_clinical_doc.txt",
+      "doc_type": "clinical",
+      "doc_date": "2020-03-11",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 018 =====\nPatient Id: p01\nDoc Id: 018\nFilename: p01/jsl_p01_018_clinical_doc.txt\nDoc Type: clinical\nDate: 2020-03-11\nTitle: Radiation Oncology Follow-Up (Telemedicine)\n---\nPATIENT: Patient\nID: p01\n\nThis was a telemedicine visit conducted via video.\n\nSUBJECTIVE:\nPatient is a 65-year-old male seen for routine follow-up of his prostate cancer, s/p EBRT in 2016. He feels well. He is also undergoing surveillance for his high-grade bladder cancer, with his last cystoscopy in November 2019 being negative.\n\nOBJECTIVE:\nLabs:\n- PSA (02/15/2020): 0.46 ng/mL (Previous: 0.23 in Feb 2019)\n\nASSESSMENT:\n1.  **Prostate Cancer (C61.9):** Continued slow biochemical recurrence. PSA remains low but is clearly rising. Doubling time is approximately 12 months. No indication for salvage therapy at this time.\n2.  **Bladder Cancer (C67.9):** Status post TURBT and BCG. Currently with no evidence of recurrence. He is appropriately following up with Urology.\n3.  **Lynch Syndrome:** Stable. He is aware of his diagnosis and the need for continued surveillance.\n\nPLAN:\n1.  **Prostate Cancer:** Continue active surveillance. The rising PSA is noted, and we will monitor it more closely. Repeat PSA in 6 months. If it continues to rise, we will consider imaging (e.g., PSMA PET) to investigate for local vs. distant recurrence.\n2.  **Bladder Cancer:** Continue close follow-up with Dr. Johnson as planned.\n3.  Continue all other cancer surveillance as recommended for Lynch Syndrome.\n\nElectronically Signed,\nDr. Brown, MD\nJSL Medical Center, Department of Radiation Oncology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 392
+      }
+    },
+    {
+      "doc_id": "doc_019_jsl_p01_019_radiology_doc",
+      "filename": "jsl_p01_019_radiology_doc.txt",
+      "doc_type": "radiology",
+      "doc_date": "2020-06-25",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 019 =====\nPatient Id: p01\nDoc Id: 019\nFilename: p01/jsl_p01_019_radiology_doc.txt\nDoc Type: radiology\nDate: 2020-06-25\nTitle: US RENAL LIMITED\n---\nEXAMINATION: ULTRASOUND RENAL, LIMITED\nCLINICAL STATEMENT: Bladder cancer surveillance.\n\nTECHNIQUE: Grayscale and Doppler imaging of the kidneys and bladder.\n\nCOMPARISON: CT Urogram from March 30, 2019.\n\nFINDINGS:\nRIGHT KIDNEY: Measures 10.1 cm. No hydronephrosis. Stable simple cortical and parapelvic cysts.\n\nLEFT KIDNEY: Measures 11.2 cm. There is new moderate hydronephrosis. The renal cortex is maintained. The visualized proximal ureter is dilated. The cause of obstruction is not definitively identified on this limited study, but may be related to changes at the ureterovesical junction (UVJ).\n\nBLADDER: Bladder wall appears thickened. Post-void residual volume is elevated at 97 mL.\n\nIMPRESSION:\n1. New moderate left hydronephrosis, concerning for obstruction at or near the left UVJ. This may be related to prior surgery (TURBT) or radiation changes.\n2. Significant post-void residual urine.\n\nRECOMMENDATION: Clinical correlation and further evaluation of the left collecting system is recommended, potentially with CT or direct visualization.\n\nElectronically Signed,\nDr. Wilson, MD\nJSL Medical Center, Department of Radiology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 324
+      }
+    },
+    {
+      "doc_id": "doc_020_jsl_p01_020_operative_doc",
+      "filename": "jsl_p01_020_operative_doc.txt",
+      "doc_type": "operative",
+      "doc_date": "2020-08-07",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 020 =====\nPatient Id: p01\nDoc Id: 020\nFilename: p01/jsl_p01_020_operative_doc.txt\nDoc Type: operative\nDate: 2020-08-07\nTitle: Operative Report - Cystoscopy, TUR of Scar, and L Ureteral Stent\n---\nPRE-OPERATIVE DIAGNOSIS:\n1. Left hydronephrosis\n2. Bladder outlet obstruction\n3. History of bladder cancer\n\nPOST-OPERATIVE DIAGNOSIS: Same.\n\nPROCEDURE:\n1. Cystoscopy\n2. Transurethral resection of scar tissue at left ureteral orifice\n3. Left ureteral stent placement\n\nSURGEON: Dr. Johnson, MD\n\nINDICATION: Patient was found to have new moderate left hydronephrosis on a surveillance renal ultrasound. This is presumed to be due to scarring at the left ureteral orifice from his prior TURBT and/or radiation.\n\nFINDINGS AND PROCEDURE:\nCystoscopy revealed significant scar tissue and inflammation at the site of the prior TURBT on the posterior wall, encompassing the left ureteral orifice (UO). The UO was stenotic and could not be cannulated. A decision was made to resect the scar tissue.\nUsing a resectoscope, the dense scar tissue around the left UO was carefully resected until the orifice was patent. A guidewire was then advanced up the left ureter under fluoroscopic guidance, and a 6-French, 24-cm double-J ureteral stent was placed without difficulty. Good efflux of urine was seen from the stent. The resected scar tissue was sent to pathology.\n\nSPECIMENS SENT:\n1. Left trigone scar tissue\n\nPLAN: The stent will remain in place for several weeks to allow the ureter to heal and ensure patency. The patient will return for follow-up and eventual stent removal.\n\nElectronically Signed,\nDr. Johnson, MD\nJSL Medical Center, Department of Urology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 414
+      }
+    },
+    {
+      "doc_id": "doc_021_jsl_p01_021_pathology_doc",
+      "filename": "jsl_p01_021_pathology_doc.txt",
+      "doc_type": "pathology",
+      "doc_date": "2020-08-08",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 021 =====\nPatient Id: p01\nDoc Id: 021\nFilename: p01/jsl_p01_021_pathology_doc.txt\nDoc Type: pathology\nDate: 2020-08-08\nTitle: Surgical Pathology Report - Bladder Scar\n---\nPATIENT: Patient\nID: p01\nACCESSION: [REDACTED]\n\nCLINICAL HISTORY: Resection of scar tissue at left ureteral orifice.\n\nSPECIMEN: Left trigone scar\n\nFINAL DIAGNOSIS:\nUrothelial mucosa with reactive atypia and changes related to prior surgical procedure. No evidence of carcinoma.\n\nCOMMENT:\nThe specimen consists of fragments of urothelial mucosa with underlying fibrotic stroma. There is marked chronic inflammation and reactive changes to the urothelium. No malignancy is identified. These findings are consistent with post-surgical and/or post-radiation scarring.\n\nElectronically Signed,\nDr. Miller, MD\nJSL Lab, Department of Pathology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 205
+      }
+    },
+    {
+      "doc_id": "doc_022_jsl_p01_022_clinical_doc",
+      "filename": "jsl_p01_022_clinical_doc.txt",
+      "doc_type": "clinical",
+      "doc_date": "2021-10-28",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 022 =====\nPatient Id: p01\nDoc Id: 022\nFilename: p01/jsl_p01_022_clinical_doc.txt\nDoc Type: clinical\nDate: 2021-10-28\nTitle: Urology Follow-Up Note\n---\nPATIENT: Patient\nID: p01\n\nSUBJECTIVE:\nPatient is a 66-year-old male with a complex GU oncologic history (prostate ca s/p RT, bladder ca s/p TURBT/BCG, Lynch syndrome) seen for follow-up. His left ureteral stent was removed 6 weeks ago. He feels well. No urinary complaints. His primary concern today is his rising PSA.\n\nOBJECTIVE:\nLabs:\n- PSA (10/21/2021): 1.65 ng/mL (Previous: 1.11 in Mar 2021, 0.97 in Oct 2020)\n- Testosterone (10/21/2021): 351 ng/dL\n\nCystoscopy (today, 10/28/2021): Urethra is patent. Bladder shows diffuse post-radiation changes. The prior tumor site on the posterior wall is well-healed. The left UO is patent and appears normal. No evidence of recurrent tumor.\n\nASSESSMENT:\n1.  **Prostate Cancer (C61.9):** Confirmed biochemical recurrence. The PSA is now >1.5 ng/mL and has been steadily rising, with a doubling time of <12 months. This is concerning for recurrent disease.\n2.  **Bladder Cancer (C67.9):** No evidence of disease. Surveillance cystoscopy is clear.\n3.  **Lynch Syndrome:** Stable.\n\nPLAN:\n1.  **Prostate Cancer Recurrence Workup:** Given the PSA kinetics, it is time to proceed with advanced imaging to localize the site of recurrence.\n    - Order PSMA-PET/CT scan.\n    - Order a dedicated multi-parametric MRI of the prostate.\n    - The goal is to determine if this is a local (prostate bed) recurrence, which may be amenable to salvage therapy, versus distant metastatic disease.\n2.  **Bladder Cancer:** Continue surveillance cystoscopy and urine cytology every 6 months.\n3.  Follow up in clinic after imaging is completed to discuss results and formulate a treatment plan.\n\nElectronically Signed,\nDr. Johnson, MD\nJSL Medical Center, Department of Urology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 465
+      }
+    },
+    {
+      "doc_id": "doc_023_jsl_p01_023_radiology_doc",
+      "filename": "jsl_p01_023_radiology_doc.txt",
+      "doc_type": "radiology",
+      "doc_date": "2021-11-06",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 023 =====\nPatient Id: p01\nDoc Id: 023\nFilename: p01/jsl_p01_023_radiology_doc.txt\nDoc Type: radiology\nDate: 2021-11-06\nTitle: MRI PROSTATE POST TREAT W/WO CON\n---\nEXAMINATION: MRI PROSTATE POST TREAT W/WO CONTRAST\nCLINICAL STATEMENT: 66-year-old male with Lynch syndrome, s/p radiation for prostate cancer in 2016. Rising PSA of 1.65 ng/mL. Evaluate for recurrence.\n\nTECHNIQUE: Multiplanar, multisequence images of the prostate were obtained at 3T without and with intravenous gadolinium contrast.\n\nCOMPARISON: MRI from October 01, 2015 (pre-treatment).\n\nFINDINGS:\nThe prostate gland is small (volume 9 cc) with diffuse post-radiation changes. Surgical clips from the prior APR cause significant artifact.\n\nPROSTATE LESIONS:\nThere is an area of abnormal enhancement in the posterior right peripheral zone, from mid-gland to apex. This area demonstrates T2 hypointensity and restricted diffusion. It measures approximately 1.6 cm. This corresponds to a site of known tumor on the pre-treatment scan but now shows features suspicious for viable, recurrent tumor in the post-treatment setting.\n\nEXTRACAPSULAR EXTENSION (ECE): No definite ECE is identified.\n\nSEMINAL VESICLES (SV): Not well visualized due to artifact.\n\nLYMPH NODES: No pelvic lymphadenopathy.\n\nBONES: No suspicious osseous lesions.\n\nIMPRESSION:\n1. Findings in the posterior right peripheral zone are suspicious for a local recurrence of prostate cancer.\n2. No evidence of metastatic disease in the pelvis.\n3. Correlation with PSMA PET/CT is recommended.\n\nElectronically Signed,\nDr. Davis, MD\nJSL Medical Center, Department of Radiology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 403
+      }
+    },
+    {
+      "doc_id": "doc_024_jsl_p01_024_radiology_doc",
+      "filename": "jsl_p01_024_radiology_doc.txt",
+      "doc_type": "radiology",
+      "doc_date": "2021-12-11",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 024 =====\nPatient Id: p01\nDoc Id: 024\nFilename: p01/jsl_p01_024_radiology_doc.txt\nDoc Type: radiology\nDate: 2021-12-11\nTitle: NM Ga-68 PSMA PET/CT\n---\nEXAMINATION: NM Ga-68 PSMA PET/CT\nCLINICAL STATEMENT: Biochemical recurrence of prostate cancer (PSA 1.65 ng/mL), s/p radiation therapy. Evaluate for site of recurrence.\n\nTECHNIQUE: PET/CT imaging from the skull base to the upper thighs was performed 66 minutes after intravenous injection of 4.7 mCi of Gallium-68 PSMA-11.\n\nCOMPARISON: None.\n\nCORRELATION: MRI Prostate from November 06, 2021.\n\nFINDINGS:\nHEAD/NECK: Physiologic PSMA uptake.\n\nCHEST: No PSMA-avid lesions.\n\nABDOMEN/PELVIS:\nPROSTATE: There is a focal area of intense PSMA uptake in the posterior right peripheral zone of the prostate. This corresponds directly to the lesion suspected to be recurrent tumor on the recent MRI (SUVmax 8.5).\n\nLYMPH NODES: No PSMA-avid lymph nodes in the pelvis, retroperitoneum, or elsewhere.\n\nBONES: No PSMA-avid osseous lesions.\n\nOTHER: Physiologic activity in the salivary glands, liver, spleen, kidneys, and bladder.\n\nIMPRESSION:\n1. Intense focal PSMA uptake in the right peripheral zone of the prostate, consistent with a local recurrence of prostate cancer.\n2. No evidence of PSMA-avid regional nodal or distant metastatic disease.\n\nElectronically Signed,\nDr. Wilson, MD\nJSL Medical Center, Department of Radiology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 345
+      }
+    },
+    {
+      "doc_id": "doc_025_jsl_p01_025_clinical_doc",
+      "filename": "jsl_p01_025_clinical_doc.txt",
+      "doc_type": "clinical",
+      "doc_date": "2022-01-28",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 025 =====\nPatient Id: p01\nDoc Id: 025\nFilename: p01/jsl_p01_025_clinical_doc.txt\nDoc Type: clinical\nDate: 2022-01-28\nTitle: Urology Note - Discussion of Recurrence\n---\nPATIENT: Patient\nID: p01\n\nSUBJECTIVE:\nPatient is seen to discuss the results of his recent imaging for biochemically recurrent prostate cancer. He has reviewed the reports and understands the findings. He feels well and has no new symptoms.\n\nOBJECTIVE:\n- PSA (01/22/2022): 1.79 ng/mL (continuing to rise).\n- MRI Prostate (11/06/2021): Lesion in right peripheral zone suspicious for recurrence.\n- PSMA PET/CT (12/11/2021): Intense focal uptake in the right prostate, confirming a localized recurrence. No evidence of metastatic disease.\n\nASSESSMENT:\n1.  **Localized Recurrent Prostate Cancer:** The patient has a biopsy-proven (from 2015) and now imaging-confirmed isolated local recurrence of his prostate cancer in the right peripheral zone after definitive radiation therapy.\n2.  **Bladder Cancer:** NED.\n3.  **Lynch Syndrome:** Stable.\n\nDISCUSSION & PLAN:\nWe had a long discussion about management options for his localized, post-radiation recurrence.\n1.  **Active Surveillance:** Continue to monitor the PSA. Given the slow pace of rise and localized nature, this is a very reasonable option. Intervention can be deferred.\n2.  **Salvage Therapy:**\n    a.  **Salvage Radical Prostatectomy:** Technically very difficult and high-risk in a patient with two prior pelvic surgeries (APR) and pelvic radiation. High risk of severe incontinence and other complications.\n    b.  **Salvage Cryotherapy or HIFU:** Focal therapies could be considered to ablate the known recurrence. This would be less morbid than surgery.\n    c.  **Systemic Therapy (ADT):** Could be re-initiated, but we typically reserve this for metastatic disease or more rapidly progressing non-metastatic disease.\n\nAfter discussing the risks and benefits, the patient is hesitant to undergo any immediate invasive treatment. He prefers to continue with active surveillance for now.\n\nPLAN:\n1.  Continue active surveillance of the recurrent prostate cancer with PSA testing every 4-6 months.\n2.  We will obtain a biopsy of the PSMA-avid lesion to confirm viable adenocarcinoma and potentially for genomic analysis to guide future therapy.\n3.  Continue routine surveillance for bladder cancer and other Lynch-related cancers.\n4.  Follow up in 6 months with repeat PSA.\n\nElectronically Signed,\nDr. Johnson, MD\nJSL Medical Center, Department of Urology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 624
+      }
+    },
+    {
+      "doc_id": "doc_026_jsl_p01_026_radiology_doc",
+      "filename": "jsl_p01_026_radiology_doc.txt",
+      "doc_type": "radiology",
+      "doc_date": "2022-09-10",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 026 =====\nPatient Id: p01\nDoc Id: 026\nFilename: p01/jsl_p01_026_radiology_doc.txt\nDoc Type: radiology\nDate: 2022-09-10\nTitle: MRI PROSTATE POST TREAT W/WO CON\n---\nEXAMINATION: MRI PROSTATE POST TREAT W/WO CONTRAST\nCLINICAL STATEMENT: 67-year-old male with known local recurrence of prostate cancer on active surveillance. Rising PSA of 2.77 ng/mL. Re-evaluation.\n\nTECHNIQUE: Multiplanar, multisequence images of the prostate were obtained at 1.5T without and with intravenous gadolinium contrast.\n\nCOMPARISON: MRI from November 06, 2021.\n\nFINDINGS:\nPROSTATE GLAND: The prostate volume is 8.4 cc. Continued post-treatment changes.\n\nPROSTATE LESIONS:\nLESION 1: The previously identified lesion in the right anterior and posterior mid-gland to apex peripheral zone is unchanged in size, measuring 1.4 cm. It remains suspicious for viable tumor.\n\nOTHER FINDINGS:\nBLADDER: The bladder is trabeculated. There is new, moderate left hydronephrosis and mild-to-moderate left hydroureter, which appears more pronounced than on prior studies. There is wall thickening, hyperenhancement, and calcification in the left bladder base at and adjacent to the left ureterovesical junction. This is concerning for chronic obstruction/inflammation.\n\nLYMPH NODES: No pelvic lymphadenopathy.\n\nBONES: No suspicious osseous lesions.\n\nIMPRESSION:\n1. Unchanged right peripheral zone lesion, consistent with known local recurrence of prostate cancer.\n2. Worsening moderate left hydroureteronephrosis, likely due to chronic inflammatory changes and calcification at the left UVJ, a long-term complication of prior surgery and radiation.\n\nRECOMMENDATION: Clinical correlation for the worsening left hydronephrosis is advised.\n\nElectronically Signed,\nDr. Davis, MD\nJSL Medical Center, Department of Radiology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 448
+      }
+    },
+    {
+      "doc_id": "doc_027_jsl_p01_027_operative_doc",
+      "filename": "jsl_p01_027_operative_doc.txt",
+      "doc_type": "operative",
+      "doc_date": "2022-11-23",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 027 =====\nPatient Id: p01\nDoc Id: 027\nFilename: p01/jsl_p01_027_operative_doc.txt\nDoc Type: operative\nDate: 2022-11-23\nTitle: Procedure Note - PSMA PET/CT Guided Prostate Biopsy\n---\nPRE-PROCEDURE DIAGNOSIS: Local recurrence of prostate cancer.\n\nPOST-PROCEDURE DIAGNOSIS: Same.\n\nPROCEDURE: PSMA PET/CT-guided coaxial core needle biopsy of prostate.\n\nINDICATION: To obtain tissue from known site of recurrence for histopathologic confirmation and potential genomic testing, given rising PSA.\n\nOPERATOR: Dr. Marinda, MD (Interventional Radiology)\n\nPROCEDURE DETAILS:\nThe patient was placed in the prone position. A pre-procedure PSMA PET/CT scan was performed to localize the target.\nUnder sterile conditions and local anesthesia, and with real-time PET/CT guidance, a coaxial needle was advanced via a transgluteal approach to the margin of the PSMA-avid lesion in the right peripheral zone of the prostate.\nSix core biopsy specimens were obtained using an 18-gauge core needle device.\nTouch preparations were made and assessed on-site for adequacy, which showed suspicious cells.\n\nCOMPLICATIONS: None. The patient tolerated the procedure well.\n\nSPECIMENS SENT:\n1. Prostate core biopsy, right peripheral zone (for pathology)\n2. Touch preps (for cytology)\n\nIMPRESSION: Successful PSMA PET/CT-guided core biopsy of the recurrent prostate tumor.\n\nElectronically Signed,\nDr. Marinda, MD\nJSL Medical Center, Department of Interventional Radiology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 363
+      }
+    },
+    {
+      "doc_id": "doc_028_jsl_p01_028_pathology_doc",
+      "filename": "jsl_p01_028_pathology_doc.txt",
+      "doc_type": "pathology",
+      "doc_date": "2022-11-24",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 028 =====\nPatient Id: p01\nDoc Id: 028\nFilename: p01/jsl_p01_028_pathology_doc.txt\nDoc Type: pathology\nDate: 2022-11-24\nTitle: Surgical Pathology Report - Prostate Biopsy\n---\nPATIENT: Patient\nID: p01\nACCESSION: [REDACTED]\n\nCLINICAL HISTORY: Biopsy of PSMA-avid lesion in a patient with biochemical recurrence of prostate cancer s/p radiation.\n\nSPECIMEN: Prostate, right peripheral zone, core biopsy (6 cores)\n\nFINAL DIAGNOSIS:\nPROSTATIC ADENOCARCINOMA, Gleason Score 3+4=7 (Grade Group 2), involving 1 of 6 cores.\n\n- Tumor involves 2% of the total tissue (0.8 mm linear extent).\n- Percentage of Gleason pattern 4 is 40%.\n- Benign glands show prominent therapy-related changes.\n- Atypical small acinar proliferation (ASAP) is noted in a separate core.\n\nCOMMENT: The findings confirm the presence of recurrent prostatic adenocarcinoma. The grade is consistent with the original diagnostic pathology. The presence of extensive radiation therapy effect is noted in the benign background glands.\n\nElectronically Signed,\nDr. Miller, MD\nJSL Lab, Department of Pathology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 269
+      }
+    },
+    {
+      "doc_id": "doc_029_jsl_p01_029_clinical_doc",
+      "filename": "jsl_p01_029_clinical_doc.txt",
+      "doc_type": "clinical",
+      "doc_date": "2022-12-08",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 029 =====\nPatient Id: p01\nDoc Id: 029\nFilename: p01/jsl_p01_029_clinical_doc.txt\nDoc Type: clinical\nDate: 2022-12-08\nTitle: Interventional Radiology Consultation (Telehealth)\n---\nPATIENT: Patient\nID: p01\n\nREASON FOR CONSULTATION: Evaluation for management of left urinary obstruction.\n\nREFERRING PHYSICIAN: Dr. Johnson (Urology)\n\nNARRATIVE: This is a 67-year-old man with a complex history (Lynch syndrome, s/p APR, s/p pelvic RT, s/p TURBT) who was found to have worsening left hydroureteronephrosis on imaging. This is attributed to dystrophic calcification and scarring at the left ureteral orifice, a long-term sequela of his prior treatments. His urologist, Dr. Johnson, performed a cystoscopy and felt another transurethral resection would be unsafe. He refers the patient to me to discuss percutaneous options.\n\nREVIEW OF IMAGING: I have reviewed the CT urogram from 12/01/2022 which confirms moderate-severe left hydroureteronephrosis down to the UVJ, with associated calcifications.\n\nASSESSMENT: Left ureteral obstruction, secondary to benign (post-treatment) stricture.\n\nDISCUSSION: We discussed the situation at length. The obstruction, if left untreated, will lead to progressive, irreversible loss of function in his left kidney. The options are:\n1.  **Percutaneous Nephrostomy (PCN) Tube Placement:** This would be the initial step to decompress the kidney and preserve its function. It involves placing a tube through the back directly into the kidney.\n2.  **Antegrade Stent Placement:** After PCN placement, we could attempt to traverse the stricture from above and place an internalized ureteral stent (an \"antegrade\" approach).\n3.  **Balloon Ureteroplasty:** We could also attempt to dilate the stricture with a balloon.\n\nPLAN:\nI recommended proceeding with percutaneous nephrostomy tube placement as the first and most important step to relieve the obstruction. Once the kidney is decompressed, we can plan for subsequent attempts at internalization or definitive repair. The patient understands the rationale but is hesitant to have an external tube and requested time to consider his options.\n\nWe will schedule him for a follow-up visit in 2 weeks to make a final decision.\n\nElectronically Signed,\nDr. Marinda, MD\nJSL Medical Center, Department of Interventional Radiology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 577
+      }
+    },
+    {
+      "doc_id": "doc_030_jsl_p01_030_radiology_doc",
+      "filename": "jsl_p01_030_radiology_doc.txt",
+      "doc_type": "radiology",
+      "doc_date": "2022-12-29",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 030 =====\nPatient Id: p01\nDoc Id: 030\nFilename: p01/jsl_p01_030_radiology_doc.txt\nDoc Type: radiology\nDate: 2022-12-29\nTitle: NM RENAL SCAN W/ DIURETIC (MAG3)\n---\nEXAMINATION: NM RENAL SCAN W/ DIURETIC (MAG3)\nCLINICAL STATEMENT: 67-year-old male with left hydronephrosis. Evaluate for severity of obstruction and differential function.\n\nTECHNIQUE: Following intravenous injection of 8.19 mCi of Tc-99m MAG3, dynamic posterior images of the kidneys were acquired for 40 minutes. At 20 minutes, 40 mg of furosemide was administered intravenously.\n\nFINDINGS:\nPERFUSION: Both kidneys are well-perfused.\n\nFUNCTION:\nDIFFERENTIAL FUNCTION: Left Kidney: 44%, Right Kidney: 56%.\n\nLEFT KIDNEY: There is mildly delayed tracer uptake and excretion. The collecting system is dilated. Following diuretic administration, there is delayed and incomplete washout, with a half-time (T1/2) clearance of greater than 20 minutes. The renogram curve is consistent with a significant partial obstruction.\n\nRIGHT KIDNEY: Normal uptake and prompt excretion. The T1/2 clearance after diuretic is less than 10 minutes, which is normal.\n\nIMPRESSION:\n1.  Split renal function is 44% on the left and 56% on the right. The left kidney still contributes significantly to overall renal function.\n2.  The left kidney demonstrates a pattern consistent with a high-grade partial obstruction.\n\nThis confirms the functional significance of the left ureteral obstruction and the need for intervention to preserve the remaining function of the left kidney.\n\nElectronically Signed,\nDr. Wilson, MD\nJSL Medical Center, Department of Radiology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 403
+      }
+    },
+    {
+      "doc_id": "doc_031_jsl_p01_031_summary_doc",
+      "filename": "jsl_p01_031_summary_doc.txt",
+      "doc_type": "summary",
+      "doc_date": "2023-01-15",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 031 =====\nPatient Id: p01\nDoc Id: 031\nFilename: p01/jsl_p01_031_summary_doc.txt\nDoc Type: summary\nDate: 2023-01-15\nTitle: GU Multidisciplinary Tumor Board Note\n---\nPATIENT: Patient\nID: p01\n\nCASE PRESENTED BY: Dr. Johnson, MD (Urology)\n\nHISTORY: 67-year-old male with Lynch syndrome and a history of rectal cancer (s/p APR/RT), appendiceal cancer, prostate cancer (s/p EBRT), and bladder cancer (s/p TURBT/BCG). He has two active issues:\n1.  **Biochemically Recurrent Prostate Cancer:** PSA is now 2.77 ng/mL. PSMA PET/MRI confirmed an isolated, biopsy-proven (Gleason 3+4) recurrence in the right prostate. No metastases.\n2.  **Left Ureteral Obstruction:** Severe left hydronephrosis due to a benign stricture at the UVJ (post-surgical/radiation). MAG3 scan shows the left kidney is obstructed but still provides 44% of total renal function.\n\nDISCUSSION:\n-   **Urology (Dr. Johnson):** The patient has been reluctant to have a percutaneous nephrostomy tube. The MAG3 scan confirms the obstruction is significant and threatens the kidney. The patient needs to be strongly encouraged to proceed with decompression.\n-   **Radiation Oncology (Dr. Brown):** Salvage re-irradiation of the prostate is not a good option given the prior full-course EBRT and the proximity to the previously irradiated rectal bed.\n-   **Medical Oncology (Dr. Smith):** For the prostate cancer, since it is a localized recurrence and the PSA rise is not precipitous, observation is still an option. However, given the continued rise, initiating systemic therapy is also reasonable. An oral GnRH antagonist like Relugolix would be a good choice to avoid the testosterone flare associated with LHRH agonists.\n-   **Interventional Radiology (Dr. Marinda):** We are ready to proceed with PCN placement as soon as the patient consents. This is the necessary first step before any antegrade procedures can be considered.\n\nRECOMMENDATIONS:\n1.  **Ureteral Obstruction:** Strongly recommend the patient proceed with percutaneous nephrostomy tube placement to preserve left renal function. This is the most urgent issue.\n2.  **Prostate Cancer:** Initiate systemic therapy with Relugolix (oral GnRH antagonist) to control the PSA rise and disease progression.\n3.  Continue all other routine cancer surveillance for Lynch syndrome and bladder cancer.\n\nPLAN: Dr. Johnson will meet with the patient to discuss these recommendations and strongly advise for PCN placement.",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 611
+      }
+    },
+    {
+      "doc_id": "doc_032_jsl_p01_032_clinical_doc",
+      "filename": "jsl_p01_032_clinical_doc.txt",
+      "doc_type": "clinical",
+      "doc_date": "2023-04-12",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 032 =====\nPatient Id: p01\nDoc Id: 032\nFilename: p01/jsl_p01_032_clinical_doc.txt\nDoc Type: clinical\nDate: 2023-04-12\nTitle: Interventional Radiology Follow-Up\n---\nPATIENT: Patient\nID: p01\n\nSUBJECTIVE:\nPatient is a 67-year-old male who finally agreed to intervention for his left ureteral obstruction. He remains asymptomatic. He is here today for follow-up after a left percutaneous nephrostomy (PCN) tube was placed one week ago. He reports he is managing the tube at home without major issues, though he finds it cumbersome.\n\nASSESSMENT:\n1.  **Left Ureteral Obstruction:** Status post successful left PCN tube placement. The kidney is now decompressed.\n2.  **Recurrent Prostate Cancer:** He notes he has started treatment with Relugolix, prescribed by Dr. Smith (Medical Oncology).\n\nPLAN:\n1.  The PCN is functioning well. We will keep it in place.\n2.  The next step is to attempt antegrade ureteroplasty and stent placement. We will schedule him for this procedure in approximately 4-6 weeks.\n3.  The goal is to eventually internalize his drainage and remove the external PCN tube.\n4.  Continue to follow up with his oncology team for management of his other conditions.\n\nElectronically Signed,\nDr. Marinda, MD\nJSL Medical Center, Department of Interventional Radiology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 321
+      }
+    },
+    {
+      "doc_id": "doc_034_jsl_p01_034_pathology_doc",
+      "filename": "jsl_p01_034_pathology_doc.txt",
+      "doc_type": "pathology",
+      "doc_date": "2023-08-04",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 034 =====\nPatient Id: p01\nDoc Id: 034\nFilename: p01/jsl_p01_034_pathology_doc.txt\nDoc Type: pathology\nDate: 2023-08-04\nTitle: Urine Cytology Report\n---\nPATIENT: Patient\nID: p01\nACCESSION: [REDACTED]\n\nCLINICAL HISTORY: 68-year-old male with history of high-grade bladder cancer, s/p TURBT/BCG. Routine surveillance.\n\nSPECIMEN SOURCE: Bladder, Urine, Voided\n\nFINAL DIAGNOSIS:\nNegative for high-grade urothelial carcinoma.\n\nCOMMENT:\nSpecimen contains scattered urothelial cells without significant atypia. Background inflammation and red blood cells are present. No evidence of malignancy.\n\nElectronically Signed,\nDr. Miller, MD\nJSL Lab, Department of Pathology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 168
+      }
+    },
+    {
+      "doc_id": "doc_033_jsl_p01_033_clinical_doc",
+      "filename": "jsl_p01_033_clinical_doc.txt",
+      "doc_type": "clinical",
+      "doc_date": "2023-08-10",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 033 =====\nPatient Id: p01\nDoc Id: 033\nFilename: p01/jsl_p01_033_clinical_doc.txt\nDoc Type: clinical\nDate: 2023-08-10\nTitle: Medical Oncology Follow-Up Note\n---\nPATIENT: Patient\nID: p01\n\nSUBJECTIVE:\nPatient is a 68-year-old male with recurrent prostate cancer, seen for follow-up. He was started on Relugolix approximately 4 months ago. He reports doing well. He has some mild hot flashes but is otherwise tolerating the medication without issue. He is also managing his left nephrostomy tube.\n\nOBJECTIVE:\nLabs:\n- PSA (08/03/2023): 0.15 ng/mL (Previous: 4.33 ng/mL before starting Relugolix)\n- Testosterone (08/03/2023): 12 ng/dL (castrate)\n\nASSESSMENT:\n1.  **Recurrent Prostate Cancer (C61.9):** Excellent biochemical response to Relugolix. PSA has dropped significantly and testosterone is well-suppressed.\n2.  **Left Ureteral Obstruction:** Stable, managed with PCN tube.\n3.  **Lynch Syndrome / Other Cancers:** Stable, continues surveillance.\n\nPLAN:\n1.  Continue Relugolix daily.\n2.  Monitor PSA and testosterone every 3-6 months.\n3.  He will continue to follow with IR for management of his nephrostomy tube and planned ureteral intervention.\n4.  Continue all other cancer surveillance as planned.\n\nElectronically Signed,\nDr. Smith, MD\nJSL Medical Center, Department of Medical Oncology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 326
+      }
+    },
+    {
+      "doc_id": "doc_035_jsl_p01_035_radiology_doc",
+      "filename": "jsl_p01_035_radiology_doc.txt",
+      "doc_type": "radiology",
+      "doc_date": "2023-09-21",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 035 =====\nPatient Id: p01\nDoc Id: 035\nFilename: p01/jsl_p01_035_radiology_doc.txt\nDoc Type: radiology\nDate: 2023-09-21\nTitle: NM Ga-68 PSMA PET/MR\n---\nEXAMINATION: NM Ga-68 PSMA PET/MR\nCLINICAL STATEMENT: Recurrent prostate cancer, s/p initiation of ADT (Relugolix). PSA has responded from 4.33 to 0.15 ng/mL. Restaging.\n\nTECHNIQUE: Combined PET/MR imaging of the abdomen and pelvis was performed after intravenous injection of 6.71 mCi of Gallium-68 PSMA-11.\n\nCOMPARISON: PSMA PET/CT from December 11, 2021.\n\nFINDINGS:\nPROSTATE: The previously noted focus of intense PSMA uptake in the right peripheral zone is now markedly decreased in avidity (SUVmax 2.1, previously 8.5). This demonstrates a significant response to androgen deprivation therapy.\n\nLYMPH NODES: No PSMA-avid lymph nodes.\n\nBONES: No PSMA-avid osseous lesions.\n\nOTHER: Left nephrostomy tube is in place. The left kidney shows improved drainage with resolution of the severe hydronephrosis, though some mild residual collecting system dilation persists.\n\nIMPRESSION:\n1.  Excellent response of the local prostate cancer recurrence to ADT, with a significant interval decrease in PSMA avidity.\n2.  No evidence of regional or distant metastatic disease.\n3.  Decompressed left collecting system, status post nephrostomy tube placement.\n\nElectronically Signed,\nDr. Wilson, MD\nJSL Medical Center, Department of Radiology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 348
+      }
+    },
+    {
+      "doc_id": "doc_036_jsl_p01_036_clinical_doc",
+      "filename": "jsl_p01_036_clinical_doc.txt",
+      "doc_type": "clinical",
+      "doc_date": "2023-11-20",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 036 =====\nPatient Id: p01\nDoc Id: 036\nFilename: p01/jsl_p01_036_clinical_doc.txt\nDoc Type: clinical\nDate: 2023-11-20\nTitle: Interventional Radiology Follow-Up\n---\nPATIENT: Patient\nID: p01\n\nSUBJECTIVE:\nPatient is a 68-year-old male s/p left PCN tube placement for a benign ureteral stricture. He is now 6 months out from the procedure and has been tolerating the tube. He is eager to attempt internalization. He continues treatment for his prostate cancer with good response.\n\nASSESSMENT:\n- Left ureteral obstruction, successfully managed with a PCN tube.\n- Ready to proceed with antegrade intervention.\n\nPLAN:\n1.  We have scheduled the patient for an antegrade nephrogram, balloon ureteroplasty (dilation) of the left ureteral stricture, and antegrade placement of a double-J ureteral stent.\n2.  The procedure is planned for next week.\n3.  If successful, we will cap the nephrostomy tube for a trial period. If he tolerates this without pain or signs of obstruction, the PCN tube can then be removed, leaving him with only the internal stent.\n4.  Discussed risks including failure of the procedure, infection, and bleeding. Patient understands and wishes to proceed.\n\nElectronically Signed,\nDr. Marinda, MD\nJSL Medical Center, Department of Interventional Radiology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 320
+      }
+    },
+    {
+      "doc_id": "doc_037_jsl_p01_037_consult_doc",
+      "filename": "jsl_p01_037_consult_doc.txt",
+      "doc_type": "consult",
+      "doc_date": "2024-01-10",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 037 =====\nPatient Id: p01\nDoc Id: 037\nFilename: p01/jsl_p01_037_consult_doc.txt\nDoc Type: consult\nDate: 2024-01-10\nTitle: Survivorship Care Plan Consultation\n---\nPATIENT: Patient\nID: p01\n\nThis consultation is to establish a comprehensive survivorship care plan, given the patient's multiple cancer diagnoses and complex medical history.\n\nDIAGNOSES OVERVIEW:\n1.  **Lynch Syndrome (MSH2 mutation):** The unifying diagnosis. This predisposes him to multiple cancers and requires lifelong, multi-system surveillance.\n2.  **Rectal Cancer (1987):** Cured. Long-term sequelae include colostomy and effects of pelvic radiation.\n3.  **Appendiceal Cancer (2005):** Cured. No active issues.\n4.  **Bladder Cancer (2019):** High-grade NMIBC, s/p TURBT/BCG. Currently NED, but at high risk of recurrence.\n5.  **Prostate Cancer (2015):** Recurrent disease, currently well-controlled on ADT (Relugolix).\n6.  **Complications:** Chronic left ureteral stricture, currently managed with an internal stent.\n\nSURVEILLANCE PLAN:\n-   **Urology (Dr. Johnson):**\n    -   Bladder Cancer: Surveillance cystoscopy and urine cytology every 6 months for 2 years, then annually.\n    -   Prostate Cancer: PSA and testosterone levels every 6 months while on ADT.\n    -   Upper Tracts: Annual imaging (CT Urogram or MR Urogram) to monitor for urothelial carcinoma of the kidneys/ureters, a known risk with Lynch Syndrome.\n-   **Gastroenterology:**\n    -   High-definition colonoscopy (via stoma) every 1-2 years.\n-   **Medical Oncology (Dr. Smith):**\n    -   Manage ADT for prostate cancer. Monitor for side effects (bone health, metabolic changes).\n-   **Dermatology:**\n    -   Annual full-body skin exam for Lynch-associated skin tumors (sebaceous neoplasms).\n\nCOORDINATION OF CARE:\n-   Patient will continue to see his specialists as outlined above.\n-   This summary will be shared with all members of his care team.\n-   Patient is encouraged to remain active and has been referred to our cancer rehabilitation service to address long-term treatment side effects.\n\nElectronically Signed,\nDr. Evans, NP\nJSL Medical Center, Survivorship Clinic",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 531
+      }
+    },
+    {
+      "doc_id": "doc_038_jsl_p01_038_clinical_doc",
+      "filename": "jsl_p01_038_clinical_doc.txt",
+      "doc_type": "clinical",
+      "doc_date": "2024-02-15",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 038 =====\nPatient Id: p01\nDoc Id: 038\nFilename: p01/jsl_p01_038_clinical_doc.txt\nDoc Type: clinical\nDate: 2024-02-15\nTitle: Urology Follow-Up Note\n---\nPATIENT: Patient\nID: p01\n\nSUBJECTIVE:\nPatient is a 68-year-old male for routine surveillance. He had a successful antegrade ureteroplasty and stenting of his left ureteral stricture in late 2023, and his nephrostomy tube has been removed. He is very pleased with this. He continues on Relugolix for his prostate cancer and has no new complaints.\n\nOBJECTIVE:\n-   **Cystoscopy (today):** No evidence of recurrent bladder tumor. Post-radiation changes are stable. The left ureteral stent is seen in good position.\n-   **Urine Cytology (today):** Sent to lab, results pending.\n-   **Labs (02/08/2024):**\n    -   PSA: 0.12 ng/mL (stable)\n    -   Testosterone: 15 ng/dL (stable)\n\nASSESSMENT:\n1.  **Bladder Cancer (C67.9):** No evidence of disease.\n2.  **Prostate Cancer (C61.9):** Stable, well-controlled on ADT.\n3.  **Left Ureteral Stricture:** Successfully managed with internal stent.\n\nPLAN:\n1.  Continue Relugolix.\n2.  The current left ureteral stent will need to be exchanged in approximately 3-4 months. We will schedule this as an outpatient procedure.\n3.  Continue surveillance cystoscopy and cytology in 6 months.\n4.  Continue all other aspects of his comprehensive cancer surveillance plan.\n\nElectronically Signed,\nDr. Johnson, MD\nJSL Medical Center, Department of Urology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 360
+      }
+    },
+    {
+      "doc_id": "doc_039_jsl_p01_039_radiology_doc",
+      "filename": "jsl_p01_039_radiology_doc.txt",
+      "doc_type": "radiology",
+      "doc_date": "2024-08-20",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 039 =====\nPatient Id: p01\nDoc Id: 039\nFilename: p01/jsl_p01_039_radiology_doc.txt\nDoc Type: radiology\nDate: 2024-08-20\nTitle: CT UROGRAM W/WO CONTRAST\n---\nEXAMINATION: CT UROGRAM W/WO CONTRAST\nCLINICAL STATEMENT: 69-year-old male with Lynch syndrome, history of rectal, appendiceal, prostate, and bladder cancers. Annual upper tract surveillance.\n\nTECHNIQUE: Multiphase CT imaging of the abdomen and pelvis was performed without and with intravenous contrast.\n\nCOMPARISON: CT Urogram from March 30, 2019.\n\nFINDINGS:\nKIDNEYS/URETERS: A left double-J ureteral stent is in place, with its ends in the left renal pelvis and bladder. There is resolution of the previously noted left hydronephrosis. No filling defects, masses, or areas of abnormal wall thickening are seen in the renal pelves or ureters bilaterally. Stable bilateral renal cysts.\n\nBLADDER: Stable mild wall trabeculation. No masses.\n\nPROSTATE: Stable post-radiation changes.\n\nOTHER: Status post-APR with colostomy. No abdominopelvic lymphadenopathy. No findings to suggest recurrence of his prior rectal or appendiceal cancers.\n\nIMPRESSION:\n1.  No evidence of upper tract urothelial carcinoma.\n2.  Left ureteral stent in good position with resolved hydronephrosis.\n3.  Stable post-treatment changes related to prior malignancies with no evidence of recurrence.\n\nElectronically Signed,\nDr. Davis, MD\nJSL Medical Center, Department of Radiology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 354
+      }
+    },
+    {
+      "doc_id": "doc_040_jsl_p01_040_clinical_doc",
+      "filename": "jsl_p01_040_clinical_doc.txt",
+      "doc_type": "clinical",
+      "doc_date": "2024-09-05",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 040 =====\nPatient Id: p01\nDoc Id: 040\nFilename: p01/jsl_p01_040_clinical_doc.txt\nDoc Type: clinical\nDate: 2024-09-05\nTitle: Medical Oncology Follow-Up Note\n---\nPATIENT: Patient\nID: p01\n\nSUBJECTIVE:\nPatient is a 69-year-old male with recurrent prostate cancer, well-controlled on Relugolix. He is seen for routine follow-up. He feels well. He is tolerating ADT with only mild hot flashes. He is managing his urologic issues (stent) without problem. His recent surveillance CT urogram was negative.\n\nOBJECTIVE:\nLabs:\n- PSA (08/28/2024): 0.09 ng/mL (stable)\n- Testosterone (08/28/2024): 11 ng/dL (castrate)\n- CBC and CMP: Within normal limits. No evidence of anemia. Liver function is normal.\n\nASSESSMENT:\n1.  **Recurrent Prostate Cancer (C61.9):** Disease remains suppressed on ADT. Excellent response.\n2.  **Other Malignancies (Lynch Syndrome):** No evidence of recurrence. He is compliant with his extensive surveillance schedule.\n\nPLAN:\n1.  Continue Relugolix. We discussed the long-term side effects of ADT, including bone density loss. We will obtain a baseline DEXA scan.\n2.  Start supplemental Calcium and Vitamin D.\n3.  Continue monitoring PSA/Testosterone every 6 months.\n4.  Return to clinic in 6 months.\n\nElectronically Signed,\nDr. Smith, MD\nJSL Medical Center, Department of Medical Oncology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 329
+      }
+    },
+    {
+      "doc_id": "doc_041_jsl_p01_041_operative_doc",
+      "filename": "jsl_p01_041_operative_doc.txt",
+      "doc_type": "operative",
+      "doc_date": "2025-01-15",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 041 =====\nPatient Id: p01\nDoc Id: 041\nFilename: p01/jsl_p01_041_operative_doc.txt\nDoc Type: operative\nDate: 2025-01-15\nTitle: Operative Report - Cystoscopy and Left Ureteral Stent Exchange\n---\nPRE-OPERATIVE DIAGNOSIS: Left ureteral stent in place for benign stricture.\n\nPOST-OPERATIVE DIAGNOSIS: Same.\n\nPROCEDURE: Cystoscopy and exchange of left ureteral stent.\n\nSURGEON: Dr. Johnson, MD\n\nINDICATION: Patient has an indwelling left ureteral stent for a chronic benign stricture, which requires routine exchange every 4-6 months.\n\nFINDINGS AND PROCEDURE:\nUnder general anesthesia, the patient was placed in the dorsal lithotomy position. Cystoscopy was performed. The bladder mucosa appeared stable with no new lesions. The existing left ureteral stent was identified.\nUsing a grasper, the old stent was removed. A guidewire was placed up the left ureter under fluoroscopic guidance. A new 6-French, 24-cm double-J ureteral stent was then advanced over the wire and positioned with its proximal coil in the renal pelvis and its distal coil in the bladder. Position was confirmed with fluoroscopy.\n\nThe patient tolerated the procedure well.\n\nPLAN: Continue routine stent exchanges as scheduled.\n\nElectronically Signed,\nDr. Johnson, MD\nJSL Medical Center, Department of Urology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 322
+      }
+    },
+    {
+      "doc_id": "doc_042_jsl_p01_042_clinical_doc",
+      "filename": "jsl_p01_042_clinical_doc.txt",
+      "doc_type": "clinical",
+      "doc_date": "2025-03-10",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 042 =====\nPatient Id: p01\nDoc Id: 042\nFilename: p01/jsl_p01_042_clinical_doc.txt\nDoc Type: clinical\nDate: 2025-03-10\nTitle: Urology Follow-Up Note\n---\nPATIENT: Patient\nID: p01\n\nSUBJECTIVE:\nPatient is a 69-year-old male for routine surveillance. He underwent a left ureteral stent exchange in January and recovered without issue. He continues on ADT for his prostate cancer. He has no urologic complaints.\n\nOBJECTIVE:\n-   **Cystoscopy (today):** No evidence of recurrent bladder tumor. Stable post-treatment changes.\n-   **Urine Cytology (from 01/15/2025):** Negative for high-grade urothelial carcinoma.\n-   **Labs (03/04/2025):**\n    -   PSA: <0.05 ng/mL (stable)\n    -   Testosterone: 9 ng/dL (stable)\n\nASSESSMENT:\n1.  **Bladder Cancer (C67.9):** No evidence of disease. Continues to be in remission.\n2.  **Prostate Cancer (C61.9):** Remains well-controlled and suppressed on ADT.\n3.  **Lynch Syndrome:** Stable, continuing multi-system surveillance.\n\nPLAN:\n1.  Continue ADT (Relugolix).\n2.  Continue scheduled ureteral stent exchanges.\n3.  Next surveillance cystoscopy and urine cytology in 6 months.\n4.  Continue follow-up with Medical Oncology for ADT management and with GI/Derm for other Lynch-related surveillance.\n\nElectronically Signed,\nDr. Johnson, MD\nJSL Medical Center, Department of Urology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 329
+      }
+    },
+    {
+      "doc_id": "doc_043_jsl_p01_043_radiology_doc",
+      "filename": "jsl_p01_043_radiology_doc.txt",
+      "doc_type": "radiology",
+      "doc_date": "2025-04-01",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 043 =====\nPatient Id: p01\nDoc Id: 043\nFilename: p01/jsl_p01_043_radiology_doc.txt\nDoc Type: radiology\nDate: 2025-04-01\nTitle: DEXA SCAN - BONE DENSITOMETRY\n---\nEXAMINATION: DXA, BONE DENSITY, AXIAL SKELETON\nCLINICAL STATEMENT: 69-year-old male on long-term androgen deprivation therapy for prostate cancer. Baseline evaluation for osteoporosis.\n\nTECHNIQUE: Bone mineral density was measured at the lumbar spine (L1-L4) and dual proximal femurs (femoral neck, total hip).\n\nFINDINGS:\nLUMBAR SPINE (L1-L4): The average bone mineral density (BMD) is 0.950 g/cm^2. The T-score is -1.8. The Z-score is -0.5.\n\nLEFT FEMORAL NECK: The BMD is 0.780 g/cm^2. The T-score is -2.1. The Z-score is -0.8.\n\nLEFT TOTAL HIP: The BMD is 0.850 g/cm^2. The T-score is -1.9. The Z-score is -0.7.\n\nRIGHT FEMORAL NECK: The BMD is 0.795 g/cm^2. The T-score is -2.0. The Z-score is -0.7.\n\nRIGHT TOTAL HIP: The BMD is 0.860 g/cm^2. The T-score is -1.8. The Z-score is -0.6.\n\nIMPRESSION:\nAccording to WHO criteria, the findings are consistent with OSTEOPENIA.\n- The lowest T-score is -2.1 at the left femoral neck.\n- There is no evidence of osteoporosis at this time.\n\nRECOMMENDATION: These results serve as a baseline. Follow-up scanning in 1-2 years is recommended to monitor for changes while on ADT. Clinical management to prevent bone loss should be considered.\n\nElectronically Signed,\nDr. Davis, MD\nJSL Medical Center, Department of Radiology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 358
+      }
+    },
+    {
+      "doc_id": "doc_044_jsl_p01_044_clinical_doc",
+      "filename": "jsl_p01_044_clinical_doc.txt",
+      "doc_type": "clinical",
+      "doc_date": "2025-04-15",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 044 =====\nPatient Id: p01\nDoc Id: 044\nFilename: p01/jsl_p01_044_clinical_doc.txt\nDoc Type: clinical\nDate: 2025-04-15\nTitle: Medical Oncology Follow-Up Note\n---\nPATIENT: Patient\nID: p01\n\nSUBJECTIVE:\nPatient is a 69-year-old male on continuous ADT for prostate cancer, seen for follow-up. He feels well. We are here to review his recent baseline DEXA scan.\n\nOBJECTIVE:\n-   **DEXA Scan (04/01/2025):** Shows osteopenia (lowest T-score -2.1). No osteoporosis.\n-   **Labs:** PSA remains suppressed at <0.05 ng/mL.\n\nASSESSMENT:\n1.  **Recurrent Prostate Cancer (C61.9):** Stable, suppressed on Relugolix.\n2.  **ADT-induced Bone Loss:** Has developed osteopenia as a result of long-term androgen deprivation.\n\nPLAN:\n1.  **Bone Health:** To mitigate further bone loss and reduce fracture risk, we will start treatment with a bone-modifying agent.\n    -   Plan to start Denosumab (Prolia) 60 mg subcutaneously every 6 months.\n    -   Patient needs to see his dentist for clearance before initiating Denosumab to ensure no active dental issues that could increase risk of osteonecrosis of the jaw (ONJ).\n    -   Continue Calcium and Vitamin D supplementation.\n2.  **Prostate Cancer:** Continue Relugolix. Continue monitoring PSA/Testosterone every 6 months.\n3.  Follow up in 6 months.\n\nElectronically Signed,\nDr. Smith, MD\nJSL Medical Center, Department of Medical Oncology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 344
+      }
+    },
+    {
+      "doc_id": "doc_045_jsl_p01_045_pathology_doc",
+      "filename": "jsl_p01_045_pathology_doc.txt",
+      "doc_type": "pathology",
+      "doc_date": "2025-09-12",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 045 =====\nPatient Id: p01\nDoc Id: 045\nFilename: p01/jsl_p01_045_pathology_doc.txt\nDoc Type: pathology\nDate: 2025-09-12\nTitle: Urine Cytology Report\n---\nPATIENT: Patient\nID: p01\nACCESSION: [REDACTED]\n\nCLINICAL HISTORY: 70-year-old male with history of high-grade bladder cancer. Routine surveillance.\n\nSPECIMEN SOURCE: Bladder, Urine, Voided\n\nFINAL DIAGNOSIS:\nNegative for high-grade urothelial carcinoma.\n\nCOMMENT:\nBenign urothelial cells. No malignant cells identified.\n\nElectronically Signed,\nDr. Miller, MD\nJSL Lab, Department of Pathology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 139
+      }
+    },
+    {
+      "doc_id": "doc_046_jsl_p01_046_clinical_doc",
+      "filename": "jsl_p01_046_clinical_doc.txt",
+      "doc_type": "clinical",
+      "doc_date": "2025-09-18",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 046 =====\nPatient Id: p01\nDoc Id: 046\nFilename: p01/jsl_p01_046_clinical_doc.txt\nDoc Type: clinical\nDate: 2025-09-18\nTitle: Urology Follow-Up Note\n---\nPATIENT: Patient\nID: p01\n\nSUBJECTIVE:\nPatient is a 70-year-old male for routine surveillance. He is doing well. He is managing his ADT and had his last ureteral stent exchange without issue.\n\nOBJECTIVE:\n-   **Cystoscopy (today):** Bladder mucosa is stable. No new lesions or areas of concern. Left ureteral stent is in place.\n-   **Urine Cytology (09/12/2025):** Negative for high-grade urothelial carcinoma.\n-   **Labs (09/10/2025):**\n    -   PSA: <0.05 ng/mL\n    -   Testosterone: 8 ng/dL\n\nASSESSMENT:\n1.  **Bladder Cancer (C67.9):** Continues to be NED.\n2.  **Prostate Cancer (C61.9):** Continues to be suppressed on ADT.\n3.  **Lynch Syndrome:** Stable.\n\nPLAN:\n1.  This marks over 5 years of surveillance for his bladder cancer without recurrence. We can now space out surveillance.\n2.  Next surveillance cystoscopy and urine cytology in 12 months.\n3.  Continue scheduled ureteral stent exchanges every 6 months.\n4.  Continue follow-up with his other specialists.\n\nElectronically Signed,\nDr. Johnson, MD\nJSL Medical Center, Department of Urology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 303
+      }
+    },
+    {
+      "doc_id": "doc_047_jsl_p01_047_radiology_doc",
+      "filename": "jsl_p01_047_radiology_doc.txt",
+      "doc_type": "radiology",
+      "doc_date": "2025-10-05",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 047 =====\nPatient Id: p01\nDoc Id: 047\nFilename: p01/jsl_p01_047_radiology_doc.txt\nDoc Type: radiology\nDate: 2025-10-05\nTitle: CT CHEST/ABDOMEN/PELVIS W/ CONTRAST\n---\nEXAMINATION: CT CHEST/ABDOMEN/PELVIS W/ CONTRAST\nCLINICAL STATEMENT: 70-year-old male with Lynch syndrome and multiple prior malignancies (rectal, appendiceal, prostate, bladder). Routine cancer surveillance.\n\nTECHNIQUE: Helical CT images of the chest, abdomen, and pelvis were obtained after administration of intravenous contrast.\n\nCOMPARISON: CT Urogram from August 20, 2024.\n\nFINDINGS:\nCHEST: No pulmonary nodules, consolidation, or effusion. No mediastinal or hilar adenopathy.\n\nABDOMEN/PELVIS: Status post APR with colostomy. Stable post-radiation changes in the prostate. Left ureteral stent is in good position with no hydronephrosis. Liver, spleen, pancreas, adrenal glands, and right kidney are unremarkable. No abdominopelvic lymphadenopathy. No signs of recurrence of his prior rectal or appendiceal cancers.\n\nBONES: Stable degenerative changes. No suspicious osseous lesions.\n\nIMPRESSION:\nStable post-treatment appearance with no CT evidence of recurrent or new malignancy in the chest, abdomen, or pelvis.\n\nElectronically Signed,\nDr. Davis, MD\nJSL Medical Center, Department of Radiology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 320
+      }
+    },
+    {
+      "doc_id": "doc_048_jsl_p01_048_clinical_doc",
+      "filename": "jsl_p01_048_clinical_doc.txt",
+      "doc_type": "clinical",
+      "doc_date": "2025-10-20",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 048 =====\nPatient Id: p01\nDoc Id: 048\nFilename: p01/jsl_p01_048_clinical_doc.txt\nDoc Type: clinical\nDate: 2025-10-20\nTitle: GI Clinic - Colonoscopy Note\n---\nPATIENT: Patient\nID: p01\n\nPROCEDURE: High-Definition Chromoendoscopy via Colostomy.\n\nINDICATION: Lynch Syndrome surveillance.\n\nFINDINGS:\nThe colonoscope was advanced through the end colostomy to the terminal ileum. The colonic mucosa was examined carefully during withdrawal. There were post-surgical changes noted. No polyps, masses, or other mucosal abnormalities were identified.\n\nIMPRESSION: Normal colonoscopy. No evidence of new polyps or neoplasia.\n\nRECOMMENDATION: Continue annual colonoscopic surveillance as per Lynch Syndrome guidelines.\n\nElectronically Signed,\nDr. Peters, MD\nJSL Medical Center, Department of Gastroenterology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 202
+      }
+    },
+    {
+      "doc_id": "doc_049_jsl_p01_049_clinical_doc",
+      "filename": "jsl_p01_049_clinical_doc.txt",
+      "doc_type": "clinical",
+      "doc_date": "2025-11-01",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 049 =====\nPatient Id: p01\nDoc Id: 049\nFilename: p01/jsl_p01_049_clinical_doc.txt\nDoc Type: clinical\nDate: 2025-11-01\nTitle: Dermatology Clinic Note\n---\nPATIENT: Patient\nID: p01\n\nINDICATION: Annual skin examination for Lynch Syndrome surveillance.\n\nEXAM:\nA full-body skin examination was performed. The patient has multiple benign-appearing nevi and seborrheic keratoses. No suspicious pigmented lesions were noted. No lesions concerning for sebaceous adenomas, sebaceous carcinomas, or keratoacanthomas were identified.\n\nASSESSMENT: Normal skin exam. No evidence of Lynch-associated skin neoplasms.\n\nPLAN: Continue annual full-body skin examinations.\n\nElectronically Signed,\nDr. Allen, MD\nJSL Medical Center, Department of Dermatology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 187
+      }
+    },
+    {
+      "doc_id": "doc_050_jsl_p01_050_summary_doc",
+      "filename": "jsl_p01_050_summary_doc.txt",
+      "doc_type": "summary",
+      "doc_date": "2025-12-31",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 050 =====\nPatient Id: p01\nDoc Id: 050\nFilename: p01/jsl_p01_050_summary_doc.txt\nDoc Type: summary\nDate: 2025-12-31\nTitle: End of Year - Integrated Oncology Summary\n---\nPATIENT: Patient\nID: p01\n\nThis note serves as an integrated summary of the patient's oncologic status at the end of 2025.\n\nOVERALL STATUS: The patient is a 70-year-old male with Lynch Syndrome who is living with multiple, complex, and chronic oncologic conditions. He is currently stable and doing well, with all malignancies either in remission or well-controlled.\n\nCURRENT ONCOLOGIC STATUS BY PRIMARY:\n\n1.  **Prostate Cancer (C61.9):** Local recurrence diagnosed in 2022. Currently well-controlled with continuous Androgen Deprivation Therapy (Relugolix). PSA remains suppressed at <0.05 ng/mL. He is being managed for ADT-related osteopenia with Denosumab.\n\n2.  **Bladder Cancer (C67.9):** High-grade non-muscle invasive disease diagnosed in 2019. He remains with no evidence of disease (NED) after TURBT and induction BCG. He has passed the 5-year mark and is now on annual surveillance.\n\n3.  **Rectal Cancer (C20.9):** Diagnosed 1987. Considered cured. No evidence of recurrence.\n\n4.  **Appendiceal Cancer (C18.1):** Diagnosed 2005. Considered cured. No evidence of recurrence.\n\nACTIVE ISSUES & MANAGEMENT:\n-   **Lynch Syndrome (MSH2):** This remains the central driver of his medical journey. He is adherent to a comprehensive, multi-specialty surveillance program (Urology, GI, Derm, Oncology).\n-   **Chronic Left Ureteral Stricture:** A long-term complication of his prior treatments. This is successfully managed with routine (every 6 months) internal ureteral stent exchanges.\n-   **ADT Side Effects:** Osteopenia is being managed with Denosumab, Calcium, and Vitamin D. He experiences mild hot flashes.\n\nSUMMARY:\nMr. [Patient] exemplifies the modern challenge and success of managing a patient with a hereditary cancer syndrome. Through intensive, coordinated, multidisciplinary care, his multiple malignancies are well-controlled, and he maintains a good quality of life. The plan is to continue all current therapies and surveillance protocols into the new year.\n\nPRIMARY ONCOLOGY TEAM:\n- Medical Oncology: Dr. Smith\n- Urology: Dr. Johnson\n- Radiation Oncology: Dr. Brown\n- Gastroenterology: Dr. Peters\n- Interventional Radiology: Dr. Marinda",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 584
+      }
+    }
+  ],
+  "processing_time_seconds": 7.402774810791016,
+  "timestamp": "2025-12-08T18:28:13.778473"
+}

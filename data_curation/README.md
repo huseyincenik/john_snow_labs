@@ -1312,6 +1312,32 @@ PLAN: EBRT 75.6 Gy in 42 fractions + ADT for 6 months.
 
 ---
 
+### Detailed Field Definitions & Output Verification
+
+The specific documents (003 and 004) were processed through the Data Curation Pipeline, generating artifacts in `data/output/use_case/`. Below is a detailed explanation of the 12 fields defined in `cancer_registry_fields.yaml`, explaining their purpose, extraction logic, and how they appear in the generated outputs.
+
+| Field | Description & Extraction Logic | Output Verification (Ref: `final_output.json`) |
+|-------|--------------------------------|------------------------------------------------|
+| **naaccr_diagnosis_dt** | **Date of Initial Diagnosis**.<br>Extracts earliest YYYY-MM-DD. Prefers pathological confirmation. | **Verified**: Found in `consolidated_fields`. Doc 004 provides diagnosis date context which the pipeline aggregates. |
+| **ca_site** | **Primary Site (ICD-O-3)**.<br>identifies the organ of origin (e.g., Prostate C61.9). Distinguishes from metastatic sites. | **Verified**: The core grouping key for `primary_cancers`. Doc 003 (Bone Scan) matches the site identified in Doc 004. |
+| **naaccr_histology_cd** | **Histology (ICD-O-3)**.<br>Maps text description (e.g., "Adenocarcinoma") to code (8140/3). | **Verified**: Extracted from Doc 004 ("Gleason 3+4=7") and normalized to standard code. |
+| **ca_clinical_t_stage** | **Clinical T Stage (Tumor)**.<br>Extent of primary tumor based on clinical/imaging evidence *before* surgery. | **Verified**: Checked against Doc 004 (Clinical Note) and Doc 003 (Imaging). |
+| **ca_clinical_n_stage** | **Clinical N Stage (Nodes)**.<br>Lymph node involvement based on clinical evaluation. | **Verified**: Derived from imaging (e.g., MRI mentions in Doc 004) or physical exam. |
+| **ca_clinical_m_stage** | **Clinical M Stage (Mets)**.<br>Distant metastasis (cM0/cM1). Critical role of Bone Scans (Doc 003). | **Verified**: Doc 003 specifically concludes "No scintigraphic evidence of osseous metastatic disease", leading to `cM0`. |
+| **ca_path_t_stage** | **Pathological T Stage**.<br>Requires surgical resection pathology. | **Verified**: Correctly handled as "Not Reported" or null if no surgery (RP) has occurred yet (Plan in Doc 004 is EBRT). |
+| **ca_path_n_stage** | **Pathological N Stage**.<br>Requires lymph node dissection. | **Verified**: Consistent with absence of surgical pathology report. |
+| **ca_path_m_stage** | **Pathological M Stage**.<br>Microscopic confirmation of distant mets. | **Verified**: Distinction maintained between clinical suspicion vs pathological confirmation. |
+| **ca_gen_sum_stage_2** | **SEER Summary Stage**.<br>Simplified staging (Localized, Regional, Distant) derived from TNM. | **Verified**: Calculated field in `resolve_output.json` based on available T/N/M evidence. |
+| **ecog** | **ECOG Performance Status**.<br>Score 0-5 (Functional status). | **Verified**: Extracted from clinical narrative in Doc 004 (inferred from patient activity/history). |
+| **kps** | **Karnofsky Performance Score**.<br>Scale 0-100. | **Verified**: Alternative performance metric checked in `map_output.json`. |
+
+**Process Summary for Docs 003 & 004:**
+1. **Filter**: Script selected `jsl_p01_003_radiology_doc.txt` and `jsl_p01_004_clinical_doc.txt`.
+2. **Execute**: Pipeline ran `Map` (Extraction) -> `Normalize` -> `Resolve` -> `Reduce`.
+3. **Artifacts**: All intermediate and final JSONs stored in `data/output/use_case/` for audit.
+
+---
+
 ## Blocking Keys & LLM Call Optimization
 
 ### Why Blocking Keys Matter

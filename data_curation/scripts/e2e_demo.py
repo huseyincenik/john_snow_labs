@@ -410,7 +410,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--num-docs",
         type=int,
-        default=0,
+        default=3,
         help="Varsayılan belge sayısı (0: tüm belgeler)",
     )
     parser.add_argument(

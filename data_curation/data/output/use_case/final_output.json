@@ -1,0 +1,15 @@
+[
+  {
+    "field_name": "ca_site",
+    "category": "p01",
+    "data_type": "p01",
+    "normalized_value": "p01",
+    "resolved_value": "Not Reported",
+    "units": "Not Reported",
+    "vocabulary_code": "003",
+    "confidence_score": 0.3,
+    "consolidation_notes": "Multiple documents indicate 'Not Reported' for ca_site, with no conflicting evidence to suggest a specific site.",
+    "patient_id": "p01",
+    "_counts_prereduce_reduce_patient_summary": 23
+  }
+]
