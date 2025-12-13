@@ -62,37 +62,37 @@ The project uses the **MTSamples (Medical Transcription Samples)** dataset, a wi
 This project merges entities from **3 pretrained Spark NLP Healthcare models** into a single unified annotation set:
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                           UNIFIED ENTITY SCHEMA (11 Entity Types)                               │
-├─────────────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                                  │
-│  FROM ner_posology (Priority 1 - Medication Entities):                                          │
-│  ┌──────────────────────────────────────────────────────────────────────────────────────────┐   │
-│  │  DRUG     │ Medication names (Aspirin, Lisinopril, Metformin)                            │   │
-│  │  DOSAGE   │ Medication amounts (100mg, 2 tablets, 10 units)                              │   │
-│  └──────────────────────────────────────────────────────────────────────────────────────────┘   │
-│                                                                                                  │
-│  FROM ner_clinical_large (Priority 2 - General Clinical Entities):                              │
-│  ┌──────────────────────────────────────────────────────────────────────────────────────────┐   │
-│  │  PROBLEM   │ Diseases, symptoms, conditions (hypertension, chest pain, diabetes)         │   │
-│  │  TREATMENT │ Medical procedures, therapies (surgery, physical therapy, chemotherapy)     │   │
-│  │  TEST      │ Medical tests, examinations (MRI, blood pressure, HbA1c)                    │   │
-│  └──────────────────────────────────────────────────────────────────────────────────────────┘   │
-│                                                                                                  │
-│  FROM ner_deid_generic_augmented (Priority 3 - De-identification Entities):                     │
-│  ┌──────────────────────────────────────────────────────────────────────────────────────────┐   │
-│  │  NAME       │ Person names (Dr. Smith, John Doe)                                          │   │
-│  │  DATE       │ Temporal expressions (March 15, 2024, last week)                            │   │
-│  │  AGE        │ Patient age information (55-year-old, age 42)                               │   │
-│  │  LOCATION   │ Places, addresses, facilities (New York, Room 302)                          │   │
-│  │  ID         │ Medical record numbers, SSN (MRN: 12345)                                    │   │
-│  │  PROFESSION │ Job titles, occupations (nurse, construction worker)                        │   │
-│  └──────────────────────────────────────────────────────────────────────────────────────────┘   │
-│                                                                                                  │
-│  PRIORITY RESOLUTION:                                                                            │
-│  When entities overlap → Posology (DRUG/DOSAGE) > Clinical (PROBLEM/TREATMENT/TEST) > DeID     │
-│                                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│                      UNIFIED ENTITY SCHEMA (11 Entity Types)                      │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                   │
+│  FROM ner_posology (Priority 1 - Medication Entities):                            │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │  DRUG     │ Medication names (Aspirin, Lisinopril, Metformin)               │  │
+│  │  DOSAGE   │ Medication amounts (100mg, 2 tablets, 10 units)                 │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                   │
+│  FROM ner_clinical_large (Priority 2 - General Clinical Entities):                │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │  PROBLEM   │ Diseases, symptoms, conditions (hypertension, chest pain)      │  │
+│  │  TREATMENT │ Medical procedures, therapies (surgery, chemotherapy)          │  │
+│  │  TEST      │ Medical tests, examinations (MRI, blood pressure, HbA1c)       │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                   │
+│  FROM ner_deid_generic_augmented (Priority 3 - De-identification Entities):       │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │  NAME       │ Person names (Dr. Smith, John Doe)                            │  │
+│  │  DATE       │ Temporal expressions (March 15, 2024, last week)              │  │
+│  │  AGE        │ Patient age information (55-year-old, age 42)                 │  │
+│  │  LOCATION   │ Places, addresses, facilities (New York, Room 302)            │  │
+│  │  ID         │ Medical record numbers, SSN (MRN: 12345)                      │  │
+│  │  PROFESSION │ Job titles, occupations (nurse, construction worker)          │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                   │
+│  PRIORITY RESOLUTION:                                                             │
+│  When entities overlap → Posology > Clinical > DeID                               │
+│                                                                                   │
+└───────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -138,54 +138,54 @@ This project merges entities from **3 pretrained Spark NLP Healthcare models** i
 ## End-to-End Flow
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                    PROJECT WORKFLOW                                              │
-├─────────────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                                  │
-│   STEP 1: DATA PREPARATION                  STEP 2: NER PIPELINE                                │
-│   ┌──────────────────────────┐              ┌──────────────────────────────────────┐            │
-│   │  MTSamples Dataset       │              │  Multi-NER Pipeline with Priority    │            │
-│   │  (638 clinical texts)    │─────────────▶│                                      │            │
-│   │                          │              │  ┌──────────────────────────────┐    │            │
-│   │  • Medical transcriptions│              │  │ ner_posology (DRUG + DOSAGE) │────┤            │
-│   │  • Surgery notes         │              │  │        ↓ (Priority 1)        │    │            │
-│   │  • Clinical reports      │              │  ├──────────────────────────────┤    │            │
-│   └──────────────────────────┘              │  │ ner_clinical_large           │────┤            │
-│                                             │  │        ↓ (Priority 2)        │    │            │
-│                                             │  ├──────────────────────────────┤    │            │
-│                                             │  │ ner_deid_generic_augmented   │────┤            │
-│                                             │  │        ↓ (Priority 3)        │    │            │
-│                                             │  └──────────────────────────────┘    │            │
-│                                             │            │                          │            │
-│                                             │            ▼                          │            │
-│                                             │  ┌──────────────────────────────┐    │            │
-│                                             │  │   ChunkMergeApproach         │    │            │
-│                                             │  │   (Conflict Resolution)      │    │            │
-│                                             │  └──────────────────────────────┘    │            │
-│                                             └──────────────────────────────────────┘            │
-│                                                          │                                       │
-│                                                          ▼                                       │
-│   STEP 3: CONLL GENERATION                  STEP 4: MODEL TRAINING                              │
-│   ┌──────────────────────────┐              ┌──────────────────────────────────────┐            │
-│   │  CoNLL 2003 Format       │              │  Custom NER Model Training           │            │
-│   │                          │              │                                      │            │
-│   │  Token  POS  POS  BIO    │─────────────▶│  • embeddings_clinical               │            │
-│   │  ──────────────────────  │              │  • MedicalNerApproach                │            │
-│   │  Aspirin NN  NN  B-DRUG  │              │  • Early Stopping                    │            │
-│   │  100mg   NN  NN  B-DOSAGE│              │  • Validation & Test Eval            │            │
-│   │  for     NN  NN  O       │              │                                      │            │
-│   │  pain    NN  NN  B-PROBLEM│              └──────────────────────────────────────┘            │
-│   └──────────────────────────┘                           │                                       │
-│                                                          ▼                                       │
-│                                             STEP 5: MODEL INFERENCE                             │
-│                                             ┌──────────────────────────────────────┐            │
-│                                             │  Predictions & Visualization         │            │
-│                                             │                                      │            │
-│                                             │  • LightPipeline for fast inference  │            │
-│                                             │  • NerVisualizer for HTML output     │            │
-│                                             │  • Entity extraction & analysis      │            │
-│                                             └──────────────────────────────────────┘            │
-└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│                               PROJECT WORKFLOW                                    │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                   │
+│  STEP 1: DATA PREPARATION              STEP 2: NER PIPELINE                       │
+│  ┌─────────────────────────┐           ┌────────────────────────────────────┐     │
+│  │  MTSamples Dataset      │           │  Multi-NER Pipeline with Priority  │     │
+│  │  (638 clinical texts)   │──────────▶│                                    │     │
+│  │                         │           │  ┌────────────────────────────┐    │     │
+│  │  • Medical transcripts  │           │  │ ner_posology (DRUG+DOSAGE) │────┤     │
+│  │  • Surgery notes        │           │  │      ↓ (Priority 1)        │    │     │
+│  │  • Clinical reports     │           │  ├────────────────────────────┤    │     │
+│  └─────────────────────────┘           │  │ ner_clinical_large         │────┤     │
+│                                        │  │      ↓ (Priority 2)        │    │     │
+│                                        │  ├────────────────────────────┤    │     │
+│                                        │  │ ner_deid_generic_augmented │────┤     │
+│                                        │  │      ↓ (Priority 3)        │    │     │
+│                                        │  └────────────────────────────┘    │     │
+│                                        │           │                        │     │
+│                                        │           ▼                        │     │
+│                                        │  ┌────────────────────────────┐    │     │
+│                                        │  │   ChunkMergeApproach       │    │     │
+│                                        │  │   (Conflict Resolution)    │    │     │
+│                                        │  └────────────────────────────┘    │     │
+│                                        └────────────────────────────────────┘     │
+│                                                    │                              │
+│                                                    ▼                              │
+│  STEP 3: CONLL GENERATION              STEP 4: MODEL TRAINING                     │
+│  ┌─────────────────────────┐           ┌────────────────────────────────────┐     │
+│  │  CoNLL 2003 Format      │           │  Custom NER Model Training         │     │
+│  │                         │           │                                    │     │
+│  │  Token  POS  POS  BIO   │──────────▶│  • embeddings_clinical             │     │
+│  │  ─────────────────────  │           │  • MedicalNerApproach              │     │
+│  │  Aspirin NN  NN  B-DRUG │           │  • Early Stopping                  │     │
+│  │  100mg   NN  NN  B-DOSE │           │  • Validation & Test Eval          │     │
+│  │  for     NN  NN  O      │           │                                    │     │
+│  └─────────────────────────┘           └────────────────────────────────────┘     │
+│                                                    │                              │
+│                                                    ▼                              │
+│                                        STEP 5: MODEL INFERENCE                    │
+│                                        ┌────────────────────────────────────┐     │
+│                                        │  Predictions & Visualization       │     │
+│                                        │                                    │     │
+│                                        │  • LightPipeline (fast inference)  │     │
+│                                        │  • NerVisualizer (HTML output)     │     │
+│                                        │  • Entity extraction & analysis    │     │
+│                                        └────────────────────────────────────┘     │
+└───────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Outputs:** 
@@ -279,75 +279,73 @@ This notebook handles the complete data preparation workflow: loading clinical t
 #### Pipeline Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                           MULTI-NER PIPELINE WITH PRIORITY MERGING                              │
-│                    Priority: Posology (DRUG/DOSAGE) > Clinical > DeID                           │
-├─────────────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                                  │
-│  INPUT TEXT                                                                                      │
-│  "The patient was prescribed Aspirin 100mg twice daily for hypertension."                       │
-│         │                                                                                        │
-│         ▼                                                                                        │
-│  ┌──────────────────────────────────────────────────────────────────────────────────────────┐   │
-│  │ STAGE 1: BASE NLP COMPONENTS                                                              │   │
-│  │ ┌──────────────────┐   ┌──────────────────────┐   ┌──────────────┐   ┌─────────────────┐ │   │
-│  │ │ DocumentAssembler │──▶│ SentenceDetectorDL   │──▶│    Tokenizer │──▶│ WordEmbeddings  │ │   │
-│  │ │                   │   │ (Healthcare)         │   │              │   │ (Clinical)      │ │   │
-│  │ └──────────────────┘   └──────────────────────┘   └──────────────┘   └─────────────────┘ │   │
-│  └──────────────────────────────────────────────────────────────────────────────────────────┘   │
-│         │                                                                                        │
-│         ▼                                                                                        │
-│  ┌──────────────────────────────────────────────────────────────────────────────────────────┐   │
-│  │ STAGE 2: PARALLEL NER MODELS                                                              │   │
-│  │                                                                                           │   │
-│  │ ┌────────────────────────────────────────────────────────────────────────────────────┐   │   │
-│  │ │ ner_clinical_large                                                                  │   │   │
-│  │ │ Labels: PROBLEM, TREATMENT, TEST                                                    │   │   │
-│  │ │ Example: "hypertension" → PROBLEM                                                   │   │   │
-│  │ └────────────────────────────────────────────────────────────────────────────────────┘   │   │
-│  │                                                                                           │   │
-│  │ ┌────────────────────────────────────────────────────────────────────────────────────┐   │   │
-│  │ │ ner_deid_generic_augmented                                                          │   │   │
-│  │ │ Labels: NAME, DATE, AGE, ID, LOCATION, CONTACT, PROFESSION                         │   │   │
-│  │ │ Example: "Dr. Smith" → NAME, "55-year-old" → AGE                                    │   │   │
-│  │ └────────────────────────────────────────────────────────────────────────────────────┘   │   │
-│  │                                                                                           │   │
-│  │ ┌────────────────────────────────────────────────────────────────────────────────────┐   │   │
-│  │ │ ner_posology                                                                        │   │   │
-│  │ │ Labels: DRUG, DOSAGE, STRENGTH, ROUTE, FREQUENCY, FORM, DURATION                   │   │   │
-│  │ │ Example: "Aspirin" → DRUG, "100mg" → DOSAGE                                         │   │   │
-│  │ └────────────────────────────────────────────────────────────────────────────────────┘   │   │
-│  └──────────────────────────────────────────────────────────────────────────────────────────┘   │
-│         │                                                                                        │
-│         ▼                                                                                        │
-│  ┌──────────────────────────────────────────────────────────────────────────────────────────┐   │
-│  │ STAGE 3: CHUNK FILTERING & MERGING                                                        │   │
-│  │                                                                                           │   │
-│  │ ┌─────────────────────────────┐                                                           │   │
-│  │ │ ChunkFilterer (Posology)    │  WhiteList: ["DRUG", "DOSAGE"]                            │   │
-│  │ │ Filter Entity: "entity"     │  Only keeps high-precision medication entities            │   │
-│  │ │ Criteria: "isin"            │                                                           │   │
-│  │ └─────────────────────────────┘                                                           │   │
-│  │                │                                                                          │   │
-│  │                ▼                                                                          │   │
-│  │ ┌─────────────────────────────────────────────────────────────────────────────────────┐  │   │
-│  │ │ ChunkMergeApproach                                                                   │  │   │
-│  │ │                                                                                      │  │   │
-│  │ │ InputCols: ["chunk_posology_filtered", "chunk_clinical", "chunk_deid"]              │  │   │
-│  │ │ Priority Order: Posology (1st) → Clinical (2nd) → DeID (3rd)                        │  │   │
-│  │ │                                                                                      │  │   │
-│  │ │ OrderingFeatures: ["ChunkLength"]                                                    │  │   │
-│  │ │ SelectionStrategy: "DiverseLonger" → Longest chunk wins in overlap conflicts        │  │   │
-│  │ │ CaseSensitive: False                                                                 │  │   │
-│  │ └─────────────────────────────────────────────────────────────────────────────────────┘  │   │
-│  └──────────────────────────────────────────────────────────────────────────────────────────┘   │
-│         │                                                                                        │
-│         ▼                                                                                        │
-│  OUTPUT: merged_ner_chunk                                                                        │
-│  ┌──────────────────────────────────────────────────────────────────────────────────────────┐   │
-│  │ Aspirin (DRUG) | 100mg (DOSAGE) | hypertension (PROBLEM)                                 │   │
-│  └──────────────────────────────────────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│                    MULTI-NER PIPELINE WITH PRIORITY MERGING                       │
+│              Priority: Posology (DRUG/DOSAGE) > Clinical > DeID                   │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                   │
+│  INPUT TEXT                                                                       │
+│  "The patient was prescribed Aspirin 100mg twice daily for hypertension."        │
+│       │                                                                           │
+│       ▼                                                                           │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │ STAGE 1: BASE NLP COMPONENTS                                                │  │
+│  │ ┌────────────────┐ ┌──────────────────┐ ┌──────────┐ ┌───────────────────┐  │  │
+│  │ │DocumentAssembler│▶│SentenceDetectorDL│▶│ Tokenizer│▶│  WordEmbeddings   │  │  │
+│  │ └────────────────┘ └──────────────────┘ └──────────┘ └───────────────────┘  │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
+│       │                                                                           │
+│       ▼                                                                           │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │ STAGE 2: PARALLEL NER MODELS                                                │  │
+│  │                                                                             │  │
+│  │ ┌─────────────────────────────────────────────────────────────────────────┐ │  │
+│  │ │ ner_clinical_large                                                      │ │  │
+│  │ │ Labels: PROBLEM, TREATMENT, TEST                                        │ │  │
+│  │ │ Example: "hypertension" → PROBLEM                                       │ │  │
+│  │ └─────────────────────────────────────────────────────────────────────────┘ │  │
+│  │                                                                             │  │
+│  │ ┌─────────────────────────────────────────────────────────────────────────┐ │  │
+│  │ │ ner_deid_generic_augmented                                              │ │  │
+│  │ │ Labels: NAME, DATE, AGE, ID, LOCATION, PROFESSION                       │ │  │
+│  │ │ Example: "Dr. Smith" → NAME, "55-year-old" → AGE                        │ │  │
+│  │ └─────────────────────────────────────────────────────────────────────────┘ │  │
+│  │                                                                             │  │
+│  │ ┌─────────────────────────────────────────────────────────────────────────┐ │  │
+│  │ │ ner_posology                                                            │ │  │
+│  │ │ Labels: DRUG, DOSAGE, STRENGTH, ROUTE, FREQUENCY, FORM, DURATION        │ │  │
+│  │ │ Example: "Aspirin" → DRUG, "100mg" → DOSAGE                             │ │  │
+│  │ └─────────────────────────────────────────────────────────────────────────┘ │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
+│       │                                                                           │
+│       ▼                                                                           │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │ STAGE 3: CHUNK FILTERING & MERGING                                          │  │
+│  │                                                                             │  │
+│  │ ┌───────────────────────────────┐                                           │  │
+│  │ │ ChunkFilterer (Posology)      │ WhiteList: ["DRUG", "DOSAGE"]             │  │
+│  │ │ Filter Entity: "entity"       │ Only keeps medication entities            │  │
+│  │ │ Criteria: "isin"              │                                           │  │
+│  │ └───────────────────────────────┘                                           │  │
+│  │              │                                                              │  │
+│  │              ▼                                                              │  │
+│  │ ┌─────────────────────────────────────────────────────────────────────────┐ │  │
+│  │ │ ChunkMergeApproach                                                      │ │  │
+│  │ │                                                                         │ │  │
+│  │ │ InputCols: ["chunk_posology_filtered", "chunk_clinical", "chunk_deid"]  │ │  │
+│  │ │ Priority: Posology (1st) → Clinical (2nd) → DeID (3rd)                  │ │  │
+│  │ │                                                                         │ │  │
+│  │ │ OrderingFeatures: ["ChunkLength"]                                       │ │  │
+│  │ │ SelectionStrategy: "DiverseLonger" → Longest chunk wins                 │ │  │
+│  │ └─────────────────────────────────────────────────────────────────────────┘ │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
+│       │                                                                           │
+│       ▼                                                                           │
+│  OUTPUT: merged_ner_chunk                                                         │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │ Aspirin (DRUG) | 100mg (DOSAGE) | hypertension (PROBLEM)                    │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
+└───────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 #### Key Pipeline Components
@@ -365,54 +363,54 @@ This notebook handles the complete data preparation workflow: loading clinical t
 #### WhiteList & Priority System Explained
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                           WHY WHITELIST & PRIORITY MERGING?                                     │
-├─────────────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                                  │
-│  PROBLEM: Multiple NER models may tag the SAME text span differently                            │
-│                                                                                                  │
-│  Example: "Metformin 500mg"                                                                      │
-│  ┌────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │ ner_posology:  "Metformin" → DRUG, "500mg" → DOSAGE                                        │ │
-│  │ ner_clinical:  "Metformin 500mg" → TREATMENT                                               │ │
-│  │ ner_deid:      (no match - not a protected entity)                                         │ │
-│  └────────────────────────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                                  │
-│  SOLUTION 1: WhiteList Filter                                                                   │
-│  ┌────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │ ChunkFilterer with WhiteList: ["DRUG", "DOSAGE"]                                           │ │
-│  │                                                                                             │ │
-│  │ • ner_posology outputs: DRUG, DOSAGE, STRENGTH, ROUTE, FREQUENCY, FORM, DURATION          │ │
-│  │ • After filtering: Only DRUG and DOSAGE remain                                             │ │
-│  │ • Reason: DRUG and DOSAGE are most critical for medication extraction                      │ │
-│  └────────────────────────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                                  │
-│  SOLUTION 2: Priority-Based Merging                                                             │
-│  ┌────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │ InputCols ORDER determines priority:                                                        │ │
-│  │                                                                                             │ │
-│  │   1. chunk_posology_filtered (HIGHEST PRIORITY)                                            │ │
-│  │      → Medication entities from specialized model                                           │ │
-│  │                                                                                             │ │
-│  │   2. chunk_clinical (MEDIUM PRIORITY)                                                       │ │
-│  │      → General clinical entities (PROBLEM, TREATMENT, TEST)                                │ │
-│  │                                                                                             │ │
-│  │   3. chunk_deid (LOWEST PRIORITY)                                                          │ │
-│  │      → De-identification entities (NAME, DATE, etc.)                                       │ │
-│  └────────────────────────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                                  │
-│  SOLUTION 3: DiverseLonger Strategy                                                             │
-│  ┌────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │ When two entities overlap with SAME priority:                                               │ │
-│  │                                                                                             │ │
-│  │ OrderingFeatures: ["ChunkLength"]                                                           │ │
-│  │ SelectionStrategy: "DiverseLonger"                                                          │ │
-│  │                                                                                             │ │
-│  │ → The LONGER chunk wins                                                                     │ │
-│  │ → Preserves more contextual information                                                     │ │
-│  │ → Example: "severe chest pain" beats "chest pain"                                          │ │
-│  └────────────────────────────────────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│                      WHY WHITELIST & PRIORITY MERGING?                            │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                   │
+│  PROBLEM: Multiple NER models may tag the SAME text span differently             │
+│                                                                                   │
+│  Example: "Metformin 500mg"                                                       │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │ ner_posology:  "Metformin" → DRUG, "500mg" → DOSAGE                         │  │
+│  │ ner_clinical:  "Metformin 500mg" → TREATMENT                                │  │
+│  │ ner_deid:      (no match - not a protected entity)                          │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                   │
+│  SOLUTION 1: WhiteList Filter                                                     │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │ ChunkFilterer with WhiteList: ["DRUG", "DOSAGE"]                            │  │
+│  │                                                                             │  │
+│  │ • ner_posology outputs: DRUG, DOSAGE, STRENGTH, ROUTE, FREQUENCY, etc.     │  │
+│  │ • After filtering: Only DRUG and DOSAGE remain                              │  │
+│  │ • Reason: DRUG and DOSAGE are most critical for medication extraction      │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                   │
+│  SOLUTION 2: Priority-Based Merging                                               │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │ InputCols ORDER determines priority:                                        │  │
+│  │                                                                             │  │
+│  │   1. chunk_posology_filtered (HIGHEST PRIORITY)                             │  │
+│  │      → Medication entities from specialized model                           │  │
+│  │                                                                             │  │
+│  │   2. chunk_clinical (MEDIUM PRIORITY)                                       │  │
+│  │      → General clinical entities (PROBLEM, TREATMENT, TEST)                 │  │
+│  │                                                                             │  │
+│  │   3. chunk_deid (LOWEST PRIORITY)                                           │  │
+│  │      → De-identification entities (NAME, DATE, etc.)                        │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                   │
+│  SOLUTION 3: DiverseLonger Strategy                                               │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │ When two entities overlap with SAME priority:                               │  │
+│  │                                                                             │  │
+│  │ OrderingFeatures: ["ChunkLength"]                                           │  │
+│  │ SelectionStrategy: "DiverseLonger"                                          │  │
+│  │                                                                             │  │
+│  │ → The LONGER chunk wins                                                     │  │
+│  │ → Preserves more contextual information                                     │  │
+│  │ → Example: "severe chest pain" beats "chest pain"                           │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
+└───────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 #### ChunkMergeApproach Deep Dive: Step-by-Step Example
@@ -427,169 +425,169 @@ The `ChunkMergeApproach` is the core component that resolves conflicts when mult
 **Step 1: Each NER Model Produces Annotations Independently**
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  RAW NER MODEL OUTPUTS (Before Merging)                                                          │
-├─────────────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                                  │
-│  ner_posology (Medication-focused):                                                              │
-│  ┌────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │  "Lisinopril"     → DRUG       (position: 26-36)                                           │ │
-│  │  "10mg"           → DOSAGE     (position: 37-41)                                           │ │
-│  │  "daily"          → FREQUENCY  (position: 42-47)    ⚠️ Filtered out by WhiteList          │ │
-│  └────────────────────────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                                  │
-│  ner_clinical_large (General clinical):                                                          │
-│  ┌────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │  "Lisinopril 10mg daily"  → TREATMENT  (position: 26-47)   ⚠️ Overlaps with Posology!     │ │
-│  │  "hypertension"           → PROBLEM    (position: 52-64)                                   │ │
-│  └────────────────────────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                                  │
-│  ner_deid_generic_augmented (De-identification):                                                 │
-│  ┌────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │  "Dr. John Smith"   → NAME     (position: 0-14)                                            │ │
-│  │  "March 15, 2024"   → DATE     (position: 68-82)                                           │ │
-│  └────────────────────────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│  RAW NER MODEL OUTPUTS (Before Merging)                                           │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                   │
+│  ner_posology (Medication-focused):                                               │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │  "Lisinopril"  → DRUG       (position: 26-36)                               │  │
+│  │  "10mg"        → DOSAGE     (position: 37-41)                               │  │
+│  │  "daily"       → FREQUENCY  (position: 42-47)  ⚠️ Filtered by WhiteList    │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                   │
+│  ner_clinical_large (General clinical):                                           │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │  "Lisinopril 10mg daily"  → TREATMENT (26-47) ⚠️ Overlaps with Posology!   │  │
+│  │  "hypertension"           → PROBLEM   (52-64)                               │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                   │
+│  ner_deid_generic_augmented (De-identification):                                  │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │  "Dr. John Smith"   → NAME  (position: 0-14)                                │  │
+│  │  "March 15, 2024"   → DATE  (position: 68-82)                               │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                   │
+└───────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Step 2: ChunkFilterer Applies WhiteList**
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  AFTER WHITELIST FILTERING (Posology only)                                                       │
-├─────────────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                                  │
-│  WhiteList: ["DRUG", "DOSAGE"]                                                                   │
-│                                                                                                  │
-│  ner_posology_filtered:                                                                          │
-│  ┌────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │  "Lisinopril"  → DRUG    (position: 26-36)  ✅ Kept                                        │ │
-│  │  "10mg"        → DOSAGE  (position: 37-41)  ✅ Kept                                        │ │
-│  │  "daily"       → FREQUENCY                  ❌ Removed (not in WhiteList)                  │ │
-│  └────────────────────────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                                  │
-│  Reason: FREQUENCY, ROUTE, FORM, DURATION are less critical for this use case                  │
-│          DRUG and DOSAGE provide the highest value for medication extraction                    │
-│                                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│  AFTER WHITELIST FILTERING (Posology only)                                        │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                   │
+│  WhiteList: ["DRUG", "DOSAGE"]                                                    │
+│                                                                                   │
+│  ner_posology_filtered:                                                           │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │  "Lisinopril"  → DRUG    (position: 26-36)  ✅ Kept                         │  │
+│  │  "10mg"        → DOSAGE  (position: 37-41)  ✅ Kept                         │  │
+│  │  "daily"       → FREQUENCY                  ❌ Removed (not in WhiteList)   │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                   │
+│  Reason: FREQUENCY, ROUTE, FORM, DURATION are less critical for this use case   │
+│          DRUG and DOSAGE provide highest value for medication extraction         │
+│                                                                                   │
+└───────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Step 3: ChunkMergeApproach Resolves Conflicts**
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  CONFLICT DETECTION & RESOLUTION                                                                 │
-├─────────────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                                  │
-│  Conflict Zone: Position 26-47                                                                   │
-│  ┌────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │                                                                                             │ │
-│  │  Text:     "... prescribed Lisinopril 10mg daily for hypertension ..."                     │ │
-│  │  Position:              26──────────────47                                                  │ │
-│  │                                                                                             │ │
-│  │  ┌─────────────────────────────────────────────────────────────────────────────────────┐   │ │
-│  │  │ OVERLAPPING ENTITIES:                                                                │   │ │
-│  │  │                                                                                      │   │ │
-│  │  │  Posology (Priority 1):  [Lisinopril|DRUG] [10mg|DOSAGE]                            │   │ │
-│  │  │                           26───────36 37──41                                         │   │ │
-│  │  │                                                                                      │   │ │
-│  │  │  Clinical (Priority 2):  [Lisinopril 10mg daily|TREATMENT]                          │   │ │
-│  │  │                           26────────────────────47                                   │   │ │
-│  │  └─────────────────────────────────────────────────────────────────────────────────────┘   │ │
-│  │                                                                                             │ │
-│  └────────────────────────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                                  │
-│  Resolution Logic:                                                                               │
-│  ┌────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │                                                                                             │ │
-│  │  1. CHECK PRIORITY ORDER (InputCols sequence)                                              │ │
-│  │     ┌─────────────────────────────────────────────────────────────────┐                    │ │
-│  │     │ InputCols: ["chunk_posology_filtered", "chunk_clinical", "chunk_deid"]               │ │
-│  │     │                       ↑                                                              │ │
-│  │     │                 First = Highest Priority                                             │ │
-│  │     └─────────────────────────────────────────────────────────────────┘                    │ │
-│  │                                                                                             │ │
-│  │  2. POSOLOGY HAS HIGHER PRIORITY → Posology entities WIN                                   │ │
-│  │     • "Lisinopril" (DRUG) → ✅ SELECTED                                                    │ │
-│  │     • "10mg" (DOSAGE) → ✅ SELECTED                                                        │ │
-│  │     • "Lisinopril 10mg daily" (TREATMENT) → ❌ DISCARDED (lower priority, overlaps)       │ │
-│  │                                                                                             │ │
-│  │  3. NON-OVERLAPPING ENTITIES PASS THROUGH                                                  │ │
-│  │     • "hypertension" (PROBLEM) → ✅ SELECTED (no conflict)                                 │ │
-│  │     • "Dr. John Smith" (NAME) → ✅ SELECTED (no conflict)                                  │ │
-│  │     • "March 15, 2024" (DATE) → ✅ SELECTED (no conflict)                                  │ │
-│  │                                                                                             │ │
-│  └────────────────────────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│  CONFLICT DETECTION & RESOLUTION                                                  │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                   │
+│  Conflict Zone: Position 26-47                                                    │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │                                                                             │  │
+│  │  Text:     "... prescribed Lisinopril 10mg daily for hypertension ..."     │  │
+│  │  Position:              26──────────────47                                  │  │
+│  │                                                                             │  │
+│  │  ┌───────────────────────────────────────────────────────────────────────┐  │  │
+│  │  │ OVERLAPPING ENTITIES:                                                 │  │  │
+│  │  │                                                                       │  │  │
+│  │  │  Posology (Priority 1):  [Lisinopril|DRUG] [10mg|DOSAGE]              │  │  │
+│  │  │                           26───────36 37──41                          │  │  │
+│  │  │                                                                       │  │  │
+│  │  │  Clinical (Priority 2):  [Lisinopril 10mg daily|TREATMENT]            │  │  │
+│  │  │                           26────────────────────47                    │  │  │
+│  │  └───────────────────────────────────────────────────────────────────────┘  │  │
+│  │                                                                             │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                   │
+│  Resolution Logic:                                                                │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │                                                                             │  │
+│  │  1. CHECK PRIORITY ORDER (InputCols sequence)                               │  │
+│  │     ┌─────────────────────────────────────────────────────────────────┐     │  │
+│  │     │ InputCols: ["posology_filtered", "chunk_clinical", "chunk_deid"]│     │  │
+│  │     │                       ↑                                         │     │  │
+│  │     │                 First = Highest Priority                        │     │  │
+│  │     └─────────────────────────────────────────────────────────────────┘     │  │
+│  │                                                                             │  │
+│  │  2. POSOLOGY HAS HIGHER PRIORITY → Posology entities WIN                   │  │
+│  │     • "Lisinopril" (DRUG) → ✅ SELECTED                                    │  │
+│  │     • "10mg" (DOSAGE) → ✅ SELECTED                                        │  │
+│  │     • "Lisinopril 10mg daily" (TREATMENT) → ❌ DISCARDED (overlaps)        │  │
+│  │                                                                             │  │
+│  │  3. NON-OVERLAPPING ENTITIES PASS THROUGH                                   │  │
+│  │     • "hypertension" (PROBLEM) → ✅ SELECTED (no conflict)                 │  │
+│  │     • "Dr. John Smith" (NAME) → ✅ SELECTED (no conflict)                  │  │
+│  │     • "March 15, 2024" (DATE) → ✅ SELECTED (no conflict)                  │  │
+│  │                                                                             │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                   │
+└───────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Step 4: Final Merged Output**
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  FINAL MERGED OUTPUT (merged_ner_chunk)                                                          │
-├─────────────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                                  │
-│  Text: "Dr. John Smith prescribed Lisinopril 10mg daily for hypertension on March 15, 2024."   │
-│         ┌───────────┐             ┌─────────┐ ┌────┐          ┌────────────┐   ┌──────────────┐ │
-│         │   NAME    │             │  DRUG   │ │DOSE│          │  PROBLEM   │   │    DATE      │ │
-│         └───────────┘             └─────────┘ └────┘          └────────────┘   └──────────────┘ │
-│                                                                                                  │
-│  Final Entities:                                                                                 │
-│  ┌────────────────────┬───────────┬───────────────────────────────────────────────────────────┐ │
-│  │ Entity             │ Label     │ Source                                                     │ │
-│  ├────────────────────┼───────────┼───────────────────────────────────────────────────────────┤ │
-│  │ Dr. John Smith     │ NAME      │ ner_deid (no conflicts)                                   │ │
-│  │ Lisinopril         │ DRUG      │ ner_posology (priority over clinical's TREATMENT)        │ │
-│  │ 10mg               │ DOSAGE    │ ner_posology (priority over clinical's TREATMENT)        │ │
-│  │ hypertension       │ PROBLEM   │ ner_clinical (no conflicts)                              │ │
-│  │ March 15, 2024     │ DATE      │ ner_deid (no conflicts)                                   │ │
-│  └────────────────────┴───────────┴───────────────────────────────────────────────────────────┘ │
-│                                                                                                  │
-│  NOTICE: "daily" (FREQUENCY) was not included because:                                          │
-│  1. ChunkFilterer WhiteList only kept DRUG and DOSAGE from ner_posology                        │
-│  2. ner_clinical's "Lisinopril 10mg daily" TREATMENT was discarded due to lower priority       │
-│                                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│  FINAL MERGED OUTPUT (merged_ner_chunk)                                           │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                   │
+│  Text: "Dr. John Smith prescribed Lisinopril 10mg for hypertension"              │
+│         ┌──────────┐           ┌────────┐ ┌────┐     ┌────────────┐               │
+│         │   NAME   │           │  DRUG  │ │DOSE│     │  PROBLEM   │               │
+│         └──────────┘           └────────┘ └────┘     └────────────┘               │
+│                                                                                   │
+│  Final Entities:                                                                  │
+│  ┌─────────────────┬─────────┬──────────────────────────────────────────────────┐ │
+│  │ Entity          │ Label   │ Source                                           │ │
+│  ├─────────────────┼─────────┼──────────────────────────────────────────────────┤ │
+│  │ Dr. John Smith  │ NAME    │ ner_deid (no conflicts)                          │ │
+│  │ Lisinopril      │ DRUG    │ ner_posology (priority over clinical's TREAT)    │ │
+│  │ 10mg            │ DOSAGE  │ ner_posology (priority over clinical's TREAT)    │ │
+│  │ hypertension    │ PROBLEM │ ner_clinical (no conflicts)                      │ │
+│  │ March 15, 2024  │ DATE    │ ner_deid (no conflicts)                          │ │
+│  └─────────────────┴─────────┴──────────────────────────────────────────────────┘ │
+│                                                                                   │
+│  NOTICE: "daily" (FREQUENCY) was not included because:                            │
+│  1. ChunkFilterer WhiteList only kept DRUG and DOSAGE from ner_posology          │
+│  2. ner_clinical's "Lisinopril 10mg daily" TREATMENT was discarded               │
+│                                                                                   │
+└───────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **DiverseLonger Strategy: When Priorities are Equal**
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  SAME-PRIORITY CONFLICT EXAMPLE                                                                  │
-├─────────────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                                  │
-│  Scenario: Two entities from the SAME model (ner_clinical) overlap                              │
-│                                                                                                  │
-│  Text: "Patient has severe chest pain and shortness of breath."                                 │
-│                                                                                                  │
-│  ner_clinical outputs:                                                                           │
-│  ┌────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │  "severe chest pain"      → PROBLEM  (length: 17 characters)                               │ │
-│  │  "chest pain"             → PROBLEM  (length: 10 characters)  ← Partial overlap            │ │
-│  │  "shortness of breath"    → PROBLEM  (length: 19 characters)  ← No overlap                 │ │
-│  └────────────────────────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                                  │
-│  DiverseLonger Resolution:                                                                       │
-│  ┌────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│  │                                                                                             │ │
-│  │  OrderingFeatures: ["ChunkLength"]                                                          │ │
-│  │  SelectionStrategy: "DiverseLonger"                                                         │ │
-│  │                                                                                             │ │
-│  │  Comparison: "severe chest pain" (17) vs "chest pain" (10)                                 │ │
-│  │              ↑ LONGER → WINS                                                                │ │
-│  │                                                                                             │ │
-│  │  Result: "severe chest pain" is selected, "chest pain" is discarded                        │ │
-│  │          "shortness of breath" is kept (no conflict)                                        │ │
-│  │                                                                                             │ │
-│  └────────────────────────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                                  │
-│  Rationale: Longer entities typically contain more context and diagnostic value                 │
-│                                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│  SAME-PRIORITY CONFLICT EXAMPLE                                                   │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                   │
+│  Scenario: Two entities from the SAME model (ner_clinical) overlap               │
+│                                                                                   │
+│  Text: "Patient has severe chest pain and shortness of breath."                  │
+│                                                                                   │
+│  ner_clinical outputs:                                                            │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │  "severe chest pain"    → PROBLEM (length: 17 chars)                        │  │
+│  │  "chest pain"           → PROBLEM (length: 10 chars) ← Partial overlap      │  │
+│  │  "shortness of breath"  → PROBLEM (length: 19 chars) ← No overlap           │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                   │
+│  DiverseLonger Resolution:                                                        │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │                                                                             │  │
+│  │  OrderingFeatures: ["ChunkLength"]                                          │  │
+│  │  SelectionStrategy: "DiverseLonger"                                         │  │
+│  │                                                                             │  │
+│  │  Comparison: "severe chest pain" (17) vs "chest pain" (10)                  │  │
+│  │              ↑ LONGER → WINS                                                │  │
+│  │                                                                             │  │
+│  │  Result: "severe chest pain" selected, "chest pain" discarded               │  │
+│  │          "shortness of breath" kept (no conflict)                           │  │
+│  │                                                                             │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                   │
+│  Rationale: Longer entities typically contain more context/diagnostic value      │
+│                                                                                   │
+└───────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 #### Generated CoNLL Format Sample
