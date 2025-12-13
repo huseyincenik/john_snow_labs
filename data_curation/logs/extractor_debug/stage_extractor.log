@@ -610,3 +610,21 @@
 2025-12-08 18:31:15 - extractor_debug_stage_extractor_ - DEBUG - Record 47 (doc_id=doc_048_jsl_p01_048_clinical_doc): extractions type=list
 2025-12-08 18:31:15 - extractor_debug_stage_extractor_ - DEBUG - Record 48 (doc_id=doc_049_jsl_p01_049_clinical_doc): extractions type=list
 2025-12-08 18:31:15 - extractor_debug_stage_extractor_ - DEBUG - Record 49 (doc_id=doc_050_jsl_p01_050_summary_doc): extractions type=list
+2025-12-13 22:01:48 - extractor_debug_stage_extractor_ - INFO - Processing 2 map records in parallel
+2025-12-13 22:01:48 - extractor_debug_stage_extractor_ - DEBUG - Using 2 workers for map record processing
+2025-12-13 22:01:48 - extractor_debug_stage_extractor_ - DEBUG - Record 0: type=dict, value=dict
+2025-12-13 22:01:48 - extractor_debug_stage_extractor_ - DEBUG - Record 0 (doc_id=doc_003_jsl_p01_003_radiology_doc): extractions type=list
+2025-12-13 22:01:48 - extractor_debug_stage_extractor_ - DEBUG - Record 1: type=dict, value=dict
+2025-12-13 22:01:48 - extractor_debug_stage_extractor_ - DEBUG - Record 1 (doc_id=doc_004_jsl_p01_004_clinical_doc): extractions type=list
+2025-12-13 22:09:43 - extractor_debug_stage_extractor_ - INFO - Processing 2 map records in parallel
+2025-12-13 22:09:43 - extractor_debug_stage_extractor_ - DEBUG - Using 2 workers for map record processing
+2025-12-13 22:09:43 - extractor_debug_stage_extractor_ - DEBUG - Record 0: type=dict, value=dict
+2025-12-13 22:09:43 - extractor_debug_stage_extractor_ - DEBUG - Record 1: type=dict, value=dict
+2025-12-13 22:09:43 - extractor_debug_stage_extractor_ - DEBUG - Record 0 (doc_id=doc_003_jsl_p01_003_radiology_doc): extractions type=list
+2025-12-13 22:09:43 - extractor_debug_stage_extractor_ - DEBUG - Record 1 (doc_id=doc_004_jsl_p01_004_clinical_doc): extractions type=list
+2025-12-13 22:13:22 - extractor_debug_stage_extractor_ - INFO - Processing 2 map records in parallel
+2025-12-13 22:13:22 - extractor_debug_stage_extractor_ - DEBUG - Using 2 workers for map record processing
+2025-12-13 22:13:22 - extractor_debug_stage_extractor_ - DEBUG - Record 0: type=dict, value=dict
+2025-12-13 22:13:22 - extractor_debug_stage_extractor_ - DEBUG - Record 1: type=dict, value=dict
+2025-12-13 22:13:22 - extractor_debug_stage_extractor_ - DEBUG - Record 0 (doc_id=doc_003_jsl_p01_003_radiology_doc): extractions type=list
+2025-12-13 22:13:22 - extractor_debug_stage_extractor_ - DEBUG - Record 1 (doc_id=doc_004_jsl_p01_004_clinical_doc): extractions type=list

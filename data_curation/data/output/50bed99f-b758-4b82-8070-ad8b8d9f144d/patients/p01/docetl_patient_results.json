@@ -1,0 +1,15 @@
+[
+  {
+    "field_name": "ca_site",
+    "category": "p01",
+    "data_type": "p01",
+    "normalized_value": "doc_004_jsl_p01_004_clinical_doc",
+    "resolved_value": "C61.9 - Prostate cancer",
+    "units": "Not Reported",
+    "vocabulary_code": "doc_004_jsl_p01_004_clinical_doc",
+    "confidence_score": 0.95,
+    "consolidation_notes": "Two high-quality sources (clinical and radiology) confirm 'Prostate cancer' with no conflicts.",
+    "patient_id": "p01",
+    "_counts_prereduce_reduce_patient_summary": 24
+  }
+]

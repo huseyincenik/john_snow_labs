@@ -1,6 +1,6 @@
 {
-  "session_id": "50bed99f-b758-4b82-8070-ad8b8d9f144d",
-  "generated_timestamp": "2025-12-13T22:10:48.850998",
+  "session_id": "68bac441-9380-4275-ab0c-d5cea2dff0bf",
+  "generated_timestamp": "2025-12-13T21:58:37.366585",
   "stage": "stage_tagger",
   "total_documents": 2,
   "sorted_documents": [
@@ -35,6 +35,6 @@
       }
     }
   ],
-  "processing_time_seconds": 2.306122303009033,
-  "timestamp": "2025-12-13T22:10:48.851015"
+  "processing_time_seconds": 2.6714260578155518,
+  "timestamp": "2025-12-13T21:58:37.366603"
 }

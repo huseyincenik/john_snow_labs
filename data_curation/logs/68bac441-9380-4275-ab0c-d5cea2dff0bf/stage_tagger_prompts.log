@@ -1,0 +1,139 @@
+
+================================================================================
+Document ID: doc_003_jsl_p01_003_radiology_doc
+Timestamp: 2025-12-13T21:58:34.698616
+================================================================================
+
+SYSTEM PROMPT:
+You are a medical document classification expert. Analyze document metadata and content to assess confidence scores for document type and date classification.
+
+USER PROMPT:
+Analyze the following medical document metadata and content preview to assess confidence scores for document type and date classification.
+
+Document ID: doc_003_jsl_p01_003_radiology_doc
+Filename: data/input/jsl_p01_003_radiology_doc.txt
+Document Type (from metadata): radiology
+Document Date (from metadata): 2015-10-01
+
+Content Preview (first 500 chars):
+===== Document 003 =====
+Patient Id: p01
+Doc Id: 003
+Filename: p01/jsl_p01_003_radiology_doc.txt
+Doc Type: radiology
+Date: 2015-10-01
+Title: NM BONE SCAN, WHOLE BODY
+---
+EXAMINATION: NM BONE SCAN, WHOLE BODY
+CLINICAL STATEMENT: Prostate cancer, Gleason score 7. Staging evaluation for osseous metastasis.
+
+TECHNIQUE: Following the intravenous injection of 20.1 mCi of Technetium-99m MDP, whole-body planar images were acquired.
+
+COMPARISON: None.
+
+FINDINGS:
+There is symmetric and homogeneous uptake 
+
+Task: Assess the confidence that the document type and date are correctly classified.
+
+For type_confidence:
+- 0.95-1.0: Document type is explicitly stated and clearly identifiable (e.g., "pathology report", "operative note", "summary")
+- 0.85-0.94: Document type can be inferred with high confidence from structure/content
+- 0.70-0.84: Document type is somewhat ambiguous but likely correct
+- 0.50-0.69: Document type is uncertain or "unknown"
+- 0.0-0.49: Document type appears incorrect or cannot be determined
+
+For date_confidence:
+- 0.90-1.0: Date is explicitly stated in standard format (YYYY-MM-DD) and clearly identifiable
+- 0.75-0.89: Date can be inferred with high confidence from content or metadata
+- 0.60-0.74: Date is somewhat ambiguous but likely correct
+- 0.30-0.59: Date is uncertain or partially missing
+- 0.0-0.29: Date cannot be determined or appears incorrect
+
+CRITICAL: You MUST respond with ONLY valid JSON. Do not include any markdown, explanations, or additional text.
+
+Return a JSON object with exactly these fields:
+{
+    "type_confidence": <float between 0.0 and 1.0>,
+    "date_confidence": <float between 0.0 and 1.0>,
+    "reasoning": "<brief explanation of scores>"
+}
+
+Start your response directly with { and end with }. No code blocks, no markdown.
+
+--------------------------------------------------------------------------------
+
+================================================================================
+Document ID: doc_004_jsl_p01_004_clinical_doc
+Timestamp: 2025-12-13T21:58:35.111982
+================================================================================
+
+SYSTEM PROMPT:
+You are a medical document classification expert. Analyze document metadata and content to assess confidence scores for document type and date classification.
+
+USER PROMPT:
+Analyze the following medical document metadata and content preview to assess confidence scores for document type and date classification.
+
+Document ID: doc_004_jsl_p01_004_clinical_doc
+Filename: data/input/jsl_p01_004_clinical_doc.txt
+Document Type (from metadata): clinical
+Document Date (from metadata): 2015-10-15
+
+Content Preview (first 500 chars):
+===== Document 004 =====
+Patient Id: p01
+Doc Id: 004
+Filename: p01/jsl_p01_004_clinical_doc.txt
+Doc Type: clinical
+Date: 2015-10-15
+Title: Radiation Oncology Consultation Note
+---
+PATIENT: Patient
+ID: p01
+
+REASON FOR CONSULTATION: Management of unfavorable intermediate-risk prostate cancer.
+
+HISTORY OF PRESENT ILLNESS: The patient is a 60-year-old male with a complex oncologic history, most notably rectal cancer in 1987 treated with neoadjuvant chemoradiation (30 Gy) and APR, and now a new diagn
+
+Task: Assess the confidence that the document type and date are correctly classified.
+
+For type_confidence:
+- 0.95-1.0: Document type is explicitly stated and clearly identifiable (e.g., "pathology report", "operative note", "summary")
+- 0.85-0.94: Document type can be inferred with high confidence from structure/content
+- 0.70-0.84: Document type is somewhat ambiguous but likely correct
+- 0.50-0.69: Document type is uncertain or "unknown"
+- 0.0-0.49: Document type appears incorrect or cannot be determined
+
+For date_confidence:
+- 0.90-1.0: Date is explicitly stated in standard format (YYYY-MM-DD) and clearly identifiable
+- 0.75-0.89: Date can be inferred with high confidence from content or metadata
+- 0.60-0.74: Date is somewhat ambiguous but likely correct
+- 0.30-0.59: Date is uncertain or partially missing
+- 0.0-0.29: Date cannot be determined or appears incorrect
+
+CRITICAL: You MUST respond with ONLY valid JSON. Do not include any markdown, explanations, or additional text.
+
+Return a JSON object with exactly these fields:
+{
+    "type_confidence": <float between 0.0 and 1.0>,
+    "date_confidence": <float between 0.0 and 1.0>,
+    "reasoning": "<brief explanation of scores>"
+}
+
+Start your response directly with { and end with }. No code blocks, no markdown.
+
+--------------------------------------------------------------------------------
+RESPONSE:
+{
+    "type_confidence": 0.95,
+    "date_confidence": 0.90,
+    "reasoning": "The document type is explicitly stated as 'clinical' in both the metadata and content, which supports a high confidence score. The date is also clearly presented in the standard format (YYYY-MM-DD) in both the metadata and content, justifying a high confidence score for the date as well."
+}
+
+================================================================================
+
+RESPONSE:
+{ "type_confidence": 0.95, "date_confidence": 0.90, "reasoning": "The document type 'radiology' is explicitly stated in both the metadata and the content, providing high confidence in its classification. The date is also clearly stated in the standard format (YYYY-MM-DD) in the metadata and content, supporting a high confidence score for the date." }
+
+================================================================================
+

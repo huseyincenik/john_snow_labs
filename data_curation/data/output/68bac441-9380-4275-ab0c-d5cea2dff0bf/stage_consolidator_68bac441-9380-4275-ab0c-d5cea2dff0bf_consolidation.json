@@ -1,6 +1,6 @@
 {
-  "session_id": "50bed99f-b758-4b82-8070-ad8b8d9f144d",
-  "generated_timestamp": "2025-12-13T22:13:22.703907",
+  "session_id": "68bac441-9380-4275-ab0c-d5cea2dff0bf",
+  "generated_timestamp": "2025-12-13T22:01:48.927755",
   "stage": "stage_consolidator",
   "total_fields_consolidated": 1,
   "consolidated_fields": [
@@ -55,10 +55,10 @@
               "supporting_evidence": [
                 {
                   "snippet": "p01",
-                  "explanation": "Inferred ECOG Performance Status from the statement about the patient's activity level.",
-                  "date": "2015-10-01",
-                  "source_file": "doc_003_jsl_p01_003_radiology_doc",
-                  "confidence": 0.75,
+                  "explanation": "Extracted ECOG Performance Status based on patient's activity level.",
+                  "date": "2015-10-15",
+                  "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                  "confidence": 0.9,
                   "span": null,
                   "page": null
                 },
@@ -138,13 +138,29 @@
           "primary_cancers": [
             {
               "cancer_id": "cancer_1",
+              "histology_morphology": {
+                "final_value": "8140/3 - Adenocarcinoma, NOS",
+                "supporting_evidence": [
+                  {
+                    "source_file": "doc_003_jsl_p01_003_radiology_doc",
+                    "snippet": "8140/3 - Adenocarcinoma, NOS",
+                    "date": "2015-10-01",
+                    "confidence": 0.9
+                  }
+                ],
+                "contradictory_evidence": [],
+                "supporting_evidence_count": 1,
+                "contradictory_evidence_count": 0,
+                "normalized_value": "8140/3 - Adenocarcinoma, NOS",
+                "normalized_code": "8140"
+              },
               "body_site": {
                 "final_value": "Prostate (C61.9)/Malignant",
                 "supporting_evidence": [
                   {
-                    "source_file": "doc_003_jsl_p01_003_radiology_doc",
-                    "snippet": "Prostate (C61.9)/Malignant",
-                    "date": "2015-10-01",
+                    "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                    "snippet": "Prostate (C61.9)",
+                    "date": "2015-10-15",
                     "confidence": 0.9
                   }
                 ],
@@ -169,22 +185,6 @@
                 "contradictory_evidence_count": 0,
                 "normalized_value": "2015-10-15",
                 "normalized_code": "doc_004_jsl_p01_004_clinical_doc"
-              },
-              "histology_morphology": {
-                "final_value": "8140/3 - Adenocarcinoma, NOS",
-                "supporting_evidence": [
-                  {
-                    "source_file": "doc_004_jsl_p01_004_clinical_doc",
-                    "snippet": "8140/3 - Adenocarcinoma, NOS",
-                    "date": "2015-10-15",
-                    "confidence": 0.9
-                  }
-                ],
-                "contradictory_evidence": [],
-                "supporting_evidence_count": 1,
-                "contradictory_evidence_count": 0,
-                "normalized_value": "8140/3 - Adenocarcinoma, NOS",
-                "normalized_code": "8140"
               }
             }
           ],
@@ -262,9 +262,9 @@
                 "supporting_evidence": [
                   {
                     "snippet": "p01",
-                    "explanation": "Extracted pathological N stage based on lymph node involvement from pathology report.",
-                    "date": "2015-10-15",
-                    "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                    "explanation": "Extracted pathological N stage from lymph node dissection results.",
+                    "date": "2015-10-01",
+                    "source_file": "doc_003_jsl_p01_003_radiology_doc",
                     "confidence": 0.9,
                     "span": null,
                     "page": null
@@ -362,8 +362,8 @@
                   {
                     "snippet": "p01",
                     "explanation": "Inferred clinical N stage based on lymph node involvement.",
-                    "date": "2015-10-01",
-                    "source_file": "doc_003_jsl_p01_003_radiology_doc",
+                    "date": "2015-10-15",
+                    "source_file": "doc_004_jsl_p01_004_clinical_doc",
                     "confidence": 0.75,
                     "span": null,
                     "page": null
@@ -394,10 +394,10 @@
                 "supporting_evidence": [
                   {
                     "snippet": "p01",
-                    "explanation": "Inferred clinical M stage based on absence of distant metastasis.",
-                    "date": "2015-10-01",
-                    "source_file": "doc_003_jsl_p01_003_radiology_doc",
-                    "confidence": 0.75,
+                    "explanation": "Extracted clinical M stage indicating no distant metastasis.",
+                    "date": "2015-10-15",
+                    "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                    "confidence": 0.9,
                     "span": null,
                     "page": null
                   },
@@ -605,6 +605,6 @@
       "data_type": "object"
     }
   ],
-  "processing_time_seconds": 0.005648374557495117,
-  "timestamp": "2025-12-13T22:13:22.703929"
+  "processing_time_seconds": 0.008745670318603516,
+  "timestamp": "2025-12-13T22:01:48.927784"
 }

@@ -1,131 +1,131 @@
 
-import sys
-import os
-import asyncio
+import time
 import json
+import urllib.request
+import urllib.error
+import sys
 import shutil
 from pathlib import Path
-from datetime import datetime
 
-# Add project root to sys.path
-sys.path.append(os.getcwd())
+# API Endpoint (pointing to localhost:8000 exposed by Docker)
+API_URL = "http://localhost:8000/api/v1"
 
-from src.models.schemas import DocumentMetadata
-from src.pipeline.tagger import Tagger
-from src.pipeline.docetl_runner import DocETLPipelineRunner
-from src.utils.ontology import OntologyLoader
-from config.settings import settings
-
-async def main():
-    print("Starting Use Case Script for Documents 003 and 004...")
+def main():
+    print("Starting Use Case Script (Client Mode)...")
     
-    # 1. Setup paths
-    input_dir = Path("input_patient_docs")
-    # Output base is relative to where we run. 
-    # The user asked for "scripts" folder for the script, but run it to create "output/use_case"
-    # If script is in scripts/, running it from project root means output/use_case is data_curation/output/use_case
+    # 1. Start Process
+    print("Sending process request...")
+    req_data = {
+        "doc_ids": ["jsl_p01_003_radiology_doc", "jsl_p01_004_clinical_doc"],
+        "llm_provider": "openai"
+    }
     
-    output_base = Path("data/output/use_case") 
+    req = urllib.request.Request(
+        f"{API_URL}/process",
+        data=json.dumps(req_data).encode('utf-8'),
+        headers={'Content-Type': 'application/json'}
+    )
+    
+    try:
+        with urllib.request.urlopen(req) as response:
+            data = json.loads(response.read().decode('utf-8'))
+            session_id = data['session_id']
+            print(f"Session started: {session_id}")
+    except urllib.error.URLError as e:
+        print(f"Failed to connect to API: {e}")
+        print("Ensure 'run_docker.sh' is running and port 8000 is accessible.")
+        sys.exit(1)
+
+    # 2. Poll Status
+    print("Polling status...")
+    status = "pending"
+    while True:
+        try:
+            with urllib.request.urlopen(f"{API_URL}/status/{session_id}") as response:
+                status_data = json.loads(response.read().decode('utf-8'))
+                status = status_data['status']
+                print(f"Status: {status} - {status_data.get('message', '')}")
+                
+                if status in ['completed', 'failed']:
+                    if status == 'failed':
+                        print("Processing failed!")
+                        sys.exit(1)
+                    break
+        except Exception as e:
+            print(f"Error polling status: {e}")
+            
+        time.sleep(2)
+
+    # 3. Copy Artifacts
+    print("Processing complete. Copying artifacts...")
+    output_base = Path("data/output/use_case")
+    # Clean existing
+    if output_base.exists():
+        shutil.rmtree(output_base)
     output_base.mkdir(parents=True, exist_ok=True)
     
-    session_id = "use_case_run"
+    # Session output dir (mapped volume on host)
+    session_dir = Path(f"data/output/{session_id}")
     
-    # 2. Define Documents (Manually loading metadata based on file content)
-    
-    def parse_doc(filename):
-        path = input_dir / filename
-        if not path.exists():
-            print(f"Error: {path} does not exist.")
-            return None
-            
-        with open(path, "r", encoding="utf-8") as f:
-            full_text = f.read()
-            
-        parts = full_text.split("---", 1)
-        header = parts[0]
-        body = parts[1].strip() if len(parts) > 1 else ""
-        
-        metadata = {}
-        for line in header.splitlines():
-            if ":" in line:
-                key, val = line.split(":", 1)
-                metadata[key.strip().lower()] = val.strip()
-                
-        return DocumentMetadata(
-            patient_id=metadata.get("patient id", "p01"),
-            doc_id=metadata.get("doc id", "unknown"),
-            doc_type=metadata.get("doc type", "unknown"),
-            doc_date=metadata.get("date", None),
-            filename=str(path),
-            content=body 
-        )
-        
-    doc3 = parse_doc("jsl_p01_003_radiology_doc.txt")
-    doc4 = parse_doc("jsl_p01_004_clinical_doc.txt")
-    
-    if not doc3 or not doc4:
-        print("Failed to load documents.")
-        return
+    if not session_dir.exists():
+        print(f"Error: Session directory not found on host: {session_dir}")
+        print("Note: This script assumes it is running on the host that has 'data' volume mounted.")
+        sys.exit(1)
 
-    print(f"Loaded {doc3.doc_id} and {doc4.doc_id}")
+    # Define mappings (Source File Pattern -> Destination Filename)
+    # We look for files in session_dir
     
-    # 3. Run Tagger
-    print("Running Tagger...")
-    # Initialize Tagger with OpenAI provider logic (default in tagger if not specified, 
-    # but we want to ensure settings.openrouter_model_openai is used if needed)
-    # Tagger uses get_llm_provider() which uses settings.
-    tagger = Tagger(provider_label="openai") 
-    tagger_result, sorted_docs = await tagger.tag_documents([doc3, doc4], session_id)
+    # 1. Tagger Result
+    tagger_files = list(session_dir.glob("*stage_tagger*sorted.json"))
+    if tagger_files:
+        shutil.copy(tagger_files[0], output_base / "tagger_result.json")
+        print(f"Copied {tagger_files[0].name} to tagger_result.json")
     
-    # Save Tagger Result
-    tagger_json_path = output_base / "tagger_result.json"
-    with open(tagger_json_path, "w", encoding="utf-8") as f:
-        f.write(tagger_result.model_dump_json(indent=2))
-    print(f"Tagger output saved to {tagger_json_path}")
+    # Locate intermediate directory
+    # Intermediates might be in root (consolidated) or patient-specific folders
+    # For Use Case 003/004, we know patient is "p01"
     
-    # 4. Run DocETL Pipeline
-    print("Running DocETL Pipeline...")
-    ontology = OntologyLoader()
-    model_name = settings.openrouter_model_openai
-    print(f"Using model: {model_name}")
+    root_intermediate = session_dir / "docetl_intermediate" / "clinical_registry"
+    patient_intermediate = session_dir / "patients" / "p01" / "docetl_intermediate" / "clinical_registry"
     
-    runner = DocETLPipelineRunner(ontology=ontology, model_name=model_name)
-    
-    # Run the pipeline
-    artifacts = runner.run_pipeline(sorted_docs, session_id)
-    
-    # 5. Copy artifacts
-    print("Copying artifacts to use_case folder...")
-    
-    # Map Output
-    if artifacts.map_output_path and artifacts.map_output_path.exists():
-        shutil.copy(artifacts.map_output_path, output_base / "map_output.json")
-        print("Copied Map Output to map_output.json")
+    # Helper to copy from best source
+    def copy_if_exists(filenames: list, dest_name: str):
+        # Try root first (consolidated), then patient (individual)
+        for fname in filenames:
+            # Check root
+            if (root_intermediate / fname).exists():
+                shutil.copy(root_intermediate / fname, output_base / dest_name)
+                print(f"Copied {fname} (from root) to {dest_name}")
+                return
+            # Check patient
+            if (patient_intermediate / fname).exists():
+                shutil.copy(patient_intermediate / fname, output_base / dest_name)
+                print(f"Copied {fname} (from p01) to {dest_name}")
+                return
+        print(f"Warning: Could not find {filenames[0]}")
+
+    # 2. Map Output
+    copy_if_exists(["extract_clinical_fields.json"], "map_output.json")
+
+    # 3. Normalize Output
+    copy_if_exists(["normalize_extractions.json"], "normalize_extractions.json")
         
-    # Resolve Output
-    if artifacts.resolve_output_path and artifacts.resolve_output_path.exists():
-        shutil.copy(artifacts.resolve_output_path, output_base / "resolve_output.json")
-        print("Copied Resolve Output to resolve_output.json")
+    # 4. Unnest Output
+    copy_if_exists(["explode_field_records.json"], "explode_field_records.json")
         
-    # Final Output (Reduce)
-    if artifacts.patient_output_path and artifacts.patient_output_path.exists():
-        shutil.copy(artifacts.patient_output_path, output_base / "final_output.json")
-        print("Copied Final Output to final_output.json")
+    # 5. Resolve Output
+    copy_if_exists(["resolve_patient_fields.json"], "resolve_output.json")
+
+    # 6. Reduce Output (Intermediate)
+    copy_if_exists(["reduce_patient_summary.json"], "reduce_patient_summary.json")
         
-    # Copy intermediate files (like Normalize, Unnest if simple copy didn't catch them)
-    # artifacts.map_output_path is presumably extract_clinical_fields.json
-    # docetl_intermediate/clinical_registry/ also has unnest/normalize usually?
-    # Let's inspect the intermediate directory
-    
-    intermediate_dir = Path(settings.output_dir) / session_id / "docetl_intermediate" / "clinical_registry"
-    if intermediate_dir.exists():
-        for file in intermediate_dir.glob("*.json"):
-            target = output_base / file.name
-            if not target.exists(): # Don't overwrite what we already copied if we renamed it
-                shutil.copy(file, target)
-                print(f"Copied additional intermediate file: {file.name}")
-            
-    print(f"Execution complete. All artifacts in {output_base}")
+    # 7. Final Output (Consolidation)
+    consolidation_files = list(session_dir.glob("*stage_consolidator*consolidation.json"))
+    if consolidation_files:
+        shutil.copy(consolidation_files[0], output_base / "final_output.json")
+        print(f"Copied {consolidation_files[0].name} to final_output.json")
+
+    print(f"\nAll artifacts copied to {output_base}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

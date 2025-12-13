@@ -606,102 +606,22 @@ class DocETLPipelineRunner:
             You are a certified oncology registrar. Extract every NAACCR field exactly as
             defined in the ontology below and emit strictly valid JSON.
 
+            ### CORE EXTRACTION RULES:
+            1. **EXTRACT & MAP**: Read the document text and map it to the required standard formats (ICD-O-3, dates, etc.).
+               - If text says "Prostate Cancer", YOU MUST map it to "Prostate (C61.9)". This is NOT hallucination, it is STANDARDIZATION.
+               - If text says "Gleason 7", YOU MUST map it to the histology code for Adenocarcinoma.
+            2. **EVIDENCE PRIORITY**:
+               - **Explicit**: Value is written in text (e.g., "ECOG 1").
+               - **Inferred**: Value is derived from clinical context (e.g. "Patient is ambulatory" -> ECOG 0).
+            3. **"NOT REPORTED" USAGE**: Only use "Not Reported" if the information is completely ABSENT or cannot be inferred.
 
-            ⚠️ ANTI-HALLUCINATION RULE: ONLY extract values that ACTUALLY APPEAR in the document.
-            DO NOT invent or guess cancer types, sites, or staging values not mentioned in text.
-            If a value is not in the document, use "Not Reported" - never make up values.
-            
-            ⚠️ DO NOT COPY EXAMPLES: The examples in this prompt (like "March 2010" or "Colon Cancer") are for illustration ONLY.
-            NEVER copy these examples into your output unless they exist verbatim in the document.
-            Use only the text present in the provided document.
+            ### CONFIDENCE SCORING GUIDE (SIMPLIFIED):
+            Assign a confidence_score between 0.0 and 1.0 based on evidence quality:
+            - **0.90 - 0.99 (High)**: Direct, explicit statement in text (e.g., "Date of diagnosis: 2015-10-15").
+            - **0.70 - 0.89 (Medium)**: Clear inference or standard mapping (e.g., "Prostate cancer" mapping to C61.9, or inferring ECOG 0 from "fully active").
+            - **0.40 - 0.69 (Low)**: Weak inference or ambiguous text.
+            - **0.00 - 0.39 (None)**: "Not Reported" or guess.
 
-            ⚠️⚠️⚠️ CRITICAL: CONFIDENCE SCORE RULES - READ THIS FIRST ⚠️⚠️⚠️
-            
-            **DO NOT DEFAULT TO 1.0!** Most fields should be 0.85-0.94 or lower.
-            **1.0 is EXTREMELY RARE** - only use when EXACT medical term appears verbatim.
-            
-            **MANDATORY CONFIDENCE SCORE CALIBRATION PROTOCOL:**
-            
-            For EVERY field, you MUST follow this 5-step process before assigning a confidence_score:
-            
-            **Step A – Evidence Classification:**
-            - **Explicit**: The exact value appears verbatim in the document (e.g., "ECOG 1", "Gleason 3+4", "2015-07-15")
-            - **Interpreted**: Value is stated but requires minor calculation or mapping (e.g., "60-year-old" → birth year, "Stage IIA" → TNM code)
-            - **Inferred**: Value must be derived from context or indirect evidence (e.g., "limited mobility" → ECOG 2, treatment type suggests stage)
-            - **Absence-driven**: Field is "Not Reported" or missing with minimal context
-            
-            **Step B – Source Quality Assessment:**
-            - **Pathology reports**: Highest quality (pathology > operative > imaging > clinical note > administrative)
-            - **Count corroborating sources**: Multiple mentions increase confidence
-            - **Single source**: Lower confidence unless it's a high-quality source with exact terminology
-            
-            **Step C – Consistency Check:**
-            - **No conflicts**: If all sources agree, maintain or slightly increase score
-            - **Conflicts exist**: If any document contradicts the value, subtract at least 0.08 from the score
-            - **Multiple cancers**: If document mentions multiple cancers, extract the MOST RECENT or PRIMARY one
-            
-            **Step D – Numeric Score Mapping (MANDATORY):**
-            - **Explicit & verbatim** (exact term appears):
-              * Start at 0.90
-              * Add +0.02 per corroborating quote (maximum cap: 0.95)
-              * Example: "ECOG 1" appears verbatim → 0.92-0.95
-              * Example: "Gleason Grade Group 3 (3+4)" verbatim → 0.95
-              * **1.0 IS FORBIDDEN - NEVER USE IT. Maximum allowed is 0.95**
-            
-            - **Interpreted** (minor reasoning required):
-              * Start at 0.85
-              * Adjust ±0.05 based on source quality and clarity
-              * Example: "60-year-old male" → calculate birth year → 0.85-0.90
-              * Example: "Stage IIA" → map to TNM → 0.88-0.92
-              * **Maximum for interpreted: 0.94**
-            
-            - **Inferred** (requires inference from context):
-              * Start at 0.65
-              * Adjust ±0.10 based on strength of contextual clues
-              * Example: "restricted in strenuous activity" → infer ECOG 1 → 0.70-0.80
-              * Example: "well-differentiated" → infer Grade 1 → 0.72-0.82
-              * **Maximum for inferred: 0.82 (hard cap)**
-            
-            - **Absence-driven** ("Not Reported" or minimal evidence):
-              * Start at 0.30
-              * Adjust ±0.10 based on any related context
-              * Example: "Not Reported" with no context → 0.30-0.40
-              * Example: "Not Reported" but related field mentioned → 0.35-0.45
-              * **Maximum for "Not Reported": 0.40 (hard cap)**
-            
-            **Step E – Sanity Clamp (FINAL CHECK):**
-            - Fields containing "Not Reported" or blank reasoning_excerpt → MUST be ≤0.40
-            - inferred=true entries → CAN NEVER exceed 0.82
-            - Always round to two decimal places (e.g., 0.85, 0.92, 0.35)
-            - If you assigned 0.95-1.0, verify the EXACT term appears verbatim - if not, lower to 0.94 or below
-            
-            **CONFIDENCE SCORE RUBRIC (QUICK REFERENCE):**
-            - **0.92-0.95**: Explicitly stated with exact medical terminology (RARE - only when exact term appears)
-            - **0.85-0.91**: Explicitly stated but needs minor interpretation (MOST COMMON for good extractions)
-            - **0.75-0.84**: Strong inference from clear clinical context
-            - **0.60-0.74**: Moderate inference from indirect evidence
-            - **0.45-0.59**: Weak inference or ambiguous evidence
-            - **0.30-0.44**: Very uncertain, minimal evidence or "Not Reported"
-            - **0.0-0.29**: No evidence or completely contradictory information
-            
-            **CRITICAL WARNINGS:**
-            1. **1.0 IS FORBIDDEN** - You MUST NEVER output 1.0. Any extraction with 1.0 will be rejected.
-            2. **Maximum confidence is 0.95** - Even for perfect verbatim matches, cap at 0.95
-            3. **If calculating, inferring, or interpreting → score MUST be 0.91 or lower**
-            4. **"Not Reported" fields → score MUST be 0.30-0.40 (hard cap)**
-            5. **inferred=true → score CAN NEVER exceed 0.82**
-            6. **When in doubt, LOWER the score - reliability > optimism**
-            
-            **CONFIDENCE SCORE EXAMPLES:**
-            - Document says "ECOG 1" verbatim → confidence_score: 0.93-0.95 (exact term)
-            - Document says "Gleason Grade Group 3 (3+4)" verbatim → confidence_score: 0.95 (exact terminology, MAX)
-            - Document says "60-year-old male" → calculate birth year → confidence_score: 0.88 (minor interpretation)
-            - Document says "limited mobility" → infer ECOG 2 → confidence_score: 0.72 (moderate inference)
-            - Document says "Not Reported" with no context → confidence_score: 0.35 (very uncertain) + inferred: true
-            - Document says "well-differentiated adenocarcinoma" → infer Grade 1 → confidence_score: 0.78 (inferred, max 0.82)
-            
-            **REMEMBER**: Most confidence scores should be 0.85-0.92 for good extractions. 1.0 is FORBIDDEN and will cause extraction rejection.
-            
             ### Ontology Guidance
             {instructions}
 
@@ -712,92 +632,25 @@ class DocETLPipelineRunner:
             - Document Date: {{{{ input.doc_date }}}}
             - Filename: {{{{ input.filename }}}}
 
-            ### Extraction Task - READ CAREFULLY
-            You MUST read the ENTIRE document word-by-word and extract REAL values. "Not Reported" is ONLY allowed if you have read every sentence and confirmed the information is completely absent.
-
-            STEP-BY-STEP PROCESS:
-            1. READ THE FULL DOCUMENT: Start from the first line and read every sentence, paragraph, and section
-            2. SEARCH FOR EACH FIELD: For each NAACCR field, actively search the document for relevant information
-            3. EXTRACT REAL VALUES: If ANY information exists (even partial), extract it - NEVER use "Not Reported" if information exists
-            4. **DOCUMENT TOPIC DETECTION (CRITICAL FOR MULTI-CANCER PATIENTS)**:
-               - STEP 4A: READ THE DOCUMENT TITLE - It often indicates the primary cancer being discussed
-               - STEP 4B: IDENTIFY THE MAIN CANCER - Look for which cancer is the PRIMARY TOPIC of THIS document:
-                 * "Prostate Cancer" in title → extract data for Prostate Cancer (C61.9)
-                 * "Colon Cancer" or "Rectal Cancer" in title → extract data for Colon/Rectal (C18.x, C20.x)
-                 * If document discusses multiple cancers, identify which one is the MAIN FOCUS
-               - STEP 4C: EXTRACT DATA ONLY FOR THE PRIMARY CANCER:
-                 * Do NOT mix diagnosis dates between different cancers
-                 * Do NOT apply histology from one cancer to another
-                 * Example: If document is about "Prostate Cancer Follow-Up", extract Prostate's diagnosis date (2015), NOT the historical Rectal Cancer date (1987)
-               - STEP 4D: WHEN IN DOUBT:
-                 * If document title mentions a specific cancer type, use that cancer's data
-                 * If document is a summary mentioning multiple cancers, use "Not Reported" for ambiguous fields (better than contaminating)
-            5. VERBATIM QUOTES: Copy the EXACT text from document in `reasoning_excerpt` - never use "Not Reported" as reasoning_excerpt
-
-            ### Confidence Score Application (REVIEW ABOVE RULES)
-            Before assigning confidence_score for each field, review the CRITICAL CONFIDENCE SCORE RULES at the top of this prompt.
-            Apply the 5-step calibration protocol (Steps A-E) for EVERY field individually.
-            DO NOT copy/paste default values - each field requires individual assessment.
-
-            FIELD-SPECIFIC EXTRACTION RULES:
-
-            **naaccr_diagnosis_dt (Diagnosis Date):**
-            - Search for: "Diagnosed in [year]", "Diagnosis date", "On [date]", "Recently diagnosed in [month] [year]"
-            - Examples from document: "Diagnosed in 1987", "Diagnosed in 2005", "Recently diagnosed in March 2010"
-            - **FORMATTING CRITICAL**: Always include space between words and dates/years (e.g., "Diagnosed in 1987" NOT "Diagnosed in1987")
-            - **MULTI-CANCER DATES**: If document mentions MULTIPLE cancers with DIFFERENT diagnosis dates, extract the date for the PRIMARY cancer being discussed in this document
-            - **DO NOT MIX DATES**: If document mentions both "Colon Cancer diagnosed in 1987" and "Prostate Cancer diagnosed in 2010", extract only ONE date per field - the one most relevant to this document's primary topic
-            - Format: YYYY-MM-DD (e.g., "2010-03-15" for "March 2010", "1987-01-01" for just "1987")
-            - **FULL DATE PRIORITY**: If document contains "May 10, 2022", extract "2022-05-10". Do NOT truncate to "2022-01-01".
-            - If only month/year given, use 15th day of that month
-            - If only year given, use January 1st of that year (e.g., "1987" → "1987-01-01") - **ONLY IF NO MONTH/DAY IS AVAILABLE**
-            - reasoning_excerpt example: "Recently diagnosed in March 2010 via core needle biopsy"
-
-            **ca_site (Cancer Site):**
-            - Search for: Cancer names with ICD-O codes like "Prostate Cancer (C61.9)", "Rectal Cancer (C20.9)", "Appendiceal Cancer (C18.1)"
-            - **EXTRACT BASED ON DOCUMENT TOPIC**: Use the cancer site that is the PRIMARY TOPIC of this document (see STEP 4 above)
-            - **SUMMARY DOCUMENTS**: If this is a summary mentioning multiple cancers, extract the cancer this document FOCUSES on most (usually by length of discussion)
-            - Format: "Site Name (Code)/Malignant" (e.g., "Colon (C18.9)/Malignant")
-            - If code not given, infer from cancer name using ICD-O-3 standards
-            - reasoning_excerpt example: "Colon Cancer (C18.9)" or "Patient diagnosed with Colon Cancer"
-
-            **naaccr_histology_cd (Histology Code):**
-            - Search for: Pathology terms like "adenocarcinoma", "carcinoma", "mucinous adenocarcinoma", "prostatic adenocarcinoma"
-            - Look for ICD-O-3 codes or map pathology terms to codes
-            - Format: "XXXX/3 - Description" (e.g., "8140/3 - Adenocarcinoma, NOS")
-            - Extract from pathology reports, biopsy results, or diagnosis descriptions
-            - **SITE-SPECIFIC HISTOLOGY CRITICAL**: Match the histology to the CORRECT cancer site mentioned in the document:
-              * "mucinous adenocarcinoma" is typically for COLON/COLORECTAL cancer (C18.x, C20.x)
-              * "prostatic adenocarcinoma" or "acinar adenocarcinoma" is for PROSTATE cancer (C61.9)
-              * "squamous cell carcinoma" is typically for LUNG cancer (C34.x)
-              * If document discusses multiple cancers, extract the histology for the PRIMARY cancer being discussed
-            - **DO NOT APPLY WRONG HISTOLOGY**: If the document is about Prostate Cancer, do NOT extract "mucinous adenocarcinoma" - look for prostate-specific terms
-            - reasoning_excerpt example: "Pathology showed mucinous adenocarcinoma, Grade 2"
-
-            **Staging Fields (ca_clinical_t_stage, ca_clinical_n_stage, ca_clinical_m_stage, ca_path_t_stage, etc.):**
-            - Search for: Explicit staging mentions like "pT3", "cT2", "pN0", "cM0", "TNM staging"
-            - Clinical staging: Look for "cT", "cN", "cM" prefixes or staging from imaging/clinical exam
-            - Pathological staging: Look for "pT", "pN", "pM" prefixes or staging from pathology reports
-            - Extract exact values as written in document
-            - reasoning_excerpt example: "Pathology revealed a moderately differentiated adenocarcinoma, pT3"
-
-            **ecog (Performance Status):**
-            - REQUIRED: set field_name to "ecog" exactly (do not use "Performance Status")
-            - Search for: "ECOG", "performance status", "ECOG 0", "ECOG 1", etc.
-            - Extract numeric value (0-5) as a STRING (e.g. "1", not 1)
-            - If not explicitly stated, infer from activity level descriptions
-
+            ### Extraction Task
             Return a JSON object with a single key `extractions` that contains one entry for *every* ontology field.
 
             Each extraction object MUST include:
             - `field_name`, `category`, `data_type`
-            - `raw_value`: The EXACT value found raw_records in document (e.g., "2015-07-15", "Prostate (C61.9)/Malignant", "8140/3 - Adenocarcinoma, NOS")
-            - `normalized_value`: Normalized version following NAACCR/ICD-O-3 standards
-            - `units`, `vocabulary_code`: Include ICD-O-3 codes when applicable
-            - `reasoning_excerpt`: EXACT verbatim quote from document (e.g., "Recently diagnosed in July 2015 via transperineal biopsy" or "Prostate Cancer (C61.9): Recently diagnosed")
-            - `explanation`: Brief explanation (e.g., "Extracted from most recent cancer diagnosis section")
-            - `confidence_level`: "high" if explicitly stated, "medium" if inferred, "low" if uncertain
-            - `confidence_score`: **CRITICAL - REFER TO CONFIDENCE SCORE RULES AT TOP OF PROMPT!**
+            - `raw_value`: The text as found in the document OR the standard mapped value.
+            - `normalized_value`: Normalized version following NAACCR/ICD-O-3 standards (e.g., "2015-10-15", "Prostate (C61.9)").
+            - `units`, `vocabulary_code`: Include ICD-O-3 codes when applicable.
+            - `reasoning_excerpt`: The exact text snippet used for extraction (e.g., "new diagnosis of prostate cancer").
+            - `explanation`: Brief explanation of mapping (e.g., "Mapped 'Prostate cancer' to C61.9").
+            - `confidence_level`: "high", "medium", "low".
+            - `confidence_score`: Float between 0.0-1.0.
+
+            FIELD-SPECIFIC TIPS:
+            - **Dates**: Convert all dates to YYYY-MM-DD. Use document date if only "recent" is mentioned.
+            - **Sites**: Map "Prostate cancer" -> "Prostate (C61.9)". Map "Colon cancer" -> "Colon (C18.9)".
+            - **Histology**: Map "Gleason" scores -> Adenocarcinoma codes.
+            - **ECOG**: Map "ambulatory" -> 0, "in bed <50%" -> 1-2.
+
               Apply the 5-step calibration protocol (Steps A-E) from the top of this prompt.
               **DO NOT DEFAULT TO 1.0** - Most fields should be 0.85-0.94 or lower.
               **1.0 is EXTREMELY RARE** - only use when EXACT medical term appears verbatim with zero interpretation.

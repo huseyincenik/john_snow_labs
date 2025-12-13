@@ -1,0 +1,379 @@
+--- doc_id=doc_003_jsl_p01_003_radiology_doc ---
+You are a certified oncology registrar. Extract every NAACCR field exactly as
+            defined in the ontology below and emit strictly valid JSON.
+
+            ### CORE EXTRACTION RULES:
+            1. **EXTRACT & MAP**: Read the document text and map it to the required standard formats (ICD-O-3, dates, etc.).
+               - If text says "Prostate Cancer", YOU MUST map it to "Prostate (C61.9)". This is NOT hallucination, it is STANDARDIZATION.
+               - If text says "Gleason 7", YOU MUST map it to the histology code for Adenocarcinoma.
+            2. **EVIDENCE PRIORITY**:
+               - **Explicit**: Value is written in text (e.g., "ECOG 1").
+               - **Inferred**: Value is derived from clinical context (e.g. "Patient is ambulatory" -> ECOG 0).
+            3. **"NOT REPORTED" USAGE**: Only use "Not Reported" if the information is completely ABSENT or cannot be inferred.
+
+            ### CONFIDENCE SCORING GUIDE (SIMPLIFIED):
+            Assign a confidence_score between 0.0 and 1.0 based on evidence quality:
+            - **0.90 - 0.99 (High)**: Direct, explicit statement in text (e.g., "Date of diagnosis: 2015-10-15").
+            - **0.70 - 0.89 (Medium)**: Clear inference or standard mapping (e.g., "Prostate cancer" mapping to C61.9, or inferring ECOG 0 from "fully active").
+            - **0.40 - 0.69 (Low)**: Weak inference or ambiguous text.
+            - **0.00 - 0.39 (None)**: "Not Reported" or guess.
+
+            ### Ontology Guidance
+            # Cancer Registry Field Extraction Instructions
+
+Extract the following fields from clinical documents:
+
+
+## DIAGNOSIS
+Profile: PrimaryCancerCondition, CancerDiagnosis, DiagnosticReport
+
+
+### naaccr_diagnosis_dt
+**Description:** Date of cancer diagnosis in NAACCR format
+**Data Type:** string
+**Instructions:** Extract the earliest date of cancer diagnosis in YYYY-MM-DD format. Prefer pathological confirmation date over clinical diagnosis date. Look for dates in pathology reports, biopsy results, or diagnosis statements. Return 'Not Reported' if no diagnosis date found.
+
+### ca_site
+**Description:** Anatomical site of cancer using ICD-O-3 topography code
+**Data Type:** string
+**Instructions:** Extract the anatomical site in ICD-O-3 format: 'Site Name (Code)/Behavior' (e.g., 'Prostate (C61)/Malignant', 'Colon, Sigmoid (C18.7)/Malignant'). Use topography codes from ICD-O-3 standards. Behavior codes: /0=Benign, /1=Uncertain, /2=In situ, /3=Malignant primary, /6=Metastatic. If not explicitly stated, infer based on anatomical location. Return 'Not Reported' if site cannot be determined.
+
+### naaccr_histology_cd
+**Description:** ICD-O-3 histology/morphology code with behavior
+**Data Type:** string
+**Instructions:** Extract ICD-O-3 histology code in 'Code/Description' format (e.g., '8140/3 - Adenocarcinoma, NOS', '8480/3 - Mucinous adenocarcinoma'). The code format is XXXX/Y where XXXX is morphology and Y is behavior (0=Benign, 1=Uncertain, 2=In situ, 3=Malignant primary, 6=Metastatic). If not explicitly stated, map the described histology to ICD-O-3 code. Return 'Not Reported' if histology cannot be determined.
+
+## CLINICAL STAGING
+Profile: TNMClinicalStageGroup, CancerStage
+
+
+### ca_clinical_t_stage
+**Description:** Clinical T stage (tumor size/extent) per AJCC staging
+**Data Type:** string
+**Instructions:** Extract clinical T stage using AJCC standards. Valid values: cT0, cTis, cTa, cT1, cT1a, cT1b, cT2, cT2a, cT2b, cT3, cT3a, cT3b, cT4, cT4a, cT4b, cTx (or T0, Tis, Ta, T1-T4 variations when clinical context clear). Source: clinical notes, imaging reports, physical examination. NEVER use 'Rx' or invalid values. Return null if not found.
+
+### ca_clinical_n_stage
+**Description:** Clinical N stage (lymph node involvement) per AJCC staging
+**Data Type:** string
+**Instructions:** Extract clinical N stage using AJCC standards. Valid values: cN0, cN1, cN1a, cN1b, cN1c, cN2, cN2a, cN2b, cN2c, cN3, cN3a, cN3b, cN3c, cNx (or N0, N1-N3 variations when clinical context clear). Source: clinical examination, imaging studies, palpation. NEVER use 'Rx' or invalid values. Return null if not found.
+
+### ca_clinical_m_stage
+**Description:** Clinical M stage (distant metastasis) per AJCC staging
+**Data Type:** string
+**Instructions:** Extract clinical M stage using AJCC standards. Valid values: cM0, cM1, cM1a, cM1b, cM1c, cMx (or M0, M1 variations when clinical context clear). Source: imaging studies, clinical assessment, symptoms. NEVER use 'Rx' or invalid values. Return null if not found.
+
+## PATHOLOGICAL STAGING
+Profile: TNMPathologicStageGroup, PathologyReport
+
+
+### ca_path_t_stage
+**Description:** Pathological T stage (tumor size/extent) from surgical pathology
+**Data Type:** string
+**Instructions:** Extract pathological T stage from surgical pathology reports. Valid values: pT0, pTis, pTa, pT1, pT1a, pT1b, pT2, pT2a, pT2b, pT3, pT3a, pT3b, pT4, pT4a, pT4b, pTx. MUST use 'p' prefix for pathological staging. Source: surgical pathology reports, resection specimens, biopsy reports. NEVER use 'Rx' or values without 'p' prefix. Return null if not found.
+
+### ca_path_n_stage
+**Description:** Pathological N stage (lymph node involvement) from surgical pathology
+**Data Type:** string
+**Instructions:** Extract pathological N stage from surgical pathology reports. Valid values: pN0, pN1, pN1a, pN1b, pN1c, pN2, pN2a, pN2b, pN2c, pN3, pN3a, pN3b, pN3c, pNx. MUST use 'p' prefix for pathological staging. Source: lymph node dissection results, pathology reports. NEVER use 'Rx' or values without 'p' prefix. Return null if not found.
+
+### ca_path_m_stage
+**Description:** Pathological M stage (distant metastasis) from surgical pathology
+**Data Type:** string
+**Instructions:** Extract pathological M stage from surgical pathology reports. Valid values: pM0, pM1, pM1a, pM1b, pM1c, pMx. MUST use 'p' prefix for pathological staging. Source: pathological confirmation of distant metastases. NEVER use 'Rx' or values without 'p' prefix. Return null if not found.
+
+## SUMMARY STAGING
+Profile: CancerStageGroup, SEERSummaryStage
+
+
+### ca_gen_sum_stage_2
+**Description:** SEER Summary Stage 2000 derived from TNM staging
+**Data Type:** string
+**Instructions:** Derive SEER Summary Stage from TNM values or extract if explicitly stated. Valid values: '0' (In situ), '1' (Localized), '2' (Regional by direct extension), '3' (Regional lymph nodes involved), '4' (Distant site/lymph nodes), '7' (Distant site/lymph nodes, unknown if extension or mets), '9' (Unstaged/Unknown). Use TNM staging to determine appropriate summary stage. Return '9' if cannot be determined.
+
+## PERFORMANCE STATUS
+Profile: PerformanceStatus, ECOGStatus, KarnofskyStatus
+
+
+### ecog
+**Description:** ECOG Performance Status (0-5)
+**Data Type:** integer
+**Instructions:** Extract ECOG Performance Status score. Valid values: 0 (Fully active), 1 (Restricted in strenuous activity), 2 (Ambulatory, unable to work), 3 (Limited self-care, >50% in bed), 4 (Completely disabled, totally confined), 5 (Dead). If only KPS present, infer ECOG: KPS 90-100→0, KPS 70-80→1, KPS 50-60→2, KPS 30-40→3, KPS ≤20→4. Document inference in notes. Return null if not found.
+
+### kps
+**Description:** Karnofsky Performance Score (0-100)
+**Data Type:** integer
+**Instructions:** Extract Karnofsky Performance Score. Valid values: 0-100 in increments of 10. 100 (Normal), 90 (Minor symptoms), 80 (Some symptoms), 70 (Cares for self), 60 (Occasional assistance), 50 (Considerable assistance), 40 (Disabled), 30 (Severely disabled), 20 (Very sick), 10 (Moribund), 0 (Dead). If only ECOG present, infer KPS: ECOG 0→90-100, ECOG 1→70-80, ECOG 2→50-60, ECOG 3→30-40, ECOG 4→≤20. Document inference in notes. Return null if not found.
+
+            ### Document Metadata
+            - Patient ID: p01
+            - Document ID: doc_003_jsl_p01_003_radiology_doc
+            - Document Type: radiology
+            - Document Date: 2015-10-01
+            - Filename: data/input/jsl_p01_003_radiology_doc.txt
+
+            ### Extraction Task
+            Return a JSON object with a single key `extractions` that contains one entry for *every* ontology field.
+
+            Each extraction object MUST include:
+            - `field_name`, `category`, `data_type`
+            - `raw_value`: The text as found in the document OR the standard mapped value.
+            - `normalized_value`: Normalized version following NAACCR/ICD-O-3 standards (e.g., "2015-10-15", "Prostate (C61.9)").
+            - `units`, `vocabulary_code`: Include ICD-O-3 codes when applicable.
+            - `reasoning_excerpt`: The exact text snippet used for extraction (e.g., "new diagnosis of prostate cancer").
+            - `explanation`: Brief explanation of mapping (e.g., "Mapped 'Prostate cancer' to C61.9").
+            - `confidence_level`: "high", "medium", "low".
+            - `confidence_score`: Float between 0.0-1.0.
+
+            FIELD-SPECIFIC TIPS:
+            - **Dates**: Convert all dates to YYYY-MM-DD. Use document date if only "recent" is mentioned.
+            - **Sites**: Map "Prostate cancer" -> "Prostate (C61.9)". Map "Colon cancer" -> "Colon (C18.9)".
+            - **Histology**: Map "Gleason" scores -> Adenocarcinoma codes.
+            - **ECOG**: Map "ambulatory" -> 0, "in bed <50%" -> 1-2.
+
+              Apply the 5-step calibration protocol (Steps A-E) from the top of this prompt.
+              **DO NOT DEFAULT TO 1.0** - Most fields should be 0.85-0.94 or lower.
+              **1.0 is EXTREMELY RARE** - only use when EXACT medical term appears verbatim with zero interpretation.
+
+              Quick reference (see detailed rules at top):
+              * **0.95-0.98**: Explicit & verbatim (exact term appears) - VERY RARE
+              * **0.85-0.94**: Explicit but interpreted (MOST COMMON for good extractions)
+              * **0.75-0.84**: Strong inference from context
+              * **0.60-0.74**: Moderate inference
+              * **0.45-0.59**: Weak inference
+              * **0.30-0.44**: "Not Reported" or minimal evidence (hard cap: 0.40)
+              * **0.0-0.29**: No evidence
+
+              **HARD CAPS:**
+              - "Not Reported" fields: Maximum 0.40
+              - inferred=true fields: Maximum 0.82
+              - Calculated/interpreted fields: Maximum 0.94
+              - Verbatim fields: Maximum 0.98 (almost never 1.0)
+
+            - `inferred`: false if explicitly stated, true only if you had to infer from context
+            - `related_entities`: List of related terms (e.g., ["Prostate", "C61.9", "adenocarcinoma", "Gleason 3+4"])
+
+            ABSOLUTE REQUIREMENTS:
+            - READ EVERY WORD: Do not skip any section of the document
+            - EXTRACT REAL VALUES: If information exists anywhere in the document, extract it
+            - NO "Not Reported" FOR reasoning_excerpt: Always provide actual text from document
+            - MULTIPLE CANCERS: Extract the most recent/primary cancer information
+            - VERBATIM QUOTES: Copy exact sentences/phrases from document for reasoning_excerpt
+            - DATES: Convert relative dates to YYYY-MM-DD format
+            - CODES: Extract or map to standard ICD-O-3 codes
+
+            FINAL CHECKLIST BEFORE RESPONDING:
+            - Did I read the ENTIRE document from start to finish?
+            - For each field, did I search for relevant information?
+            - Did I extract REAL values instead of using "Not Reported"?
+            - Is every `reasoning_excerpt` an actual quote from the document (not "Not Reported")?
+            - If multiple cancers exist, did I extract the most recent/primary one?
+            - Are dates in YYYY-MM-DD format?
+            - Are ICD-O-3 codes properly formatted?
+            - **CONFIDENCE SCORES** (CRITICAL - CHECK EVERY FIELD):
+              * Did I review the CONFIDENCE SCORE RULES at the top of this prompt?
+              * Did I apply the 5-step calibration protocol (Steps A-E) for each field?
+              * Am I giving 0.95-0.98 ONLY when the EXACT term appears verbatim in the document?
+              * Did I lower the score to 0.85-0.94 for any interpretation or calculation?
+              * Did I avoid defaulting to 1.0? (1.0 is EXTREMELY RARE - almost never use it)
+              * For "Not Reported" fields, did I set score ≤0.40?
+              * For inferred=true fields, did I set score ≤0.82?
+              * Did I round all scores to two decimal places?
+
+            **FINAL REMINDERS:**
+            1. "Not Reported" is a LAST RESORT. If you see ANY mention of the information, extract it!
+            2. DO NOT assign confidence_score of 1.0 - use 0.95-0.98 for verbatim matches instead
+            3. Most confidence scores should be 0.85-0.94 for good extractions
+            4. When in doubt, lower—not raise—the score. Reliability > optimism.
+
+            Respond with JSON containing a top-level `extractions` array where every object repeats
+            the requested fields. Do not include narrative text—only strict JSON.
+
+--- doc_id=doc_004_jsl_p01_004_clinical_doc ---
+You are a certified oncology registrar. Extract every NAACCR field exactly as
+            defined in the ontology below and emit strictly valid JSON.
+
+            ### CORE EXTRACTION RULES:
+            1. **EXTRACT & MAP**: Read the document text and map it to the required standard formats (ICD-O-3, dates, etc.).
+               - If text says "Prostate Cancer", YOU MUST map it to "Prostate (C61.9)". This is NOT hallucination, it is STANDARDIZATION.
+               - If text says "Gleason 7", YOU MUST map it to the histology code for Adenocarcinoma.
+            2. **EVIDENCE PRIORITY**:
+               - **Explicit**: Value is written in text (e.g., "ECOG 1").
+               - **Inferred**: Value is derived from clinical context (e.g. "Patient is ambulatory" -> ECOG 0).
+            3. **"NOT REPORTED" USAGE**: Only use "Not Reported" if the information is completely ABSENT or cannot be inferred.
+
+            ### CONFIDENCE SCORING GUIDE (SIMPLIFIED):
+            Assign a confidence_score between 0.0 and 1.0 based on evidence quality:
+            - **0.90 - 0.99 (High)**: Direct, explicit statement in text (e.g., "Date of diagnosis: 2015-10-15").
+            - **0.70 - 0.89 (Medium)**: Clear inference or standard mapping (e.g., "Prostate cancer" mapping to C61.9, or inferring ECOG 0 from "fully active").
+            - **0.40 - 0.69 (Low)**: Weak inference or ambiguous text.
+            - **0.00 - 0.39 (None)**: "Not Reported" or guess.
+
+            ### Ontology Guidance
+            # Cancer Registry Field Extraction Instructions
+
+Extract the following fields from clinical documents:
+
+
+## DIAGNOSIS
+Profile: PrimaryCancerCondition, CancerDiagnosis, DiagnosticReport
+
+
+### naaccr_diagnosis_dt
+**Description:** Date of cancer diagnosis in NAACCR format
+**Data Type:** string
+**Instructions:** Extract the earliest date of cancer diagnosis in YYYY-MM-DD format. Prefer pathological confirmation date over clinical diagnosis date. Look for dates in pathology reports, biopsy results, or diagnosis statements. Return 'Not Reported' if no diagnosis date found.
+
+### ca_site
+**Description:** Anatomical site of cancer using ICD-O-3 topography code
+**Data Type:** string
+**Instructions:** Extract the anatomical site in ICD-O-3 format: 'Site Name (Code)/Behavior' (e.g., 'Prostate (C61)/Malignant', 'Colon, Sigmoid (C18.7)/Malignant'). Use topography codes from ICD-O-3 standards. Behavior codes: /0=Benign, /1=Uncertain, /2=In situ, /3=Malignant primary, /6=Metastatic. If not explicitly stated, infer based on anatomical location. Return 'Not Reported' if site cannot be determined.
+
+### naaccr_histology_cd
+**Description:** ICD-O-3 histology/morphology code with behavior
+**Data Type:** string
+**Instructions:** Extract ICD-O-3 histology code in 'Code/Description' format (e.g., '8140/3 - Adenocarcinoma, NOS', '8480/3 - Mucinous adenocarcinoma'). The code format is XXXX/Y where XXXX is morphology and Y is behavior (0=Benign, 1=Uncertain, 2=In situ, 3=Malignant primary, 6=Metastatic). If not explicitly stated, map the described histology to ICD-O-3 code. Return 'Not Reported' if histology cannot be determined.
+
+## CLINICAL STAGING
+Profile: TNMClinicalStageGroup, CancerStage
+
+
+### ca_clinical_t_stage
+**Description:** Clinical T stage (tumor size/extent) per AJCC staging
+**Data Type:** string
+**Instructions:** Extract clinical T stage using AJCC standards. Valid values: cT0, cTis, cTa, cT1, cT1a, cT1b, cT2, cT2a, cT2b, cT3, cT3a, cT3b, cT4, cT4a, cT4b, cTx (or T0, Tis, Ta, T1-T4 variations when clinical context clear). Source: clinical notes, imaging reports, physical examination. NEVER use 'Rx' or invalid values. Return null if not found.
+
+### ca_clinical_n_stage
+**Description:** Clinical N stage (lymph node involvement) per AJCC staging
+**Data Type:** string
+**Instructions:** Extract clinical N stage using AJCC standards. Valid values: cN0, cN1, cN1a, cN1b, cN1c, cN2, cN2a, cN2b, cN2c, cN3, cN3a, cN3b, cN3c, cNx (or N0, N1-N3 variations when clinical context clear). Source: clinical examination, imaging studies, palpation. NEVER use 'Rx' or invalid values. Return null if not found.
+
+### ca_clinical_m_stage
+**Description:** Clinical M stage (distant metastasis) per AJCC staging
+**Data Type:** string
+**Instructions:** Extract clinical M stage using AJCC standards. Valid values: cM0, cM1, cM1a, cM1b, cM1c, cMx (or M0, M1 variations when clinical context clear). Source: imaging studies, clinical assessment, symptoms. NEVER use 'Rx' or invalid values. Return null if not found.
+
+## PATHOLOGICAL STAGING
+Profile: TNMPathologicStageGroup, PathologyReport
+
+
+### ca_path_t_stage
+**Description:** Pathological T stage (tumor size/extent) from surgical pathology
+**Data Type:** string
+**Instructions:** Extract pathological T stage from surgical pathology reports. Valid values: pT0, pTis, pTa, pT1, pT1a, pT1b, pT2, pT2a, pT2b, pT3, pT3a, pT3b, pT4, pT4a, pT4b, pTx. MUST use 'p' prefix for pathological staging. Source: surgical pathology reports, resection specimens, biopsy reports. NEVER use 'Rx' or values without 'p' prefix. Return null if not found.
+
+### ca_path_n_stage
+**Description:** Pathological N stage (lymph node involvement) from surgical pathology
+**Data Type:** string
+**Instructions:** Extract pathological N stage from surgical pathology reports. Valid values: pN0, pN1, pN1a, pN1b, pN1c, pN2, pN2a, pN2b, pN2c, pN3, pN3a, pN3b, pN3c, pNx. MUST use 'p' prefix for pathological staging. Source: lymph node dissection results, pathology reports. NEVER use 'Rx' or values without 'p' prefix. Return null if not found.
+
+### ca_path_m_stage
+**Description:** Pathological M stage (distant metastasis) from surgical pathology
+**Data Type:** string
+**Instructions:** Extract pathological M stage from surgical pathology reports. Valid values: pM0, pM1, pM1a, pM1b, pM1c, pMx. MUST use 'p' prefix for pathological staging. Source: pathological confirmation of distant metastases. NEVER use 'Rx' or values without 'p' prefix. Return null if not found.
+
+## SUMMARY STAGING
+Profile: CancerStageGroup, SEERSummaryStage
+
+
+### ca_gen_sum_stage_2
+**Description:** SEER Summary Stage 2000 derived from TNM staging
+**Data Type:** string
+**Instructions:** Derive SEER Summary Stage from TNM values or extract if explicitly stated. Valid values: '0' (In situ), '1' (Localized), '2' (Regional by direct extension), '3' (Regional lymph nodes involved), '4' (Distant site/lymph nodes), '7' (Distant site/lymph nodes, unknown if extension or mets), '9' (Unstaged/Unknown). Use TNM staging to determine appropriate summary stage. Return '9' if cannot be determined.
+
+## PERFORMANCE STATUS
+Profile: PerformanceStatus, ECOGStatus, KarnofskyStatus
+
+
+### ecog
+**Description:** ECOG Performance Status (0-5)
+**Data Type:** integer
+**Instructions:** Extract ECOG Performance Status score. Valid values: 0 (Fully active), 1 (Restricted in strenuous activity), 2 (Ambulatory, unable to work), 3 (Limited self-care, >50% in bed), 4 (Completely disabled, totally confined), 5 (Dead). If only KPS present, infer ECOG: KPS 90-100→0, KPS 70-80→1, KPS 50-60→2, KPS 30-40→3, KPS ≤20→4. Document inference in notes. Return null if not found.
+
+### kps
+**Description:** Karnofsky Performance Score (0-100)
+**Data Type:** integer
+**Instructions:** Extract Karnofsky Performance Score. Valid values: 0-100 in increments of 10. 100 (Normal), 90 (Minor symptoms), 80 (Some symptoms), 70 (Cares for self), 60 (Occasional assistance), 50 (Considerable assistance), 40 (Disabled), 30 (Severely disabled), 20 (Very sick), 10 (Moribund), 0 (Dead). If only ECOG present, infer KPS: ECOG 0→90-100, ECOG 1→70-80, ECOG 2→50-60, ECOG 3→30-40, ECOG 4→≤20. Document inference in notes. Return null if not found.
+
+            ### Document Metadata
+            - Patient ID: p01
+            - Document ID: doc_004_jsl_p01_004_clinical_doc
+            - Document Type: clinical
+            - Document Date: 2015-10-15
+            - Filename: data/input/jsl_p01_004_clinical_doc.txt
+
+            ### Extraction Task
+            Return a JSON object with a single key `extractions` that contains one entry for *every* ontology field.
+
+            Each extraction object MUST include:
+            - `field_name`, `category`, `data_type`
+            - `raw_value`: The text as found in the document OR the standard mapped value.
+            - `normalized_value`: Normalized version following NAACCR/ICD-O-3 standards (e.g., "2015-10-15", "Prostate (C61.9)").
+            - `units`, `vocabulary_code`: Include ICD-O-3 codes when applicable.
+            - `reasoning_excerpt`: The exact text snippet used for extraction (e.g., "new diagnosis of prostate cancer").
+            - `explanation`: Brief explanation of mapping (e.g., "Mapped 'Prostate cancer' to C61.9").
+            - `confidence_level`: "high", "medium", "low".
+            - `confidence_score`: Float between 0.0-1.0.
+
+            FIELD-SPECIFIC TIPS:
+            - **Dates**: Convert all dates to YYYY-MM-DD. Use document date if only "recent" is mentioned.
+            - **Sites**: Map "Prostate cancer" -> "Prostate (C61.9)". Map "Colon cancer" -> "Colon (C18.9)".
+            - **Histology**: Map "Gleason" scores -> Adenocarcinoma codes.
+            - **ECOG**: Map "ambulatory" -> 0, "in bed <50%" -> 1-2.
+
+              Apply the 5-step calibration protocol (Steps A-E) from the top of this prompt.
+              **DO NOT DEFAULT TO 1.0** - Most fields should be 0.85-0.94 or lower.
+              **1.0 is EXTREMELY RARE** - only use when EXACT medical term appears verbatim with zero interpretation.
+
+              Quick reference (see detailed rules at top):
+              * **0.95-0.98**: Explicit & verbatim (exact term appears) - VERY RARE
+              * **0.85-0.94**: Explicit but interpreted (MOST COMMON for good extractions)
+              * **0.75-0.84**: Strong inference from context
+              * **0.60-0.74**: Moderate inference
+              * **0.45-0.59**: Weak inference
+              * **0.30-0.44**: "Not Reported" or minimal evidence (hard cap: 0.40)
+              * **0.0-0.29**: No evidence
+
+              **HARD CAPS:**
+              - "Not Reported" fields: Maximum 0.40
+              - inferred=true fields: Maximum 0.82
+              - Calculated/interpreted fields: Maximum 0.94
+              - Verbatim fields: Maximum 0.98 (almost never 1.0)
+
+            - `inferred`: false if explicitly stated, true only if you had to infer from context
+            - `related_entities`: List of related terms (e.g., ["Prostate", "C61.9", "adenocarcinoma", "Gleason 3+4"])
+
+            ABSOLUTE REQUIREMENTS:
+            - READ EVERY WORD: Do not skip any section of the document
+            - EXTRACT REAL VALUES: If information exists anywhere in the document, extract it
+            - NO "Not Reported" FOR reasoning_excerpt: Always provide actual text from document
+            - MULTIPLE CANCERS: Extract the most recent/primary cancer information
+            - VERBATIM QUOTES: Copy exact sentences/phrases from document for reasoning_excerpt
+            - DATES: Convert relative dates to YYYY-MM-DD format
+            - CODES: Extract or map to standard ICD-O-3 codes
+
+            FINAL CHECKLIST BEFORE RESPONDING:
+            - Did I read the ENTIRE document from start to finish?
+            - For each field, did I search for relevant information?
+            - Did I extract REAL values instead of using "Not Reported"?
+            - Is every `reasoning_excerpt` an actual quote from the document (not "Not Reported")?
+            - If multiple cancers exist, did I extract the most recent/primary one?
+            - Are dates in YYYY-MM-DD format?
+            - Are ICD-O-3 codes properly formatted?
+            - **CONFIDENCE SCORES** (CRITICAL - CHECK EVERY FIELD):
+              * Did I review the CONFIDENCE SCORE RULES at the top of this prompt?
+              * Did I apply the 5-step calibration protocol (Steps A-E) for each field?
+              * Am I giving 0.95-0.98 ONLY when the EXACT term appears verbatim in the document?
+              * Did I lower the score to 0.85-0.94 for any interpretation or calculation?
+              * Did I avoid defaulting to 1.0? (1.0 is EXTREMELY RARE - almost never use it)
+              * For "Not Reported" fields, did I set score ≤0.40?
+              * For inferred=true fields, did I set score ≤0.82?
+              * Did I round all scores to two decimal places?
+
+            **FINAL REMINDERS:**
+            1. "Not Reported" is a LAST RESORT. If you see ANY mention of the information, extract it!
+            2. DO NOT assign confidence_score of 1.0 - use 0.95-0.98 for verbatim matches instead
+            3. Most confidence scores should be 0.85-0.94 for good extractions
+            4. When in doubt, lower—not raise—the score. Reliability > optimism.
+
+            Respond with JSON containing a top-level `extractions` array where every object repeats
+            the requested fields. Do not include narrative text—only strict JSON.

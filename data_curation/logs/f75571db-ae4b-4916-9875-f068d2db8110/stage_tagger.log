@@ -1,0 +1,9 @@
+2025-12-13 22:06:56 - f75571db-ae4b-4916-9875-f068d2db8110_stage_tagger_ - INFO - Starting tagger for 2 documents via provider=openai
+2025-12-13 22:06:59 - f75571db-ae4b-4916-9875-f068d2db8110_stage_tagger_ - DEBUG - LLM confidence response for doc doc_004_jsl_p01_004_clinical_doc: {
+    "type_confidence": 0.95,
+    "date_confidence": 0.90,
+    "reasoning": "The document type is explicitly stated as 'clinical' in both the metadata and content, which supports a high confidence sc
+2025-12-13 22:06:59 - f75571db-ae4b-4916-9875-f068d2db8110_stage_tagger_ - DEBUG - Parsed confidence scores for doc doc_004_jsl_p01_004_clinical_doc: type=0.95, date=0.90
+2025-12-13 22:07:01 - f75571db-ae4b-4916-9875-f068d2db8110_stage_tagger_ - DEBUG - LLM confidence response for doc doc_003_jsl_p01_003_radiology_doc: { "type_confidence": 0.95, "date_confidence": 0.90, "reasoning": "The document type 'radiology' is explicitly stated in both the metadata and the content, providing high confidence in its classificati
+2025-12-13 22:07:01 - f75571db-ae4b-4916-9875-f068d2db8110_stage_tagger_ - DEBUG - Parsed confidence scores for doc doc_003_jsl_p01_003_radiology_doc: type=0.95, date=0.90
+2025-12-13 22:07:01 - f75571db-ae4b-4916-9875-f068d2db8110_stage_tagger_ - INFO - Tagger completed: 2 documents processed in 4.95 seconds
