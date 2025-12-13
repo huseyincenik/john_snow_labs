@@ -1429,6 +1429,28 @@ The specific documents (003 and 004) were processed through the Data Curation Pi
 | **ecog** | `0` | **Doc 004**: "ambulatory"; "Proceed with CT simulation"; "reluctant to undergo surgery" | None | `PerformanceStatus(ECOG)` | **Verified**: Inferred from "ambulatory" and "Start ADT" plan in Doc 004. |
 | **kps** | `90` | **Doc 004**: Interpreted from "ambulatory" status | None | `PerformanceStatus(Karnofsky)` | **Verified**: Alternative scoring extracted/mapped alongside ECOG. |
 
+---
+
+## Ontology Configuration (`cancer_registry_fields.yaml`)
+
+The pipeline uses a strict YAML ontology to define valid values and mapping logic. Below is the configuration for Performance Status, showing the "mapping dictionaries" used to standardize text descriptions into numeric scores:
+
+```yaml
+  # ========== PERFORMANCE STATUS DOMAIN ==========
+  performance_status:
+    profile: "PerformanceStatus, ECOGStatus, KarnofskyStatus"
+    fields:
+      - name: ecog
+        description: "ECOG Performance Status (0-5)"
+        data_type: integer
+        instructions: "Extract ECOG Performance Status score. Valid values: 0 (Fully active), 1 (Restricted in strenuous activity), 2 (Ambulatory, unable to work), 3 (Limited self-care, >50% in bed), 4 (Completely disabled, totally confined), 5 (Dead). If only KPS present, infer ECOG: KPS 90-100→0, KPS 70-80→1, KPS 50-60→2, KPS 30-40→3, KPS ≤20→4."
+
+      - name: kps
+        description: "Karnofsky Performance Score (0-100)"
+        data_type: integer
+        instructions: "Extract Karnofsky Performance Score. Valid values: 0-100 in increments of 10. 100 (Normal), 90 (Minor symptoms), 80 (Some symptoms), 70 (Cares for self), 60 (Occasional assistance), 50 (Considerable assistance), 40 (Disabled), 30 (Severely disabled), 20 (Very sick), 10 (Moribund), 0 (Dead). If only ECOG present, infer KPS: ECOG 0→90-100, ECOG 1→70-80, ECOG 2→50-60, ECOG 3→30-40, ECOG 4→≤20."
+```
+
 **Process Summary for Docs 003 & 004:**
 1. **Filter**: Script selected `jsl_p01_003_radiology_doc.txt` and `jsl_p01_004_clinical_doc.txt`.
 2. **Execute**: Pipeline ran `Map` (Extraction) -> `Normalize` -> `Resolve` -> `Reduce`.
