@@ -1129,9 +1129,20 @@ DocumentMetadata(
 
 This section provides a detailed step-by-step walkthrough of how the pipeline processes two specific documents (`doc_003` and `doc_004`) for patient `p01`. These documents were chosen to demonstrate the system's ability to handle **multi-modal data** (radiology vs. clinical notes), **temporal reasoning**, and **conflict resolution** between differing medical contexts.
 
+### Step 1: Input Documents (Full Context)
+
 > **Note**: All referenced output files can be found in the `data/output/use_case/` directory.
 
-### Step 1: Input Documents (Full Context)
+#### Artifact Mapping Table
+To follow along with the files in the output directory, use this reference:
+
+| Pipeline Stage | Operator Name | Output File Name | Description |
+|----------------|---------------|------------------|-------------|
+| **1. Ingest** | `Tagger` | `tagger_result.json` | Document classification & dating. |
+| **2. Extract** | `Map/Extractor` | `map_output.json` <br> *(also `extract_clinical_fields.json`)* | Raw extractions per document. |
+| **3. Normalize** | `Unnest` | `explode_field_records.json` | Flattened list of all extractions (Feature Store). |
+| **4. Resolve** | `Resolver` | `resolve_output.json` | Conflict resolution & confidence scoring. |
+| **5. Consolidate** | `Reduce/Consolidator` | `final_output.json` <br> *(also `reduce_patient_summary.json`)* | Final nested mCODE patient record. |
 
 These documents are the raw input for our pipeline. Note the distinct structures: `doc_003` is a structured radiology report, while `doc_004` is a dense clinical narrative.
 
@@ -1145,10 +1156,13 @@ CLINICAL STATEMENT: Prostate cancer, Gleason score 7. Staging evaluation for oss
 
 TECHNIQUE: Following the intravenous injection of 20.1 mCi of Technetium-99m MDP, whole-body planar images were acquired.
 
+COMPARISON: None.
+
 FINDINGS:
 There is symmetric and homogeneous uptake of radiotracer throughout the axial and appendicular skeleton.
 No focal areas of abnormally increased uptake are seen to suggest osteoblastic metastatic disease.
 Mild degenerative changes are noted in the shoulders, hips, and spine.
+Renal excretion is symmetric. Activity is seen in the urinary bladder.
 
 IMPRESSION:
 No scintigraphic evidence of osseous metastatic disease.
@@ -1160,14 +1174,17 @@ No scintigraphic evidence of osseous metastatic disease.
 Title: Radiation Oncology Consultation Note
 Date: 2015-10-15
 
-HISTORY OF PRESENT ILLNESS: The patient is a 60-year-old male with a complex oncologic history, most notably rectal cancer in 1987 treated with neoadjuvant chemoradiation (30 Gy) and APR, and now a new diagnosis of prostate cancer (Gleason 3+4=7, PSA 15.7 ng/mL). He has known Lynch Syndrome. Staging workup (MRI, bone scan) is negative for metastatic disease...
+HISTORY OF PRESENT ILLNESS: The patient is a 60-year-old male with a complex oncologic history, most notably rectal cancer in 1987 treated with neoadjuvant chemoradiation (30 Gy) and APR, and now a new diagnosis of prostate cancer (Gleason 3+4=7, PSA 15.7 ng/mL). He has known Lynch Syndrome. Staging workup (MRI, bone scan) is negative for metastatic disease, though local staging is limited by artifact. He is reluctant to undergo surgery.
 
 ASSESSMENT:
-The patient has unfavorable intermediate-risk prostate cancer... The main options are radical prostatectomy or external beam radiation therapy (EBRT).
+The patient has unfavorable intermediate-risk prostate cancer. His prior pelvic radiation presents a significant challenge. The rectum is absent, precluding brachytherapy. The main options are radical prostatectomy or external beam radiation therapy (EBRT).
 
 PLAN:
+After extensive discussion, the patient expresses his preference to proceed with EBRT and ADT. He understands the risks, including the potential for significant long-term urinary toxicity.
 1. Initiate ADT (e.g., Leuprolide) for 6 months.
 2. Proceed with CT simulation for radiation planning. We will plan for a dose of 75.6 Gy in 42 fractions to the prostate.
+3. Place fiducial markers in the prostate for image guidance during treatment.
+4. Continue multidisciplinary management with Urology and Medical Oncology.
 ```
 
 ### Step 2: Tagger Stage
@@ -1254,64 +1271,147 @@ This document is rich in history and planning details, providing **Histology**, 
 ```
 
 ### Step 4: Unnest Operator
-*Result*: Flattened list of `(patient_id, field_name, value, source_doc)` tuples. This stage prepares the data for the **Resolve** operator by grouping all extractions for the same field together.
+*Output File Reference: `data/output/use_case/explode_field_records.json`*
+*Result*: A flattened "Feature Store" view of all extractions.
+
+The Unnest operator takes the document-level extractions and flattens them into a normalized list of records. This prepares the data for the resolution phase by grouping every extraction by `(patient_id, field_name)`.
+
+**Expanded Unnest Output (Partial View):**
+```json
+[
+  {
+    "patient_id": "p01",
+    "field_name": "ca_site",
+    "normalized_value": "Prostate (C61.9)",
+    "source_doc_id": "doc_003",
+    "doc_type": "radiology",
+    "extraction_confidence": 0.92,
+    "context": "Prostate cancer, Gleason score 7"
+  },
+  {
+    "patient_id": "p01",
+    "field_name": "ca_site",
+    "normalized_value": "Prostate (C61.9)",
+    "source_doc_id": "doc_004",
+    "doc_type": "clinical",
+    "extraction_confidence": 0.94,
+    "context": "60-year-old male with prostate cancer"
+  },
+  {
+    "patient_id": "p01",
+    "field_name": "ca_clinical_m_stage",
+    "normalized_value": "cM0",
+    "source_doc_id": "doc_003",
+    "doc_type": "radiology",
+    "extraction_confidence": 0.88,
+    "context": "No scintigraphic evidence of osseous metastatic disease"
+  },
+  {
+    "patient_id": "p01",
+    "field_name": "naaccr_diagnosis_dt",
+    "normalized_value": "2015-10-15",
+    "source_doc_id": "doc_004",
+    "doc_type": "clinical",
+    "extraction_confidence": 0.85,
+    "context": "Date of consult"
+  }
+]
+```
 
 ### Step 5: Resolve Operator (Conflict Detection & Resolution)
 *Output File Reference: `data/output/use_case/resolve_output.json`*
 
-This is where the semantic power of the pipeline shines. It compares values across documents.
+This stage is critical. The LLM analyzes all values for a specific field `(p01, ca_site)` to determine the final truth.
 
-**Scenario: `ca_site` Resolution**
-- **Input 1 (Doc 003)**: "Prostate (C61.9)" (Confidence: 0.92)
-- **Input 2 (Doc 004)**: "Prostate (C61.9)" (Confidence: 0.94)
-- **Action**: Values are identical. The system boosts the confidence score because two independent sources agree.
-- **Resolved Output**:
-```json
-{
-  "field_name": "ca_site",
-  "resolved_value": "Prostate (C61.9)/Malignant",
-  "confidence_score": 0.96,
-  "consolidation_notes": "Strong agreement between radiology (doc_003) and clinical note (doc_004)."
-}
-```
+#### Scenario A: Supporting Evidence (Agreement)
+When multiple documents agree, the system **boosts the confidence score** and links all supporting evidence.
 
-**Scenario: `ca_clinical_m_stage` Resolution**
-- **Input 1 (Doc 003)**: "cM0" (Detailed bone scan evidence)
-- **Input 2 (Doc 004)**: "Likely cM0" (Mention of "Staging workup negative")
-- **Action**: Doc 003 is the *primary source* for this specific data point (it is the actual scan report), so its extracted value carries more weight than the summary in the clinical note.
+*   **Group**: `(p01, ca_site)`
+*   **Values**:
+    1.  `doc_003`: "Prostate (C61.9)" (Conf: 0.92)
+    2.  `doc_004`: "Prostate (C61.9)" (Conf: 0.94)
+*   **Resolution Output**:
+    ```json
+    {
+      "field_name": "ca_site",
+      "resolved_value": "Prostate (C61.9)/Malignant",
+      "confidence_score": 0.96, // Boosted due to multi-source verification
+      "supporting_evidence": [
+        { "doc_id": "doc_003", "excerpt": "Prostate cancer, Gleason..." },
+        { "doc_id": "doc_004", "excerpt": "new diagnosis of prostate cancer..." }
+      ],
+      "consolidation_notes": "Strong consensus. Identified as primary site in both Radiology (Bone Scan) and Clinical Oncology notes."
+    }
+    ```
+
+#### Scenario B: Contradictory / Varying Evidence (Resolution)
+Sometimes documents differ in specificity or imply conflicts. The pipeline uses source hierarchy (Pathology > Radiology > Clinical) and recency.
+
+*   **Group**: `(p01, ca_clinical_m_stage)`
+*   **Values**:
+    1.  `doc_003` (Radiology): **"cM0"** (Evidence: "No scintigraphic evidence...")
+    2.  `doc_004` (Clinical): **"Unknown / Not Reported"** (Initial text might vary or simply imply absence)
+*   **Resolution Logic**:
+    *   *Conflict*: One doc is specific (Bone Scan explicitly says "No mets"), the other is general.
+    *   *Decision*: Prefer the **Radiology Report** (`doc_003`) over the Clinical Note for osseous metastases because it is the **primary diagnostic source** for this specific question.
+*   **Resolution Output**:
+    ```json
+    {
+      "field_name": "ca_clinical_m_stage",
+      "resolved_value": "cM0",
+      "confidence_score": 0.90,
+      "contradictory_evidence": [], // No direct contradiction, just differing specificity
+      "consolidation_notes": "Resolved to cM0 based on definitive negative Bone Scan (doc_003) which overrides general clinical context.",
+      "primary_source": "doc_003"
+    }
+    ```
+
+**Conflict Resolution Policies:**
+| Scenario | Policy |
+|----------|---------------------|
+| **Values Agree** | Boost confidence, link all sources. |
+| **Values Conflict** | Hierarchy: Pathology > Operative > Radiology > Clinical. Recency: Newer > Older. |
+| **"Not Reported" vs Value** | Always prefer the explicit extraction (e.g., if Doc A says "NR" and Doc B has a date). |
+| **Multi-Cancer** | If documents discuss different cancers (e.g., Rectal vs Prostate), they are split into distinct tumor groups. |
 
 ### Step 6: Reduce Operator (Patient-Level mCODE)
 *Output File Reference: `data/output/use_case/final_output.json`*
 
-Finally, all resolved fields are aggregated into a cohesive patient record. A simpler JSON representation is shown below:
+The final stage consolidates the resolved fields into the nested mCODE schema. It explicitly lists the `primary_cancers` identified.
 
 ```json
 {
   "patient_id": "p01",
+  "generated_at": "2025-12-14",
+  "data_completeness": "High",
   "primary_cancers": [
     {
-      "site": "C61.9 - Prostate",
-      "histology": "8140/3 - Adenocarcinoma, NOS",
-      "diagnosis_date": "2015-10-01",
-      "staging": "cTNM: cM0 (confirmed by bone scan)",
-      "notes": "Patient has favorable intermediate risk. Prior history of Rectal Cancer (1987)."
+      "site": {
+        "code": "C61.9",
+        "label": "Prostate",
+        "primary_source": "doc_003, doc_004"
+      },
+      "histology": {
+        "code": "8140/3",
+        "label": "Adenocarcinoma, NOS",
+        "primary_source": "doc_004"
+      },
+      "diagnosis_date": "2015-10-15", // From Doc 004
+      "staging": {
+        "clinical_t": null,
+        "clinical_n": null,
+        "clinical_m": "cM0", // From Doc 003 (Bone Scan)
+        "grade": "Gleason Score 7 (3+4)"
+      }
     }
   ],
-  "patient_summary": "60-year-old male with new diagnosis of prostate cancer (Gleason 7). Staging workup including bone scan (2015-10-01) shows no metastatic disease (cM0). Patient has significant history of rectal cancer treated in 1987. Current plan involves EBRT and ADT."
+  "patient_summary": "60-year-old male presenting with unfavorable intermediate-risk prostate cancer (Gleason 7). Staging evaluation (Bone Scan, 2015-10-01) rules out osseous metastases (cM0). Patient has a relevant history of Rectal Cancer (1987). Current plan involves EBRT and ADT.",
+  "provenance": {
+    "doc_count": 2,
+    "sources": ["radiology", "clinical"]
+  }
 }
 ```
-
-**Conflict Resolution Strategy Table:**
-
-| Scenario | Resolution Strategy |
-|----------|---------------------|
-| **Values Agree** | Use highest confidence source, boost score (e.g., `ca_site` in this example). |
-| **Values Conflict** | Prefer: Pathology > Operative > Imaging > Clinical > Admin. |
-| **"Not Reported" vs Actual** | ALWAYS use actual value (e.g., if Doc 003 didn't mention histology, we take it from Doc 004). |
-| **Multiple Cancers** | Preserve separate entries per cancer site (e.g., Rectal vs Prostate history). |
-
-
----
 
 ### Detailed Field Definitions & Output Verification
 
