@@ -216,8 +216,6 @@ class VectorStoreManager:
                     base_url=config.model.ollama_base_url.replace(
                         "/v1", ""
                     ),  # Remove /v1 for Ollama
-                    # Increase context window for embeddings (default 512 is too small)
-                    num_ctx=2048,
                 )
                 self.logger.info(
                     f"Initialized Qwen embeddings with model: {config.model.local_embedding_model}"
@@ -913,7 +911,9 @@ ANSWER:"""
                 )
 
                 # Step 2: Create mapping of chunk_id -> (distance, similarity) from original query results
+                # Also create mapping of chunk_id -> original_content for highlighting
                 doc_scores_map = {}
+                original_content_map = {}  # chunk_id -> original page_content (before compression)
                 for orig_doc, distance_score in all_docs_with_scores:
                     chunk_id = orig_doc.metadata.get("chunk_id")
                     if chunk_id:
@@ -921,6 +921,9 @@ ANSWER:"""
                             distance_score
                         )
                         doc_scores_map[chunk_id] = (distance_score, similarity_score)
+                        # CRITICAL: Store original content for highlighting
+                        # This is the UNCOMPRESSED content from vector store
+                        original_content_map[chunk_id] = orig_doc.page_content
                         self.logger.debug(
                             f"  Original doc chunk_id={chunk_id}: distance={distance_score:.4f}, accuracy={similarity_score:.2%}"
                         )
@@ -1129,8 +1132,18 @@ ANSWER:"""
                     "Model_Provider": model_provider,
                 }
 
+                # CRITICAL: Get original (uncompressed) content for highlighting
+                # ContextualCompressionRetriever modifies doc.page_content
+                # But we need the ORIGINAL content that matches the position metadata
+                original_content = doc.page_content  # Default fallback
+                if actual_chunk_id and original_content_map:
+                    original_content = original_content_map.get(actual_chunk_id, doc.page_content)
+                    if original_content != doc.page_content:
+                        self.logger.debug(f"Using original content for chunk {actual_chunk_id} (compressed: {len(doc.page_content)} chars, original: {len(original_content)} chars)")
+
                 source_info = {
-                    "content": doc.page_content,  # Show full content instead of truncating
+                    "content": original_content,  # Use ORIGINAL content (matches highlight positions)
+                    "original_content": original_content,  # Keep for backward compatibility
                     "metadata": doc.metadata,  # Keep original metadata for backward compatibility
                     "structured_metadata": structured_metadata,  # New structured metadata JSON
                     "page": page,

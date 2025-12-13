@@ -2320,7 +2320,8 @@ class ChatbotApp:
                                         self.logger.debug(f"Chunk {chunk_id}: Position-based highlight pos {start_char_in_page}-{end_char_in_page}, {len(exact_text)} chars, found {len(instances)} instances")
                                 else:
                                     # Page text length mismatch - try to find content in page text
-                                    content_text = highlight_source.get("content", "").strip()
+                                    # Use original_content for accurate matching (not LLM-compressed content)
+                                    content_text = (highlight_source.get("original_content") or highlight_source.get("content", "")).strip()
                                     if content_text:
                                         # Find the content in the page text
                                         content_pos = page_text.find(content_text[:100])  # Try first 100 chars
@@ -2333,11 +2334,15 @@ class ChatbotApp:
                                                 text_instances.extend(instances)
                                                 self.logger.debug(f"Chunk {chunk_id}: Content-based position found at pos {content_pos}, {len(instances)} instances")
                             except Exception as pos_error:
-                                self.logger.debug(f"Chunk {chunk_id}: Position-based highlight failed: {str(pos_error)}, falling back to content")
+                                self.logger.error(f"Chunk {chunk_id}: Position-based highlight failed: {str(pos_error)}, falling back to content")
                         
                         # Fallback: Use content-based highlighting
+                        # CRITICAL: Use original_content for highlighting (not compressed content)
+                        # original_content matches the position metadata, while content may be LLM-compressed
                         if not text_instances:
-                            highlight_text = highlight_source.get("content", "")
+                            self.logger.info(f"Falling back to content-based highlighting for chunk {chunk_id}")
+                            # Prefer original_content (matches positions) over content (may be compressed)
+                            highlight_text = highlight_source.get("original_content") or highlight_source.get("content", "")
                             if highlight_text:
                                 try:
                                     import re
