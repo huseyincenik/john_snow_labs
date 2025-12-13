@@ -1127,188 +1127,189 @@ DocumentMetadata(
 
 ## Use Case Walkthrough: Documents 003 & 004
 
-### Step 1: Input Documents
+This section provides a detailed step-by-step walkthrough of how the pipeline processes two specific documents (`doc_003` and `doc_004`) for patient `p01`. These documents were chosen to demonstrate the system's ability to handle **multi-modal data** (radiology vs. clinical notes), **temporal reasoning**, and **conflict resolution** between differing medical contexts.
+
+> **Note**: All referenced output files can be found in the `data/output/use_case/` directory.
+
+### Step 1: Input Documents (Full Context)
+
+These documents are the raw input for our pipeline. Note the distinct structures: `doc_003` is a structured radiology report, while `doc_004` is a dense clinical narrative.
 
 **Document 003 (Radiology - Bone Scan)**
-```
-Patient Id: p01
-Doc Type: radiology
+*Source File: `input_patient_docs/jsl_p01_003_radiology_doc.txt`*
+```text
+Title: NM BONE SCAN, WHOLE BODY
 Date: 2015-10-01
 
-CLINICAL STATEMENT: Prostate cancer, Gleason score 7. Staging evaluation.
+CLINICAL STATEMENT: Prostate cancer, Gleason score 7. Staging evaluation for osseous metastasis.
 
-IMPRESSION: No scintigraphic evidence of osseous metastatic disease.
+TECHNIQUE: Following the intravenous injection of 20.1 mCi of Technetium-99m MDP, whole-body planar images were acquired.
+
+FINDINGS:
+There is symmetric and homogeneous uptake of radiotracer throughout the axial and appendicular skeleton.
+No focal areas of abnormally increased uptake are seen to suggest osteoblastic metastatic disease.
+Mild degenerative changes are noted in the shoulders, hips, and spine.
+
+IMPRESSION:
+No scintigraphic evidence of osseous metastatic disease.
 ```
 
 **Document 004 (Clinical - Radiation Oncology)**
-```
-Patient Id: p01
-Doc Type: clinical
+*Source File: `input_patient_docs/jsl_p01_004_clinical_doc.txt`*
+```text
+Title: Radiation Oncology Consultation Note
 Date: 2015-10-15
 
-HISTORY: 60-year-old male with prostate cancer (Gleason 3+4=7, PSA 15.7 ng/mL).
-Prior history: Rectal cancer in 1987 treated with neoadjuvant chemoradiation.
+HISTORY OF PRESENT ILLNESS: The patient is a 60-year-old male with a complex oncologic history, most notably rectal cancer in 1987 treated with neoadjuvant chemoradiation (30 Gy) and APR, and now a new diagnosis of prostate cancer (Gleason 3+4=7, PSA 15.7 ng/mL). He has known Lynch Syndrome. Staging workup (MRI, bone scan) is negative for metastatic disease...
 
-PLAN: EBRT 75.6 Gy in 42 fractions + ADT for 6 months.
+ASSESSMENT:
+The patient has unfavorable intermediate-risk prostate cancer... The main options are radical prostatectomy or external beam radiation therapy (EBRT).
+
+PLAN:
+1. Initiate ADT (e.g., Leuprolide) for 6 months.
+2. Proceed with CT simulation for radiation planning. We will plan for a dose of 75.6 Gy in 42 fractions to the prostate.
 ```
 
 ### Step 2: Tagger Stage
+*Output File References: `data/output/use_case/tagger_result.json`*
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        TAGGER OUTPUT                                │
-├─────────────────────────────────────────────────────────────────────┤
-│ Sorted Documents (by date):                                         │
-│                                                                     │
-│ 1. doc_003 │ 2015-10-01 │ radiology │ type_conf: 0.95 │ date: 0.92 │
-│ 2. doc_004 │ 2015-10-15 │ clinical  │ type_conf: 0.97 │ date: 0.95 │
-└─────────────────────────────────────────────────────────────────────┘
+The Tagger assigns a confidence score to the document type and date, ensuring we prioritize high-quality data.
+
+```json
+{
+  "sorted_documents": [
+    {
+      "doc_id": "doc_003",
+      "doc_type": "radiology",
+      "doc_date": "2015-10-01",
+      "confidence": { "type": 0.95, "date": 0.92 }
+    },
+    {
+      "doc_id": "doc_004",
+      "doc_type": "clinical",
+      "doc_date": "2015-10-15",
+      "confidence": { "type": 0.97, "date": 0.95 }
+    }
+  ]
+}
 ```
 
 ### Step 3: Map Operator (Extraction)
+*Output File Reference: `data/output/use_case/map_output.json`*
 
+The Map operator extracts NAACCR fields from each document independently. Note how different fields are captured from different documents based on their content.
+
+**Extraction from doc_003 (Radiology)**:
+Because this is a bone scan, it provides critical evidence for **M Stage** (Metastasis) but might be less specific about histology.
+```json
+{
+  "doc_id": "doc_003",
+  "extractions": [
+    {
+      "field_name": "ca_site",
+      "raw_value": "Prostate cancer",
+      "normalized_value": "Prostate (C61.9)/Malignant",
+      "reasoning_excerpt": "CLINICAL STATEMENT: Prostate cancer, Gleason score 7.",
+      "confidence_score": 0.92
+    },
+    {
+      "field_name": "ca_clinical_m_stage",
+      "raw_value": "No scintigraphic evidence of osseous metastatic disease",
+      "normalized_value": "cM0",
+      "reasoning_excerpt": "IMPRESSION: No scintigraphic evidence of osseous metastatic disease.",
+      "confidence_score": 0.88,
+      "category": "staging"
+    }
+  ]
+}
 ```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                    MAP OUTPUT FOR doc_003 (Radiology)                           │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│ {                                                                               │
-│   "extractions": [                                                              │
-│     {                                                                           │
-│       "field_name": "ca_site",                                                  │
-│       "raw_value": "Prostate cancer",                                           │
-│       "normalized_value": "Prostate (C61.9)/Malignant",                         │
-│       "reasoning_excerpt": "Prostate cancer, Gleason score 7",                  │
-│       "confidence_score": 0.92                                                  │
-│     },                                                                          │
-│     {                                                                           │
-│       "field_name": "ca_clinical_m_stage",                                      │
-│       "raw_value": "No osseous metastatic disease",                             │
-│       "normalized_value": "cM0",                                                │
-│       "reasoning_excerpt": "No scintigraphic evidence of osseous metastases",   │
-│       "confidence_score": 0.88                                                  │
-│     }                                                                           │
-│   ]                                                                             │
-│ }                                                                               │
-└─────────────────────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                    MAP OUTPUT FOR doc_004 (Clinical)                            │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│ {                                                                               │
-│   "extractions": [                                                              │
-│     {                                                                           │
-│       "field_name": "ca_site",                                                  │
-│       "raw_value": "prostate cancer",                                           │
-│       "normalized_value": "Prostate (C61.9)/Malignant",                         │
-│       "reasoning_excerpt": "60-year-old male with prostate cancer",             │
-│       "confidence_score": 0.94                                                  │
-│     },                                                                          │
-│     {                                                                           │
-│       "field_name": "naaccr_histology_cd",                                      │
-│       "raw_value": "Gleason 3+4=7",                                             │
-│       "normalized_value": "8140/3 - Adenocarcinoma, NOS",                       │
-│       "reasoning_excerpt": "Gleason 3+4=7, PSA 15.7 ng/mL",                     │
-│       "confidence_score": 0.91                                                  │
-│     }                                                                           │
-│   ]                                                                             │
-│ }                                                                               │
-└─────────────────────────────────────────────────────────────────────────────────┘
+**Extraction from doc_004 (Clinical)**:
+This document is rich in history and planning details, providing **Histology**, **PSA**, and **Treatment Plan**.
+```json
+{
+  "doc_id": "doc_004",
+  "extractions": [
+    {
+      "field_name": "ca_site",
+      "normalized_value": "Prostate (C61.9)/Malignant",
+      "confidence_score": 0.94
+    },
+    {
+      "field_name": "naaccr_histology_cd",
+      "raw_value": "Gleason 3+4=7",
+      "normalized_value": "8140/3 - Adenocarcinoma, NOS",
+      "reasoning_excerpt": "new diagnosis of prostate cancer (Gleason 3+4=7)",
+      "confidence_score": 0.91
+    },
+    {
+      "field_name": "ecog",
+      "raw_value": "ambulatory",
+      "normalized_value": "0",
+      "reasoning_excerpt": "Patient is 60-year-old male... reluctant to undergo surgery... Proceed with CT simulation",
+      "confidence_score": 0.85
+    }
+  ]
+}
 ```
 
 ### Step 4: Unnest Operator
-
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                         UNNEST OUTPUT (Flattened Rows)                          │
-├──────┬────────────┬────────────────────┬───────────────────────┬────────────────┤
-│ Row  │ patient_id │ field_name         │ normalized_value      │ doc_id         │
-├──────┼────────────┼────────────────────┼───────────────────────┼────────────────┤
-│  1   │ p01        │ ca_site            │ Prostate (C61.9)      │ doc_003        │
-│  2   │ p01        │ ca_clinical_m_stage│ cM0                   │ doc_003        │
-│  3   │ p01        │ ca_site            │ Prostate (C61.9)      │ doc_004        │
-│  4   │ p01        │ naaccr_histology_cd│ 8140/3 - Adenocarc... │ doc_004        │
-└──────┴────────────┴────────────────────┴───────────────────────┴────────────────┘
-```
+*Result*: Flattened list of `(patient_id, field_name, value, source_doc)` tuples. This stage prepares the data for the **Resolve** operator by grouping all extractions for the same field together.
 
 ### Step 5: Resolve Operator (Conflict Detection & Resolution)
+*Output File Reference: `data/output/use_case/resolve_output.json`*
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                    RESOLVE: CONFLICT DETECTION FOR ca_site                      │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                 │
-│  BLOCKING: Records grouped by (patient_id=p01, field_name=ca_site)             │
-│                                                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │ COMPARISON PROMPT (LLM Call):                                           │   │
-│  │                                                                         │   │
-│  │ Field 1 (ca_site) from doc_003:                                         │   │
-│  │ - Value: Prostate (C61.9)/Malignant                                     │   │
-│  │ - Evidence: "Prostate cancer, Gleason score 7"                          │   │
-│  │                                                                         │   │
-│  │ Field 2 (ca_site) from doc_004:                                         │   │
-│  │ - Value: Prostate (C61.9)/Malignant                                     │   │
-│  │ - Evidence: "60-year-old male with prostate cancer"                     │   │
-│  │                                                                         │   │
-│  │ → LLM Response: {"is_match": true}                                      │   │
-│  └─────────────────────────────────────────────────────────────────────────┘   │
-│                                                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │ RESOLUTION PROMPT (LLM Call):                                           │   │
-│  │                                                                         │   │
-│  │ Evidence set for (p01, ca_site):                                        │   │
-│  │ - doc_003 (radiology): Prostate (C61.9), confidence 0.92                │   │
-│  │ - doc_004 (clinical): Prostate (C61.9), confidence 0.94                 │   │
-│  │                                                                         │   │
-│  │ → Result: Both agree → confidence_score: 0.95                           │   │
-│  │ → resolved_value: "Prostate (C61.9)/Malignant"                          │   │
-│  └─────────────────────────────────────────────────────────────────────────┘   │
-│                                                                                 │
-└─────────────────────────────────────────────────────────────────────────────────┘
+This is where the semantic power of the pipeline shines. It compares values across documents.
+
+**Scenario: `ca_site` Resolution**
+- **Input 1 (Doc 003)**: "Prostate (C61.9)" (Confidence: 0.92)
+- **Input 2 (Doc 004)**: "Prostate (C61.9)" (Confidence: 0.94)
+- **Action**: Values are identical. The system boosts the confidence score because two independent sources agree.
+- **Resolved Output**:
+```json
+{
+  "field_name": "ca_site",
+  "resolved_value": "Prostate (C61.9)/Malignant",
+  "confidence_score": 0.96,
+  "consolidation_notes": "Strong agreement between radiology (doc_003) and clinical note (doc_004)."
+}
 ```
 
-**Conflict Resolution Strategy:**
+**Scenario: `ca_clinical_m_stage` Resolution**
+- **Input 1 (Doc 003)**: "cM0" (Detailed bone scan evidence)
+- **Input 2 (Doc 004)**: "Likely cM0" (Mention of "Staging workup negative")
+- **Action**: Doc 003 is the *primary source* for this specific data point (it is the actual scan report), so its extracted value carries more weight than the summary in the clinical note.
+
+### Step 6: Reduce Operator (Patient-Level mCODE)
+*Output File Reference: `data/output/use_case/final_output.json`*
+
+Finally, all resolved fields are aggregated into a cohesive patient record. A simpler JSON representation is shown below:
+
+```json
+{
+  "patient_id": "p01",
+  "primary_cancers": [
+    {
+      "site": "C61.9 - Prostate",
+      "histology": "8140/3 - Adenocarcinoma, NOS",
+      "diagnosis_date": "2015-10-01",
+      "staging": "cTNM: cM0 (confirmed by bone scan)",
+      "notes": "Patient has favorable intermediate risk. Prior history of Rectal Cancer (1987)."
+    }
+  ],
+  "patient_summary": "60-year-old male with new diagnosis of prostate cancer (Gleason 7). Staging workup including bone scan (2015-10-01) shows no metastatic disease (cM0). Patient has significant history of rectal cancer treated in 1987. Current plan involves EBRT and ADT."
+}
+```
+
+**Conflict Resolution Strategy Table:**
 
 | Scenario | Resolution Strategy |
 |----------|---------------------|
-| Values Agree | Use highest confidence source, boost score |
-| Values Conflict | Prefer: Pathology > Operative > Imaging > Clinical > Admin |
-| "Not Reported" vs Actual Value | ALWAYS use actual value |
-| Multiple Cancers | Preserve separate entries per cancer site |
+| **Values Agree** | Use highest confidence source, boost score (e.g., `ca_site` in this example). |
+| **Values Conflict** | Prefer: Pathology > Operative > Imaging > Clinical > Admin. |
+| **"Not Reported" vs Actual** | ALWAYS use actual value (e.g., if Doc 003 didn't mention histology, we take it from Doc 004). |
+| **Multiple Cancers** | Preserve separate entries per cancer site (e.g., Rectal vs Prostate history). |
 
-### Step 6: Reduce Operator (Patient-Level mCODE)
-
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                    REDUCE OUTPUT: mCODE PATIENT RECORD                          │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│ {                                                                               │
-│   "patient_id": "p01",                                                          │
-│   "consolidated_fields": [                                                      │
-│     {                                                                           │
-│       "field_name": "ca_site",                                                  │
-│       "normalized_value": "Prostate (C61.9)/Malignant",                         │
-│       "confidence_score": 0.95,                                                 │
-│       "consolidation_notes": "2 agreeing sources (radiology, clinical)"         │
-│     },                                                                          │
-│     {                                                                           │
-│       "field_name": "naaccr_histology_cd",                                      │
-│       "normalized_value": "8140/3 - Adenocarcinoma, NOS",                       │
-│       "confidence_score": 0.91                                                  │
-│     }                                                                           │
-│   ],                                                                            │
-│   "primary_cancers": [                                                          │
-│     {                                                                           │
-│       "site": "C61.9 - Prostate",                                               │
-│       "histology": "8140/3 - Adenocarcinoma",                                   │
-│       "diagnosis_date": "2015-07-15",                                           │
-│       "staging": "Gleason 3+4=7, unfavorable intermediate-risk"                 │
-│     }                                                                           │
-│   ],                                                                            │
-│   "patient_summary": "60-year-old male with unfavorable intermediate-risk..."   │
-│ }                                                                               │
-└─────────────────────────────────────────────────────────────────────────────────┘
-```
 
 ---
 
