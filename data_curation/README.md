@@ -20,6 +20,26 @@ This repository contains a complete DocETL-powered **Data Curation Service** tha
 
 ---
 
+## Table of Contents
+
+1. [Project Navigator](#project-navigator)
+2. [High-Level Architecture](#high-level-architecture)
+3. [DocETL Pipeline Deep Dive](#docetl-pipeline-deep-dive)
+   - [Pipeline Flow Schematic](#pipeline-flow-schematic)
+   - [Input Format](#input-format)
+   - [Operator Details](#operator-details)
+4. [Use Case Walkthrough](#use-case-walkthrough-documents-003--004)
+5. [Blocking Keys & LLM Call Optimization](#blocking-keys--llm-call-optimization)
+6. [Parallel Processing Architecture](#parallel-processing-architecture)
+7. [LLM Models & OpenRouter Integration](#llm-models--openrouter-integration)
+8. [Configuration Reference](#configuration-reference)
+9. [FastAPI Service Architecture](#fastapi-service-architecture)
+10. [Getting Started](#getting-started)
+11. [Output Artifacts](#output-artifacts)
+12. [References](#references)
+
+---
+
 ## Project Navigator
 
 - Back to portfolio home → [`../README.md`](../README.md)
@@ -31,445 +51,1240 @@ This repository contains a complete DocETL-powered **Data Curation Service** tha
 ## High-Level Architecture
 
 ```
-┌───────────────────────────────────────────────────────────────────────┐
-│                           Ingestion Layer                             │
-│    Upload REST API + sample docs (TXT/PDF) written to input storage    │
-└───────────────┬───────────────────────────────────────────────────────┘
-                ▼
-┌───────────────────────────────────────────────────────────────────────┐
-│                            DocETL Engine                              │
-│   1. Tagger (chronology) → 2. Extractor (NAACCR fields) →              │
-│   3. Consolidator (patient-level Resolve + Reduce)                     │
-└───────────────┬───────────────────────────────────────────────────────┘
-                ▼
-┌───────────────────────────────────────────────────────────────────────┐
-│                    Structured Outputs & Observability                  │
-│  JSON artifacts + logs + demo artifacts → feed downstream pipelines    │
-└───────────────────────────────────────────────────────────────────────┘
-```
-
-DocETL outputs can be reused by the **CoNLL generator** to bootstrap annotations or ingested by the **RAG chatbot** to expand its knowledge base, ensuring consistent clinical narratives across the portfolio.
-
----
-
-## 1. System Overview
-
-### 1.1 Key Capabilities
-
-- **DocETL Python pipeline** (Tagger → Map → Unnest → Resolve → Reduce) implemented with FastAPI background workers.
-- **Multi-provider LLM support**: OpenRouter-backed routing that sequentially exercises OpenAI GPT-4o-mini and Qwen 2.5 7B Instruct models.[^openrouter]
-- **Parallel ingestion & demos**: asynchronous document loading in FastAPI plus concurrent OpenAI/Qwen benchmark runs in the demo harness keep wall-clock time low.
-- **Canonical outputs**: document-level extractions and patient-level consolidations aligned with NAACCR fields.
-- **Auditable processing**: per-session logs, prompt/response capture, JSON artifacts per stage.
-- **Turnkey demo flow**: a Python script that exercises every API endpoint end-to-end.
-
-### 1.2 Pipeline Schematic
-
-```
-┌────────────────┐    ┌──────────────┐    ┌──────────────┐    ┌────────────────────┐
-│ Input documents │ -> │ Tagger       │ -> │ Extractor    │ -> │ Consolidator        │
-│ (txt / pdf)     │    │ (chronology) │    │ (DocETL Map) │    │ (Resolve + Reduce) │
-└────────────────┘    └──────────────┘    └──────────────┘    └────────────────────┘
-        │                     │                    │                    │
-        │                     │                    │                    └─► `stage_stage_consolidator_<session>.json`
-        │                     │                    └─► `stage_stage_extractor_<session>.json`
-        │                     └─► `stage_stage_tagger_<session>_sorted.json`
-        └─► Logs (`logs/<session_id>/stage_*.log`)
-```
-
-### 1.3 DocETL Operators
-
-| Step | DocETL Operator | Purpose |
-| ---- | --------------- | ------- |
-| Extractor | `MapOp` `extract_clinical_fields` | Builds a fully typed JSON schema from `cancer_registry_fields.yaml` and enforces OpenAI-style reasoning metadata per field. |
-| Extractor | `UnnestOp` `explode_field_records` | Flattens the map payload so each ontology field becomes an individual row with `patient_id`, `doc_id`, and evidence. |
-| Consolidator | `ResolveOp` `resolve_patient_fields` | Performs canonical value selection per `(patient_id, field_name)` cluster with blocking keys + provenance capture. |
-| Consolidator | `ReduceOp` `reduce_patient_summary` | Aggregates resolved entries into patient-level registries and emits `consolidated_fields` + a narrative summary. |
-
-DocETL runs as a **memory dataset** so no temporary CSV/JSON artifacts are required, yet every stage checkpoint is persisted to `data/output/<session_id>/docetl_intermediate/<step>/<op>.json` for debugging.
-
-### 1.4 Repository Layout
-
-```
-data_curation/
-├── src/
-│   ├── api/               # FastAPI routers & background workers
-│   ├── pipeline/          # Tagger, Extractor, Consolidator
-│   ├── models/            # Pydantic v2 schemas
-│   ├── utils/             # Config, storage, logging, LLM adapters
-│   └── main.py            # Uvicorn entry point
-├── data/
-│   ├── input/             # Sample patient docs
-│   ├── output/<session>/  # Stage artifacts (tagger/extractor/consolidator)
-│   └── ontology/          # cancer_registry_fields.yaml
-├── config/
-│   ├── .env.example
-│   └── settings.py
-├── scripts/
-│   └── e2e_demo.py        # Automated demo harness
-├── docker-compose.yml
-├── run_docker.sh
-└── README.md
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                      INGESTION LAYER                                        │
+│  ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────────────────────────────┐ │
+│  │  REST API       │    │  File Upload     │    │  Sample Documents (TXT/PDF)            │ │
+│  │  POST /process  │───▶│  POST /upload    │───▶│  input_patient_docs/*.txt              │ │
+│  └─────────────────┘    └──────────────────┘    └─────────────────────────────────────────┘ │
+└───────────────────────────────────────┬─────────────────────────────────────────────────────┘
+                                        ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                    DocETL ENGINE                                            │
+│  ┌────────────┐   ┌────────────┐   ┌────────────┐   ┌────────────┐   ┌────────────────────┐ │
+│  │  TAGGER    │──▶│    MAP     │──▶│  UNNEST    │──▶│  RESOLVE   │──▶│      REDUCE        │ │
+│  │ Chronology │   │ Extraction │   │  Explode   │   │ Deduplicate│   │ Patient-Level      │ │
+│  └────────────┘   └────────────┘   └────────────┘   └────────────┘   └────────────────────┘ │
+│        │                │                │                │                    │            │
+│        ▼                ▼                ▼                ▼                    ▼            │
+│   Sorted Docs      Field JSON       Row per Field    Canonical Value    Patient Summary    │
+└───────────────────────────────────────┬─────────────────────────────────────────────────────┘
+                                        ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                              STRUCTURED OUTPUTS & OBSERVABILITY                             │
+│  ┌─────────────────────────────┐  ┌─────────────────────┐  ┌──────────────────────────────┐ │
+│  │  JSON Artifacts             │  │  Logs               │  │  Demo Artifacts              │ │
+│  │  • tagger_result.json       │  │  • stage_*.log      │  │  • extraction_result.json    │ │
+│  │  • extraction_result.json   │  │  • prompts.log      │  │  • consolidation_result.json │ │
+│  │  • consolidation_result.json│  └─────────────────────┘  └──────────────────────────────┘ │
+│  └─────────────────────────────┘                                                            │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Getting Started
+## DocETL Pipeline Deep Dive
 
-### 2.1 Prerequisites
+### Pipeline Flow Schematic
 
-| Tool                    | Version  | Notes                                      |
-| ----------------------- | -------- | ------------------------------------------ |
-| Python                  | 3.10+    | Use `uv` for dependency/workflow tooling   |
-| `uv`                    | latest   | <https://github.com/astral-sh/uv>          |
-| Docker & Docker Compose | optional | Containerized deployment of FastAPI stack  |
+```
+┌──────────────────────────────────────────────────────────────────────────────────────────┐
+│                           COMPLETE DocETL PIPELINE FLOW                                  │
+├──────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                          │
+│  ┌─────────────────┐                                                                     │
+│  │ INPUT DOCUMENTS │  ← Raw medical documents (clinical notes, pathology, radiology)    │
+│  │ (TXT/PDF)       │                                                                     │
+│  └────────┬────────┘                                                                     │
+│           │                                                                              │
+│           ▼                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────────────────────┐│
+│  │ STAGE 1: TAGGER (Chronological Ordering)                                            ││
+│  │ ┌─────────────────────────────────────────────────────────────────────────────────┐ ││
+│  │ │ • Parse document metadata (patient_id, doc_id, doc_type, doc_date)              │ ││
+│  │ │ • Sort documents chronologically per patient                                     │ ││
+│  │ │ • Calculate confidence scores via LLM (type_confidence, date_confidence)        │ ││
+│  │ │ • Output: TaggerResult with sorted TaggedDocument list                          │ ││
+│  │ └─────────────────────────────────────────────────────────────────────────────────┘ ││
+│  └────────┬────────────────────────────────────────────────────────────────────────────┘│
+│           │                                                                              │
+│           ▼                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────────────────────┐│
+│  │ STAGE 2: EXTRACTOR (DocETL Map + Normalize + Unnest)                                ││
+│  │ ┌───────────────────────────────────────────────────────────────────────────────┐   ││
+│  │ │ MAP OPERATOR: extract_clinical_fields                                         │   ││
+│  │ │ • LLM extracts ALL NAACCR fields from each document                          │   ││
+│  │ │ • Output: {extractions: [{field_name, raw_value, normalized_value, ...}]}    │   ││
+│  │ └───────────────────────────────────────────────────────────────────────────────┘   ││
+│  │                              ▼                                                       ││
+│  │ ┌───────────────────────────────────────────────────────────────────────────────┐   ││
+│  │ │ NORMALIZE OPERATOR: normalize_extractions (code_map)                          │   ││
+│  │ │ • Ensures 'extractions' is always a valid list                                │   ││
+│  │ │ • Handles JSON string parsing from tool calls                                 │   ││
+│  │ │ • Fixes malformed LLM outputs                                                 │   ││
+│  │ └───────────────────────────────────────────────────────────────────────────────┘   ││
+│  │                              ▼                                                       ││
+│  │ ┌───────────────────────────────────────────────────────────────────────────────┐   ││
+│  │ │ UNNEST OPERATOR: explode_field_records                                        │   ││
+│  │ │ • Flattens extractions array into individual rows                             │   ││
+│  │ │ • Each row: one field with patient_id, doc_id, evidence                       │   ││
+│  │ │ • Enables field-level resolution in next stage                                │   ││
+│  │ └───────────────────────────────────────────────────────────────────────────────┘   ││
+│  └────────┬────────────────────────────────────────────────────────────────────────────┘│
+│           │                                                                              │
+│           ▼                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────────────────────┐│
+│  │ STAGE 3: CONSOLIDATOR (DocETL Resolve + Reduce)                                     ││
+│  │ ┌───────────────────────────────────────────────────────────────────────────────┐   ││
+│  │ │ RESOLVE OPERATOR: resolve_patient_fields                                      │   ││
+│  │ │ • Uses blocking_keys: [patient_id, field_name] to group records               │   ││
+│  │ │ • Compares values via comparison_prompt (LLM pairwise matching)               │   ││
+│  │ │ • Resolves conflicts via resolution_prompt (picks canonical value)            │   ││
+│  │ │ • Output: One resolved value per (patient_id, field_name) pair                │   ││
+│  │ └───────────────────────────────────────────────────────────────────────────────┘   ││
+│  │                              ▼                                                       ││
+│  │ ┌───────────────────────────────────────────────────────────────────────────────┐   ││
+│  │ │ REDUCE OPERATOR: reduce_patient_summary                                       │   ││
+│  │ │ • Groups all resolved fields by patient_id                                    │   ││
+│  │ │ • Generates mCODE-compliant patient registry                                  │   ││
+│  │ │ • Creates patient_summary narrative                                           │   ││
+│  │ │ • Identifies primary_cancers with site, histology, date                       │   ││
+│  │ └───────────────────────────────────────────────────────────────────────────────┘   ││
+│  └────────┬────────────────────────────────────────────────────────────────────────────┘│
+│           │                                                                              │
+│           ▼                                                                              │
+│  ┌─────────────────┐                                                                     │
+│  │ OUTPUT: mCODE   │  → Patient-level JSON with consolidated_fields, primary_cancers    │
+│  │ Patient Record  │                                                                     │
+│  └─────────────────┘                                                                     │
+│                                                                                          │
+└──────────────────────────────────────────────────────────────────────────────────────────┘
+```
 
-### 2.2 Local (bare-metal) Setup
+### Input Format
 
-#### Step 1: Clone and Install Dependencies
+Documents are stored in `input_patient_docs/` with standardized header metadata:
+
+```
+===== Document 003 =====
+Patient Id: p01
+Doc Id: 003
+Filename: p01/jsl_p01_003_radiology_doc.txt
+Doc Type: radiology
+Date: 2015-10-01
+Title: NM BONE SCAN, WHOLE BODY
+---
+[Document content follows...]
+```
+
+**Parsed Into:**
+```python
+DocumentMetadata(
+    patient_id="p01",
+    doc_id="doc_003_jsl_p01_003_radiology_doc",
+    doc_type="radiology",
+    doc_date="2015-10-01",
+    filename="input_patient_docs/jsl_p01_003_radiology_doc.txt",
+    content="..."
+)
+```
+
+### Operator Details Summary
+
+| Operator | Type | Purpose | Input | Output |
+|----------|------|---------|-------|--------|
+| **Tagger** | Custom Stage | Chronological ordering + confidence scoring | Raw documents | Sorted TaggedDocument list |
+| **Map** | `MapOp` | Extract NAACCR fields via LLM | Document content | `{extractions: [...]}` per doc |
+| **Normalize** | `CodeMapOp` | Fix malformed extractions array | Map output | Clean list of extractions |
+| **Unnest** | `UnnestOp` | Flatten extractions to rows | Normalized output | One row per field |
+| **Resolve** | `ResolveOp` | Deduplicate & select canonical value | Unnested rows | One value per (patient, field) |
+| **Reduce** | `ReduceOp` | Aggregate to patient-level record | Resolved values | mCODE patient record |
+
+---
+
+### Operator 1: MAP (extract_clinical_fields)
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────────────┐
+│                              MAP OPERATOR: extract_clinical_fields                           │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                              │
+│  PURPOSE: Extract ALL NAACCR oncology fields from each document using LLM                   │
+│                                                                                              │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │                                    INPUT                                               │ │
+│  │  ┌──────────────────────────────────────────────────────────────────────────────────┐ │ │
+│  │  │ DocumentMetadata {                                                               │ │ │
+│  │  │   patient_id: "p01",                                                             │ │ │
+│  │  │   doc_id: "doc_003_jsl_p01_003_radiology_doc",                                   │ │ │
+│  │  │   doc_type: "radiology",                                                         │ │ │
+│  │  │   doc_date: "2015-10-01",                                                        │ │ │
+│  │  │   content: "CLINICAL STATEMENT: Prostate cancer, Gleason score 7..."            │ │ │
+│  │  │ }                                                                                │ │ │
+│  │  └──────────────────────────────────────────────────────────────────────────────────┘ │ │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                           │                                                  │
+│                                           ▼                                                  │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │                               LLM PROMPT (Simplified)                                  │ │
+│  │  ┌──────────────────────────────────────────────────────────────────────────────────┐ │ │
+│  │  │ "You are a certified oncology registrar. Extract every NAACCR field:            │ │ │
+│  │  │                                                                                  │ │ │
+│  │  │  ONTOLOGY FIELDS TO EXTRACT:                                                     │ │ │
+│  │  │  ├── naaccr_diagnosis_dt (Date of diagnosis in YYYY-MM-DD)                       │ │ │
+│  │  │  ├── ca_site (Anatomical site with ICD-O-3 code)                                 │ │ │
+│  │  │  ├── naaccr_histology_cd (Histology/morphology code)                             │ │ │
+│  │  │  ├── ca_clinical_t_stage (Clinical T stage)                                      │ │ │
+│  │  │  ├── ca_clinical_n_stage (Clinical N stage)                                      │ │ │
+│  │  │  ├── ca_clinical_m_stage (Clinical M stage)                                      │ │ │
+│  │  │  ├── ca_path_t_stage (Pathological T stage)                                      │ │ │
+│  │  │  ├── ca_path_n_stage (Pathological N stage)                                      │ │ │
+│  │  │  ├── ca_path_m_stage (Pathological M stage)                                      │ │ │
+│  │  │  ├── ca_gen_sum_stage_2 (SEER Summary Stage)                                     │ │ │
+│  │  │  ├── ecog (ECOG Performance Status 0-5)                                          │ │ │
+│  │  │  └── kps (Karnofsky Performance Score 0-100)                                     │ │ │
+│  │  │                                                                                  │ │ │
+│  │  │  For EACH field, return:                                                         │ │ │
+│  │  │  - field_name, raw_value, normalized_value                                       │ │ │
+│  │  │  - reasoning_excerpt (EXACT quote from document)                                 │ │ │
+│  │  │  - confidence_score (0.0-1.0 with calibration rules)                             │ │ │
+│  │  │  - inferred (true/false)"                                                        │ │ │
+│  │  └──────────────────────────────────────────────────────────────────────────────────┘ │ │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                           │                                                  │
+│                                           ▼                                                  │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │                                   OUTPUT                                               │ │
+│  │  ┌──────────────────────────────────────────────────────────────────────────────────┐ │ │
+│  │  │ {                                                                                │ │ │
+│  │  │   "extractions": [                                                               │ │ │
+│  │  │     {                                                                            │ │ │
+│  │  │       "field_name": "ca_site",                                                   │ │ │
+│  │  │       "category": "diagnosis",                                                   │ │ │
+│  │  │       "raw_value": "Prostate cancer",                                            │ │ │
+│  │  │       "normalized_value": "Prostate (C61.9)/Malignant",                          │ │ │
+│  │  │       "reasoning_excerpt": "CLINICAL STATEMENT: Prostate cancer, Gleason...",    │ │ │
+│  │  │       "confidence_score": 0.92,                                                  │ │ │
+│  │  │       "inferred": false                                                          │ │ │
+│  │  │     },                                                                           │ │ │
+│  │  │     {                                                                            │ │ │
+│  │  │       "field_name": "ca_clinical_m_stage",                                       │ │ │
+│  │  │       "raw_value": "No osseous metastatic disease",                              │ │ │
+│  │  │       "normalized_value": "cM0",                                                 │ │ │
+│  │  │       "reasoning_excerpt": "No scintigraphic evidence of osseous metastases",    │ │ │
+│  │  │       "confidence_score": 0.88,                                                  │ │ │
+│  │  │       "inferred": true                                                           │ │ │
+│  │  │     },                                                                           │ │ │
+│  │  │     ... (one entry per ontology field)                                           │ │ │
+│  │  │   ]                                                                              │ │ │
+│  │  │ }                                                                                │ │ │
+│  │  └──────────────────────────────────────────────────────────────────────────────────┘ │ │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                              │
+│  CONFIDENCE SCORE CALIBRATION:                                                               │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │ 0.92-0.95  │ Explicit & verbatim (exact term appears in document)        │ RARE      │ │
+│  │ 0.85-0.91  │ Explicit but interpreted (needs minor calculation)          │ COMMON    │ │
+│  │ 0.75-0.84  │ Strong inference from clinical context                      │ MEDIUM    │ │
+│  │ 0.60-0.74  │ Moderate inference from indirect evidence                   │ MEDIUM    │ │
+│  │ 0.30-0.40  │ "Not Reported" or minimal evidence (HARD CAP: 0.40)         │ LOW       │ │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                              │
+└──────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Operator 2: NORMALIZE (normalize_extractions)
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────────────┐
+│                          NORMALIZE OPERATOR: normalize_extractions                           │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                              │
+│  PURPOSE: Ensure 'extractions' is ALWAYS a valid list (fix malformed LLM outputs)           │
+│  TYPE: CodeMapOp (Python code transformation, no LLM call)                                   │
+│                                                                                              │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │                           PROBLEM CASES HANDLED                                        │ │
+│  │                                                                                        │ │
+│  │  CASE 1: extractions is a JSON string (from tool calls)                                │ │
+│  │  ┌──────────────────────────────────────────────────────────────────────────────────┐ │ │
+│  │  │ INPUT:  {"extractions": "[{\"field_name\": \"ca_site\"...}]"}  ← string!         │ │ │
+│  │  │ OUTPUT: {"extractions": [{"field_name": "ca_site"...}]}       ← parsed list      │ │ │
+│  │  └──────────────────────────────────────────────────────────────────────────────────┘ │ │
+│  │                                                                                        │ │
+│  │  CASE 2: extractions is None                                                           │ │
+│  │  ┌──────────────────────────────────────────────────────────────────────────────────┐ │ │
+│  │  │ INPUT:  {"extractions": null}                                                    │ │ │
+│  │  │ OUTPUT: {"extractions": []}                                                      │ │ │
+│  │  └──────────────────────────────────────────────────────────────────────────────────┘ │ │
+│  │                                                                                        │ │
+│  │  CASE 3: extractions is a single dict (not array)                                      │ │
+│  │  ┌──────────────────────────────────────────────────────────────────────────────────┐ │ │
+│  │  │ INPUT:  {"extractions": {"field_name": "ca_site"...}}                            │ │ │
+│  │  │ OUTPUT: {"extractions": [{"field_name": "ca_site"...}]}                          │ │ │
+│  │  └──────────────────────────────────────────────────────────────────────────────────┘ │ │
+│  │                                                                                        │ │
+│  │  CASE 4: Nested extractions object                                                     │ │
+│  │  ┌──────────────────────────────────────────────────────────────────────────────────┐ │ │
+│  │  │ INPUT:  {"extractions": {"extractions": [...]}}  ← double nested                 │ │ │
+│  │  │ OUTPUT: {"extractions": [...]}                   ← flattened                     │ │ │
+│  │  └──────────────────────────────────────────────────────────────────────────────────┘ │ │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                              │
+│  PYTHON CODE (simplified):                                                                   │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │ def transform(doc: dict) -> dict:                                                      │ │
+│  │     if 'extractions' not in doc:                                                       │ │
+│  │         doc['extractions'] = []                                                        │ │
+│  │     elif isinstance(doc['extractions'], str):                                          │ │
+│  │         doc['extractions'] = json.loads(doc['extractions'])                            │ │
+│  │     elif isinstance(doc['extractions'], dict):                                         │ │
+│  │         doc['extractions'] = [doc['extractions']]                                      │ │
+│  │     return doc                                                                         │ │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                              │
+└──────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Operator 3: UNNEST (explode_field_records)
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────────────┐
+│                            UNNEST OPERATOR: explode_field_records                            │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                              │
+│  PURPOSE: Flatten the extractions array so each field becomes an individual row             │
+│  TYPE: UnnestOp (no LLM call, pure data transformation)                                      │
+│                                                                                              │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │                                 TRANSFORMATION                                         │ │
+│  │                                                                                        │ │
+│  │  INPUT (1 record with array):                                                          │ │
+│  │  ┌──────────────────────────────────────────────────────────────────────────────────┐ │ │
+│  │  │ {                                                                                │ │ │
+│  │  │   "patient_id": "p01",                                                           │ │ │
+│  │  │   "doc_id": "doc_003",                                                           │ │ │
+│  │  │   "doc_type": "radiology",                                                       │ │ │
+│  │  │   "doc_date": "2015-10-01",                                                      │ │ │
+│  │  │   "extractions": [                                                               │ │ │
+│  │  │     {"field_name": "ca_site", "normalized_value": "Prostate (C61.9)", ...},      │ │ │
+│  │  │     {"field_name": "ca_clinical_m_stage", "normalized_value": "cM0", ...},       │ │ │
+│  │  │     {"field_name": "ecog", "normalized_value": "Not Reported", ...}              │ │ │
+│  │  │   ]                                                                              │ │ │
+│  │  │ }                                                                                │ │ │
+│  │  └───────────────────────────────────────┬──────────────────────────────────────────┘ │ │
+│  │                                          │                                            │ │
+│  │                                          ▼  UNNEST                                    │ │
+│  │                                                                                        │ │
+│  │  OUTPUT (3 separate records):                                                          │ │
+│  │  ┌──────────────────────────────────────────────────────────────────────────────────┐ │ │
+│  │  │ ROW 1: {                                                                         │ │ │
+│  │  │   "patient_id": "p01", "doc_id": "doc_003", "doc_type": "radiology",             │ │ │
+│  │  │   "doc_date": "2015-10-01",                                                      │ │ │
+│  │  │   "field_name": "ca_site",                                                       │ │ │
+│  │  │   "normalized_value": "Prostate (C61.9)",                                        │ │ │
+│  │  │   "confidence_score": 0.92, ...                                                  │ │ │
+│  │  │ }                                                                                │ │ │
+│  │  ├──────────────────────────────────────────────────────────────────────────────────┤ │ │
+│  │  │ ROW 2: {                                                                         │ │ │
+│  │  │   "patient_id": "p01", "doc_id": "doc_003", "doc_type": "radiology",             │ │ │
+│  │  │   "doc_date": "2015-10-01",                                                      │ │ │
+│  │  │   "field_name": "ca_clinical_m_stage",                                           │ │ │
+│  │  │   "normalized_value": "cM0",                                                     │ │ │
+│  │  │   "confidence_score": 0.88, ...                                                  │ │ │
+│  │  │ }                                                                                │ │ │
+│  │  ├──────────────────────────────────────────────────────────────────────────────────┤ │ │
+│  │  │ ROW 3: {                                                                         │ │ │
+│  │  │   "patient_id": "p01", "doc_id": "doc_003", "doc_type": "radiology",             │ │ │
+│  │  │   "doc_date": "2015-10-01",                                                      │ │ │
+│  │  │   "field_name": "ecog",                                                          │ │ │
+│  │  │   "normalized_value": "Not Reported",                                            │ │ │
+│  │  │   "confidence_score": 0.35, ...                                                  │ │ │
+│  │  │ }                                                                                │ │ │
+│  │  └──────────────────────────────────────────────────────────────────────────────────┘ │ │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                              │
+│  CONFIGURATION:                                                                              │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │ UnnestOp(                                                                              │ │
+│  │   name="explode_field_records",                                                        │ │
+│  │   unnest_key="extractions",           # Array to flatten                               │ │
+│  │   expand_fields=[                     # Fields to promote to top level                 │ │
+│  │     "field_name", "category", "data_type", "raw_value",                                │ │
+│  │     "normalized_value", "units", "vocabulary_code",                                    │ │
+│  │     "reasoning_excerpt", "explanation", "confidence_level",                            │ │
+│  │     "confidence_score", "inferred", "related_entities"                                 │ │
+│  │   ],                                                                                   │ │
+│  │   keep_empty=False,                   # Drop records with empty extractions            │ │
+│  │   recursive=True,                     # Handle nested structures                       │ │
+│  │   depth=2                             # Max nesting depth                              │ │
+│  │ )                                                                                      │ │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                              │
+│  WHY UNNEST?                                                                                 │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │ Before Unnest: 50 documents × 1 record each = 50 records                               │ │
+│  │ After Unnest:  50 documents × 12 fields each = 600 rows                                │ │
+│  │                                                                                        │ │
+│  │ This enables FIELD-LEVEL resolution in the next stage:                                 │ │
+│  │ • Compare ca_site values across all documents                                          │ │
+│  │ • Compare diagnosis_date values across all documents                                   │ │
+│  │ • Each field resolved independently                                                    │ │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                              │
+└──────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Operator 4: RESOLVE (resolve_patient_fields)
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────────────┐
+│                          RESOLVE OPERATOR: resolve_patient_fields                            │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                              │
+│  PURPOSE: Deduplicate and select the CANONICAL value for each (patient_id, field_name)      │
+│  TYPE: ResolveOp (uses LLM for comparison and resolution)                                    │
+│                                                                                              │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │                              BLOCKING KEYS (Critical!)                                 │ │
+│  │                                                                                        │ │
+│  │  blocking_keys = ["patient_id", "field_name"]                                          │ │
+│  │                                                                                        │ │
+│  │  Records are ONLY compared within the same (patient_id, field_name) group:             │ │
+│  │                                                                                        │ │
+│  │  ALL UNNESTED ROWS (600):                   GROUPED BY BLOCKING KEYS:                  │ │
+│  │  ┌─────────────────────────┐               ┌─────────────────────────────────┐        │ │
+│  │  │ p01 / ca_site / doc001  │               │ GROUP (p01, ca_site):           │        │ │
+│  │  │ p01 / ca_stage / doc001 │     ────►     │   doc001, doc003, doc015, ...   │        │ │
+│  │  │ p01 / ca_site / doc003  │               │   Compare ONLY within group     │        │ │
+│  │  │ p01 / ecog / doc005     │               └─────────────────────────────────┘        │ │
+│  │  │ ...                     │               ┌─────────────────────────────────┐        │ │
+│  │  └─────────────────────────┘               │ GROUP (p01, ca_stage):          │        │ │
+│  │                                            │   doc001, doc002, ...           │        │ │
+│  │  ❌ NO cross-field comparisons             └─────────────────────────────────┘        │ │
+│  │  ❌ NO cross-patient comparisons                                                       │ │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                              │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │                         STEP 1: COMPARISON PROMPT (Pairwise)                           │ │
+│  │                                                                                        │ │
+│  │  For each pair of records in the same group, LLM determines if they match:             │ │
+│  │                                                                                        │ │
+│  │  ┌──────────────────────────────────────────────────────────────────────────────────┐ │ │
+│  │  │ "You are comparing two candidate values for the same oncology registry field.   │ │ │
+│  │  │                                                                                  │ │ │
+│  │  │  Field 1 (ca_site) from doc_003:                                                 │ │ │
+│  │  │  - Value: Prostate (C61.9)/Malignant                                             │ │ │
+│  │  │  - Evidence: 'CLINICAL STATEMENT: Prostate cancer, Gleason score 7'              │ │ │
+│  │  │                                                                                  │ │ │
+│  │  │  Field 2 (ca_site) from doc_004:                                                 │ │ │
+│  │  │  - Value: Prostate (C61.9)/Malignant                                             │ │ │
+│  │  │  - Evidence: '60-year-old male with prostate cancer'                             │ │ │
+│  │  │                                                                                  │ │ │
+│  │  │  Respond with JSON: {\"is_match\": true} or {\"is_match\": false}"               │ │ │
+│  │  └──────────────────────────────────────────────────────────────────────────────────┘ │ │
+│  │                                                                                        │ │
+│  │  LLM Response: {"is_match": true}  ✓ Same value, merge into cluster                   │ │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                              │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │                      STEP 2: RESOLUTION PROMPT (Per Cluster)                           │ │
+│  │                                                                                        │ │
+│  │  For each cluster of matching records, LLM picks the canonical value:                  │ │
+│  │                                                                                        │ │
+│  │  ┌──────────────────────────────────────────────────────────────────────────────────┐ │ │
+│  │  │ "You are consolidating oncology registry evidence for patient p01                │ │ │
+│  │  │  and field ca_site.                                                              │ │ │
+│  │  │                                                                                  │ │ │
+│  │  │  Evidence set:                                                                   │ │ │
+│  │  │  ---                                                                             │ │ │
+│  │  │  Document ID: doc_003, Date: 2015-10-01, Type: radiology                         │ │ │
+│  │  │  Raw Value: 'Prostate cancer', Normalized: 'Prostate (C61.9)/Malignant'          │ │ │
+│  │  │  Confidence: 0.92                                                                │ │ │
+│  │  │  ---                                                                             │ │ │
+│  │  │  Document ID: doc_004, Date: 2015-10-15, Type: clinical                          │ │ │
+│  │  │  Raw Value: 'prostate cancer', Normalized: 'Prostate (C61.9)/Malignant'          │ │ │
+│  │  │  Confidence: 0.94                                                                │ │ │
+│  │  │  ---                                                                             │ │ │
+│  │  │                                                                                  │ │ │
+│  │  │  TASK: Resolve conflicts and determine the most reliable value.                  │ │ │
+│  │  │                                                                                  │ │ │
+│  │  │  Source Tiering: Pathology > Operative > Imaging > Clinical > Admin              │ │ │
+│  │  │  Confidence Anchors:                                                             │ │ │
+│  │  │  - 0.95-0.99: 3+ agreeing sources OR 2 high-quality identical                    │ │ │
+│  │  │  - 0.85-0.94: Clear agreement, limited sources                                   │ │ │
+│  │  │  - 0.60-0.74: Conflicts exist, one source clearly superior"                      │ │ │
+│  │  └──────────────────────────────────────────────────────────────────────────────────┘ │ │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                              │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │                                    OUTPUT                                              │ │
+│  │  ┌──────────────────────────────────────────────────────────────────────────────────┐ │ │
+│  │  │ {                                                                                │ │ │
+│  │  │   "patient_id": "p01",                                                           │ │ │
+│  │  │   "field_name": "ca_site",                                                       │ │ │
+│  │  │   "normalized_value": "Prostate (C61.9)/Malignant",                              │ │ │
+│  │  │   "resolved_value": "C61.9 - Prostate, Malignant primary site",                  │ │ │
+│  │  │   "confidence_score": 0.95,                                                      │ │ │
+│  │  │   "supporting_docs": [                                                           │ │ │
+│  │  │     {"doc_id": "doc_003", "doc_date": "2015-10-01", "doc_type": "radiology"},    │ │ │
+│  │  │     {"doc_id": "doc_004", "doc_date": "2015-10-15", "doc_type": "clinical"}      │ │ │
+│  │  │   ],                                                                             │ │ │
+│  │  │   "consolidation_notes": "2 agreeing sources (radiology + clinical). Boosted    │ │ │
+│  │  │                          confidence due to identical normalized values."         │ │ │
+│  │  │ }                                                                                │ │ │
+│  │  └──────────────────────────────────────────────────────────────────────────────────┘ │ │
+│  │                                                                                        │ │
+│  │  ONE resolved record per (patient_id, field_name) pair                                 │ │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                              │
+│  CONFLICT RESOLUTION STRATEGIES:                                                             │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │ Scenario                        │ Resolution Strategy                                  │ │
+│  │ ────────────────────────────────┼──────────────────────────────────────────────────── │ │
+│  │ Values AGREE                    │ Use highest confidence, boost score                 │ │
+│  │ Values CONFLICT                 │ Prefer: Pathology > Operative > Imaging > Clinical │ │
+│  │ "Not Reported" vs Actual Value  │ ALWAYS use the actual clinical value               │ │
+│  │ Multiple Cancers (different     │ Preserve separate entries per cancer site          │ │
+│  │   sites like Colon vs Prostate) │ (do NOT merge different cancers)                   │ │
+│  │ Date conflicts                  │ Use EARLIEST valid diagnosis date                  │ │
+│  │ Stage conflicts                 │ Prefer HIGHEST stage (pT3 > pT2)                   │ │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                              │
+└──────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Operator 5: REDUCE (reduce_patient_summary)
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────────────┐
+│                            REDUCE OPERATOR: reduce_patient_summary                           │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                              │
+│  PURPOSE: Aggregate all resolved fields into a PATIENT-LEVEL mCODE registry record          │
+│  TYPE: ReduceOp (groups by patient_id, uses LLM for final consolidation)                     │
+│                                                                                              │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │                                  GROUPING                                              │ │
+│  │                                                                                        │ │
+│  │  reduce_key = "patient_id"                                                             │ │
+│  │                                                                                        │ │
+│  │  RESOLVED RECORDS (12 per patient):          GROUPED BY patient_id:                    │ │
+│  │  ┌───────────────────────────────┐          ┌──────────────────────────────────┐      │ │
+│  │  │ p01 / ca_site / resolved      │          │ PATIENT p01:                     │      │ │
+│  │  │ p01 / ca_stage / resolved     │   ────►  │   ca_site, ca_stage, diag_dt,   │      │ │
+│  │  │ p01 / diagnosis_dt / resolved │          │   histology, ecog, kps, ...     │      │ │
+│  │  │ p01 / histology / resolved    │          │   (ALL 12 fields together)       │      │ │
+│  │  │ p01 / ecog / resolved         │          └──────────────────────────────────┘      │ │
+│  │  │ ...                           │                                                     │ │
+│  │  └───────────────────────────────┘                                                     │ │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                              │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │                              LLM PROMPT (Simplified)                                   │ │
+│  │  ┌──────────────────────────────────────────────────────────────────────────────────┐ │ │
+│  │  │ "You are a certified oncology registrar consolidating patient-level data.       │ │ │
+│  │  │                                                                                  │ │ │
+│  │  │  RESOLVED FIELD EXTRACTIONS FOR PATIENT p01:                                     │ │ │
+│  │  │                                                                                  │ │ │
+│  │  │  Field: ca_site (Category: diagnosis)                                            │ │ │
+│  │  │  - Normalized value: Prostate (C61.9)/Malignant                                  │ │ │
+│  │  │  - Confidence: 0.95                                                              │ │ │
+│  │  │  - Supporting docs: doc_003 (radiology), doc_004 (clinical)                      │ │ │
+│  │  │                                                                                  │ │ │
+│  │  │  Field: naaccr_diagnosis_dt (Category: diagnosis)                                │ │ │
+│  │  │  - Normalized value: 2015-07-15                                                  │ │ │
+│  │  │  - Confidence: 0.92                                                              │ │ │
+│  │  │                                                                                  │ │ │
+│  │  │  Field: ecog (Category: performance)                                             │ │ │
+│  │  │  - Normalized value: ECOG 1                                                      │ │ │
+│  │  │  - Confidence: 0.88                                                              │ │ │
+│  │  │  ...                                                                             │ │ │
+│  │  │                                                                                  │ │ │
+│  │  │  TASK: Generate patient-level mCODE registry with:                               │ │ │
+│  │  │  1. consolidated_fields array (all 12 fields)                                    │ │ │
+│  │  │  2. primary_cancers array (one per unique cancer site)                           │ │ │
+│  │  │  3. patient_summary narrative"                                                   │ │ │
+│  │  └──────────────────────────────────────────────────────────────────────────────────┘ │ │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                              │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │                              OUTPUT: mCODE PATIENT RECORD                              │ │
+│  │  ┌──────────────────────────────────────────────────────────────────────────────────┐ │ │
+│  │  │ {                                                                                │ │ │
+│  │  │   "patient_id": "p01",                                                           │ │ │
+│  │  │                                                                                  │ │ │
+│  │  │   "consolidated_fields": [                                                       │ │ │
+│  │  │     {                                                                            │ │ │
+│  │  │       "field_name": "ca_site",                                                   │ │ │
+│  │  │       "category": "diagnosis",                                                   │ │ │
+│  │  │       "normalized_value": "Prostate (C61.9)/Malignant",                          │ │ │
+│  │  │       "resolved_value": "C61.9 - Prostate, primary malignant site",              │ │ │
+│  │  │       "confidence_score": 0.95,                                                  │ │ │
+│  │  │       "consolidation_notes": "2 agreeing sources"                                │ │ │
+│  │  │     },                                                                           │ │ │
+│  │  │     {                                                                            │ │ │
+│  │  │       "field_name": "naaccr_diagnosis_dt",                                       │ │ │
+│  │  │       "normalized_value": "2015-07-15",                                          │ │ │
+│  │  │       "confidence_score": 0.92                                                   │ │ │
+│  │  │     },                                                                           │ │ │
+│  │  │     ... (all 12 NAACCR fields)                                                   │ │ │
+│  │  │   ],                                                                             │ │ │
+│  │  │                                                                                  │ │ │
+│  │  │   "primary_cancers": [                                                           │ │ │
+│  │  │     {                                                                            │ │ │
+│  │  │       "site": "C61.9 - Prostate",                                                │ │ │
+│  │  │       "histology": "8140/3 - Adenocarcinoma, NOS",                               │ │ │
+│  │  │       "diagnosis_date": "2015-07-15",                                            │ │ │
+│  │  │       "staging": "Gleason 3+4=7, unfavorable intermediate-risk"                  │ │ │
+│  │  │     },                                                                           │ │ │
+│  │  │     {                                                                            │ │ │
+│  │  │       "site": "C18.9 - Colon",                                                   │ │ │
+│  │  │       "histology": "8480/3 - Mucinous adenocarcinoma",                           │ │ │
+│  │  │       "diagnosis_date": "1987-05-12",                                            │ │ │
+│  │  │       "staging": "Historical, treated with neoadjuvant chemoradiation"           │ │ │
+│  │  │     }                                                                            │ │ │
+│  │  │   ],                                                                             │ │ │
+│  │  │                                                                                  │ │ │
+│  │  │   "patient_summary": "60-year-old male with unfavorable intermediate-risk       │ │ │
+│  │  │     prostate cancer (Gleason 3+4=7, PSA 15.7 ng/mL) diagnosed in July 2015.      │ │ │
+│  │  │     Prior history of rectal/colon cancer in 1987 treated with neoadjuvant        │ │ │
+│  │  │     chemoradiation (30 Gy) and APR. Known Lynch Syndrome. Current treatment       │ │ │
+│  │  │     plan: EBRT 75.6 Gy in 42 fractions with 6 months ADT. Bone scan negative     │ │ │
+│  │  │     for metastatic disease. ECOG performance status 1."                          │ │ │
+│  │  │ }                                                                                │ │ │
+│  │  └──────────────────────────────────────────────────────────────────────────────────┘ │ │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                              │
+│  MULTI-CANCER HANDLING:                                                                      │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │ When patient has MULTIPLE cancers (different sites):                                   │ │
+│  │                                                                                        │ │
+│  │ ✓ Each cancer gets its OWN entry in primary_cancers array                             │ │
+│  │ ✓ Each cancer has its OWN diagnosis_date (do NOT mix dates!)                          │ │
+│  │ ✓ Each cancer has SITE-APPROPRIATE histology:                                         │ │
+│  │   - Prostate → "prostatic adenocarcinoma"                                             │ │
+│  │   - Colon → "mucinous adenocarcinoma"                                                 │ │
+│  │   - Lung → "squamous cell carcinoma"                                                  │ │
+│  │                                                                                        │ │
+│  │ ❌ Do NOT merge values from different cancer sites                                     │ │
+│  │ ❌ Do NOT apply Colon dates/histology to Prostate cancer                              │ │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                              │
+└──────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Complete Operator Flow Summary
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────────────┐
+│                          DocETL OPERATOR FLOW - DATA TRANSFORMATION                          │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                              │
+│  50 Documents                                                                                │
+│       │                                                                                      │
+│       ▼                                                                                      │
+│  ┌─────────────┐     ┌──────────────────────────────────────────────────────────────────┐   │
+│  │    MAP      │ ──► │ 50 records, each with {extractions: [12 fields]}                │   │
+│  │ (LLM Call)  │     │ = 50 × 12 = 600 field extractions (nested in arrays)            │   │
+│  └─────────────┘     └──────────────────────────────────────────────────────────────────┘   │
+│       │                                                                                      │
+│       ▼                                                                                      │
+│  ┌─────────────┐     ┌──────────────────────────────────────────────────────────────────┐   │
+│  │  NORMALIZE  │ ──► │ 50 records with clean extractions arrays                        │   │
+│  │ (Code only) │     │ (fixes JSON strings, nulls, nested objects)                     │   │
+│  └─────────────┘     └──────────────────────────────────────────────────────────────────┘   │
+│       │                                                                                      │
+│       ▼                                                                                      │
+│  ┌─────────────┐     ┌──────────────────────────────────────────────────────────────────┐   │
+│  │   UNNEST    │ ──► │ 600 individual rows (one per field per document)                │   │
+│  │ (No LLM)    │     │ Each row: patient_id + doc_id + field_name + value              │   │
+│  └─────────────┘     └──────────────────────────────────────────────────────────────────┘   │
+│       │                                                                                      │
+│       ▼                                                                                      │
+│  ┌─────────────┐     ┌──────────────────────────────────────────────────────────────────┐   │
+│  │   RESOLVE   │ ──► │ 12 resolved records (one per unique field for patient p01)     │   │
+│  │ (LLM Calls) │     │ Blocking keys reduce 600 rows → 12 groups → 12 outputs          │   │
+│  └─────────────┘     └──────────────────────────────────────────────────────────────────┘   │
+│       │                                                                                      │
+│       ▼                                                                                      │
+│  ┌─────────────┐     ┌──────────────────────────────────────────────────────────────────┐   │
+│  │   REDUCE    │ ──► │ 1 patient record with consolidated_fields, primary_cancers,    │   │
+│  │ (LLM Call)  │     │ patient_summary (mCODE-compliant registry output)               │   │
+│  └─────────────┘     └──────────────────────────────────────────────────────────────────┘   │
+│                                                                                              │
+│  RECORD COUNT PROGRESSION:                                                                   │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │ Stage         │ Records │ LLM Calls │ Description                                     │ │
+│  │ ──────────────┼─────────┼───────────┼──────────────────────────────────────────────── │ │
+│  │ Input         │ 50      │ 0         │ Raw documents                                   │ │
+│  │ After Map     │ 50      │ 50        │ Each doc → {extractions: [...]}                │ │
+│  │ After Unnest  │ 600     │ 0         │ 50 docs × 12 fields = 600 rows                 │ │
+│  │ After Resolve │ 12      │ ~150*     │ 600 rows → 12 canonical values                 │ │
+│  │ After Reduce  │ 1       │ 1         │ 12 fields → 1 patient record                   │ │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                              │
+│  * Resolve LLM calls depend on blocking key grouping (see Blocking Keys section)            │
+│                                                                                              │
+└──────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Use Case Walkthrough: Documents 003 & 004
+
+### Step 1: Input Documents
+
+**Document 003 (Radiology - Bone Scan)**
+```
+Patient Id: p01
+Doc Type: radiology
+Date: 2015-10-01
+
+CLINICAL STATEMENT: Prostate cancer, Gleason score 7. Staging evaluation.
+
+IMPRESSION: No scintigraphic evidence of osseous metastatic disease.
+```
+
+**Document 004 (Clinical - Radiation Oncology)**
+```
+Patient Id: p01
+Doc Type: clinical
+Date: 2015-10-15
+
+HISTORY: 60-year-old male with prostate cancer (Gleason 3+4=7, PSA 15.7 ng/mL).
+Prior history: Rectal cancer in 1987 treated with neoadjuvant chemoradiation.
+
+PLAN: EBRT 75.6 Gy in 42 fractions + ADT for 6 months.
+```
+
+### Step 2: Tagger Stage
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        TAGGER OUTPUT                                │
+├─────────────────────────────────────────────────────────────────────┤
+│ Sorted Documents (by date):                                         │
+│                                                                     │
+│ 1. doc_003 │ 2015-10-01 │ radiology │ type_conf: 0.95 │ date: 0.92 │
+│ 2. doc_004 │ 2015-10-15 │ clinical  │ type_conf: 0.97 │ date: 0.95 │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Step 3: Map Operator (Extraction)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    MAP OUTPUT FOR doc_003 (Radiology)                           │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ {                                                                               │
+│   "extractions": [                                                              │
+│     {                                                                           │
+│       "field_name": "ca_site",                                                  │
+│       "raw_value": "Prostate cancer",                                           │
+│       "normalized_value": "Prostate (C61.9)/Malignant",                         │
+│       "reasoning_excerpt": "Prostate cancer, Gleason score 7",                  │
+│       "confidence_score": 0.92                                                  │
+│     },                                                                          │
+│     {                                                                           │
+│       "field_name": "ca_clinical_m_stage",                                      │
+│       "raw_value": "No osseous metastatic disease",                             │
+│       "normalized_value": "cM0",                                                │
+│       "reasoning_excerpt": "No scintigraphic evidence of osseous metastases",   │
+│       "confidence_score": 0.88                                                  │
+│     }                                                                           │
+│   ]                                                                             │
+│ }                                                                               │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    MAP OUTPUT FOR doc_004 (Clinical)                            │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ {                                                                               │
+│   "extractions": [                                                              │
+│     {                                                                           │
+│       "field_name": "ca_site",                                                  │
+│       "raw_value": "prostate cancer",                                           │
+│       "normalized_value": "Prostate (C61.9)/Malignant",                         │
+│       "reasoning_excerpt": "60-year-old male with prostate cancer",             │
+│       "confidence_score": 0.94                                                  │
+│     },                                                                          │
+│     {                                                                           │
+│       "field_name": "naaccr_histology_cd",                                      │
+│       "raw_value": "Gleason 3+4=7",                                             │
+│       "normalized_value": "8140/3 - Adenocarcinoma, NOS",                       │
+│       "reasoning_excerpt": "Gleason 3+4=7, PSA 15.7 ng/mL",                     │
+│       "confidence_score": 0.91                                                  │
+│     }                                                                           │
+│   ]                                                                             │
+│ }                                                                               │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Step 4: Unnest Operator
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                         UNNEST OUTPUT (Flattened Rows)                          │
+├──────┬────────────┬────────────────────┬───────────────────────┬────────────────┤
+│ Row  │ patient_id │ field_name         │ normalized_value      │ doc_id         │
+├──────┼────────────┼────────────────────┼───────────────────────┼────────────────┤
+│  1   │ p01        │ ca_site            │ Prostate (C61.9)      │ doc_003        │
+│  2   │ p01        │ ca_clinical_m_stage│ cM0                   │ doc_003        │
+│  3   │ p01        │ ca_site            │ Prostate (C61.9)      │ doc_004        │
+│  4   │ p01        │ naaccr_histology_cd│ 8140/3 - Adenocarc... │ doc_004        │
+└──────┴────────────┴────────────────────┴───────────────────────┴────────────────┘
+```
+
+### Step 5: Resolve Operator (Conflict Detection & Resolution)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    RESOLVE: CONFLICT DETECTION FOR ca_site                      │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  BLOCKING: Records grouped by (patient_id=p01, field_name=ca_site)             │
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐   │
+│  │ COMPARISON PROMPT (LLM Call):                                           │   │
+│  │                                                                         │   │
+│  │ Field 1 (ca_site) from doc_003:                                         │   │
+│  │ - Value: Prostate (C61.9)/Malignant                                     │   │
+│  │ - Evidence: "Prostate cancer, Gleason score 7"                          │   │
+│  │                                                                         │   │
+│  │ Field 2 (ca_site) from doc_004:                                         │   │
+│  │ - Value: Prostate (C61.9)/Malignant                                     │   │
+│  │ - Evidence: "60-year-old male with prostate cancer"                     │   │
+│  │                                                                         │   │
+│  │ → LLM Response: {"is_match": true}                                      │   │
+│  └─────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐   │
+│  │ RESOLUTION PROMPT (LLM Call):                                           │   │
+│  │                                                                         │   │
+│  │ Evidence set for (p01, ca_site):                                        │   │
+│  │ - doc_003 (radiology): Prostate (C61.9), confidence 0.92                │   │
+│  │ - doc_004 (clinical): Prostate (C61.9), confidence 0.94                 │   │
+│  │                                                                         │   │
+│  │ → Result: Both agree → confidence_score: 0.95                           │   │
+│  │ → resolved_value: "Prostate (C61.9)/Malignant"                          │   │
+│  └─────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Conflict Resolution Strategy:**
+
+| Scenario | Resolution Strategy |
+|----------|---------------------|
+| Values Agree | Use highest confidence source, boost score |
+| Values Conflict | Prefer: Pathology > Operative > Imaging > Clinical > Admin |
+| "Not Reported" vs Actual Value | ALWAYS use actual value |
+| Multiple Cancers | Preserve separate entries per cancer site |
+
+### Step 6: Reduce Operator (Patient-Level mCODE)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    REDUCE OUTPUT: mCODE PATIENT RECORD                          │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ {                                                                               │
+│   "patient_id": "p01",                                                          │
+│   "consolidated_fields": [                                                      │
+│     {                                                                           │
+│       "field_name": "ca_site",                                                  │
+│       "normalized_value": "Prostate (C61.9)/Malignant",                         │
+│       "confidence_score": 0.95,                                                 │
+│       "consolidation_notes": "2 agreeing sources (radiology, clinical)"         │
+│     },                                                                          │
+│     {                                                                           │
+│       "field_name": "naaccr_histology_cd",                                      │
+│       "normalized_value": "8140/3 - Adenocarcinoma, NOS",                       │
+│       "confidence_score": 0.91                                                  │
+│     }                                                                           │
+│   ],                                                                            │
+│   "primary_cancers": [                                                          │
+│     {                                                                           │
+│       "site": "C61.9 - Prostate",                                               │
+│       "histology": "8140/3 - Adenocarcinoma",                                   │
+│       "diagnosis_date": "2015-07-15",                                           │
+│       "staging": "Gleason 3+4=7, unfavorable intermediate-risk"                 │
+│     }                                                                           │
+│   ],                                                                            │
+│   "patient_summary": "60-year-old male with unfavorable intermediate-risk..."   │
+│ }                                                                               │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Blocking Keys & LLM Call Optimization
+
+### Why Blocking Keys Matter
+
+The **Resolve operator** uses `blocking_keys` to dramatically reduce LLM API calls:
+
+```python
+ResolveOp(
+    blocking_keys=["patient_id", "field_name"],
+    blocking_conditions=[
+        "input1.get('patient_id') == input2.get('patient_id') and "
+        "input1.get('field_name') == input2.get('field_name')"
+    ]
+)
+```
+
+### Comparison: With vs Without Blocking Keys
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    LLM CALL OPTIMIZATION WITH BLOCKING KEYS                     │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  SCENARIO: 50 documents × 12 fields = 600 total extraction rows                │
+│                                                                                 │
+│  ┌───────────────────────────────────────────────────────────────────────────┐ │
+│  │ WITHOUT BLOCKING KEYS (Naive Approach)                                    │ │
+│  │                                                                           │ │
+│  │ Compare EVERY row with EVERY other row:                                   │ │
+│  │ Comparisons = C(600, 2) = 600 × 599 / 2 = 179,700 LLM calls! ❌           │ │
+│  │                                                                           │ │
+│  │ Cost: ~$180 (at $0.001/call) + Hours of processing time                   │ │
+│  └───────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                 │
+│  ┌───────────────────────────────────────────────────────────────────────────┐ │
+│  │ WITH BLOCKING KEYS: [patient_id, field_name]                              │ │
+│  │                                                                           │ │
+│  │ Only compare rows WITHIN same (patient_id, field_name) group:             │ │
+│  │                                                                           │ │
+│  │ Example groups for patient p01:                                           │ │
+│  │ ┌─────────────────────┬───────────────────────────────────────┐          │ │
+│  │ │ (p01, ca_site)      │ 50 docs → C(50,2) = 1,225 comparisons │          │ │
+│  │ │ (p01, ca_stage)     │ 50 docs → C(50,2) = 1,225 comparisons │          │ │
+│  │ │ (p01, diagnosis_dt) │ 50 docs → C(50,2) = 1,225 comparisons │          │ │
+│  │ │ ... × 12 fields     │                                      │          │ │
+│  │ └─────────────────────┴───────────────────────────────────────┘          │ │
+│  │                                                                           │ │
+│  │ Total: 12 fields × 1,225 = 14,700 comparisons ✓                          │ │
+│  │ Reduction: 92% fewer LLM calls!                                           │ │
+│  └───────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Optimization Impact Table
+
+| Metric | Without Blocking | With Blocking | Improvement |
+|--------|------------------|---------------|-------------|
+| **LLM Comparisons** | 179,700 | 14,700 | **92% reduction** |
+| **API Cost** | ~$180 | ~$15 | **92% savings** |
+| **Processing Time** | ~8 hours | ~40 minutes | **12x faster** |
+| **Token Usage** | ~18M tokens | ~1.5M tokens | **92% reduction** |
+
+### Visual: Blocking Key Grouping
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                         BLOCKING KEY GROUPING VISUAL                            │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  ALL UNNESTED ROWS (600 total):                                                 │
+│  ┌──────────────────────────────────────────────────────────────────────────┐  │
+│  │ Row1: p01/ca_site/doc001    Row2: p01/ca_stage/doc001   ...              │  │
+│  │ Row3: p01/ca_site/doc002    Row4: p01/ca_stage/doc002   ...              │  │
+│  │ ...                                                                      │  │
+│  └──────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                 │
+│  AFTER BLOCKING BY (patient_id, field_name):                                    │
+│                                                                                 │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐                 │
+│  │ GROUP 1         │  │ GROUP 2         │  │ GROUP 3         │                 │
+│  │ (p01, ca_site)  │  │ (p01, ca_stage) │  │ (p01, diag_dt)  │                 │
+│  │ ┌─────────────┐ │  │ ┌─────────────┐ │  │ ┌─────────────┐ │                 │
+│  │ │ doc001      │ │  │ │ doc001      │ │  │ │ doc001      │ │                 │
+│  │ │ doc002      │ │  │ │ doc002      │ │  │ │ doc002      │ │                 │
+│  │ │ doc003      │ │  │ │ doc005      │ │  │ │ doc003      │ │                 │
+│  │ │ ...         │ │  │ │ ...         │ │  │ │ ...         │ │                 │
+│  │ └─────────────┘ │  │ └─────────────┘ │  │ └─────────────┘ │                 │
+│  │                 │  │                 │  │                 │                 │
+│  │ Compare ONLY    │  │ Compare ONLY    │  │ Compare ONLY    │                 │
+│  │ within group    │  │ within group    │  │ within group    │                 │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘                 │
+│                                                                                 │
+│  ❌ NO cross-group comparisons needed!                                          │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Parallel Processing Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                       PARALLEL PROCESSING ARCHITECTURE                          │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐   │
+│  │                        FastAPI Background Workers                        │   │
+│  │                                                                         │   │
+│  │   POST /api/v1/process                                                  │   │
+│  │         │                                                               │   │
+│  │         ▼                                                               │   │
+│  │   ┌─────────────────────────────────────────────────────────────────┐   │   │
+│  │   │ BackgroundTasks.add_task(process_documents_task)                │   │   │
+│  │   │                                                                 │   │   │
+│  │   │   ┌───────────────────────────────────────────────────────┐     │   │   │
+│  │   │   │ PARALLEL PATIENT PROCESSING                           │     │   │   │
+│  │   │   │                                                       │     │   │   │
+│  │   │   │  Patient p01 ─┐                                       │     │   │   │
+│  │   │   │  Patient p02 ─┼─→ ThreadPoolExecutor(max_workers=12)  │     │   │   │
+│  │   │   │  Patient p03 ─┤   (max_parallel_patients setting)     │     │   │   │
+│  │   │   │  ...          ─┘                                       │     │   │   │
+│  │   │   │                                                       │     │   │   │
+│  │   │   └───────────────────────────────────────────────────────┘     │   │   │
+│  │   │                                                                 │   │   │
+│  │   │   Each patient runs DocETL pipeline independently:              │   │   │
+│  │   │   ┌─────────────────────────────────────────────────────────┐   │   │   │
+│  │   │   │ DocETL Pipeline (per patient)                           │   │   │   │
+│  │   │   │                                                         │   │   │   │
+│  │   │   │   Map ─→ Normalize ─→ Unnest ─→ Resolve ─→ Reduce       │   │   │   │
+│  │   │   │    │          │          │          │           │       │   │   │   │
+│  │   │   │    ▼          ▼          ▼          ▼           ▼       │   │   │   │
+│  │   │   │ max_threads=200 (docetl_max_threads setting)            │   │   │   │
+│  │   │   │ Parallel LLM calls per document                         │   │   │   │
+│  │   │   └─────────────────────────────────────────────────────────┘   │   │   │
+│  │   └─────────────────────────────────────────────────────────────────┘   │   │
+│  │                                                                         │   │
+│  └─────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                 │
+│  CONCURRENCY SETTINGS (settings.py):                                           │
+│  ┌─────────────────────────────────────────────────────────────────────────┐   │
+│  │ max_concurrent_requests = 30   # LLM API semaphore                      │   │
+│  │ max_workers = 150              # Total thread pool workers              │   │
+│  │ max_parallel_patients = 12     # Patients processed in parallel         │   │
+│  │ docetl_max_threads = 200       # DocETL internal parallelism            │   │
+│  └─────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## LLM Models & OpenRouter Integration
+
+### OpenRouter as Unified Gateway
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                         OPENROUTER INTEGRATION                                  │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐   │
+│  │                        Single API Key                                   │   │
+│  │                             │                                           │   │
+│  │                             ▼                                           │   │
+│  │  ┌───────────────────────────────────────────────────────────────────┐ │   │
+│  │  │              OpenRouter Gateway (https://openrouter.ai/api/v1)    │ │   │
+│  │  │                                                                   │ │   │
+│  │  │   ┌─────────────────┐     ┌─────────────────┐                    │ │   │
+│  │  │   │ OpenAI Models   │     │ Open Source     │                    │ │   │
+│  │  │   │ ┌─────────────┐ │     │ ┌─────────────┐ │                    │ │   │
+│  │  │   │ │ GPT-4o-mini │ │     │ │ Qwen 3 8B   │ │                    │ │   │
+│  │  │   │ │ GPT-4o      │ │     │ │ Qwen 2.5 7B │ │                    │ │   │
+│  │  │   │ │ GPT-4-turbo │ │     │ │ DeepSeek    │ │                    │ │   │
+│  │  │   │ └─────────────┘ │     │ │ Yi-Large    │ │                    │ │   │
+│  │  │   └─────────────────┘     │ └─────────────┘ │                    │ │   │
+│  │  │                           └─────────────────┘                    │ │   │
+│  │  └───────────────────────────────────────────────────────────────────┘ │   │
+│  │                                                                         │   │
+│  └─────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                 │
+│  BENEFITS:                                                                      │
+│  ✓ Single API key for 60+ providers, 300+ models                               │
+│  ✓ Automatic failover between providers                                         │
+│  ✓ Unified billing and rate limiting                                            │
+│  ✓ OpenAI-compatible API (works with LiteLLM)                                   │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Supported Models
+
+| Provider | Model | Use Case | Speed | Cost |
+|----------|-------|----------|-------|------|
+| **OpenAI** | `openai/gpt-4o-mini` | Default extraction | Fast | $$ |
+| **Qwen** | `openrouter/qwen/qwen3-8b` | Budget option | Very Fast | $ |
+| **Qwen** | `openrouter/qwen/qwen-2.5-7b-instruct` | Alternative | Fast | $ |
+| **DeepSeek** | `openrouter/deepseek/deepseek-chat` | Complex reasoning | Medium | $$ |
+
+---
+
+## Configuration Reference
+
+### Environment Variables (`config/.env`)
+
+| Variable | Required | Description | Default |
+|----------|----------|-------------|---------|
+| `OPENROUTER_API_KEY` | ✅ Yes | API key from openrouter.ai | - |
+| `DEFAULT_LLM_PROVIDER` | No | `openai` or `qwen` | `openai` |
+| `OPENROUTER_MODEL_OPENAI` | No | OpenAI model slug | `openai/gpt-4o-mini` |
+| `OPENROUTER_MODEL_QWEN` | No | Qwen model slug | `openrouter/qwen/qwen3-8b` |
+| `MAX_CONCURRENT_REQUESTS` | No | LLM API semaphore | `30` |
+| `OUTPUT_DIR` | No | JSON artifact directory | `./data/output` |
+| `LOG_DIR` | No | Session log directory | `./logs` |
+
+### Settings Class (`config/settings.py`)
+
+```python
+class Settings(BaseSettings):
+    # LLM Configuration
+    default_llm_provider: Literal["openai", "qwen"] = "openai"
+    openrouter_api_key: str = ""
+    openrouter_model_openai: str = "openai/gpt-4o-mini"
+    openrouter_model_qwen: str = "openrouter/qwen/qwen3-8b"
+    
+    # Concurrency Settings
+    max_concurrent_requests: int = 30
+    max_workers: int = 150
+    max_parallel_patients: int = 12
+    
+    # DocETL Configuration
+    docetl_max_threads: int = 200
+    docetl_timeout: int = 300
+    llm_request_timeout: float = 45.0
+```
+
+---
+
+## FastAPI Service Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                          FASTAPI SERVICE ARCHITECTURE                           │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐   │
+│  │                              src/main.py                                │   │
+│  │  FastAPI(title="Data Curation Service")                                 │   │
+│  │                                                                         │   │
+│  │  Endpoints:                                                             │   │
+│  │  ┌─────────────────────────────────────────────────────────────────┐   │   │
+│  │  │ GET  /              → Root info + docs link                     │   │   │
+│  │  │ GET  /health        → Health check                              │   │   │
+│  │  │ POST /api/v1/process→ Start document processing                 │   │   │
+│  │  │ GET  /api/v1/status/{session_id} → Check processing status      │   │   │
+│  │  │ POST /api/v1/upload → Upload documents                          │   │   │
+│  │  └─────────────────────────────────────────────────────────────────┘   │   │
+│  └─────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐   │
+│  │                         Processing Pipeline                             │   │
+│  │                                                                         │   │
+│  │  POST /process                                                          │   │
+│  │       │                                                                 │   │
+│  │       ▼                                                                 │   │
+│  │  ┌─────────────────────────────────────────────────────────────────┐   │   │
+│  │  │ Background Task:                                                │   │   │
+│  │  │   1. Tagger.tag_documents()     → sorted, confidence-scored    │   │   │
+│  │  │   2. Extractor.extract()        → DocETL Map/Unnest/Resolve    │   │   │
+│  │  │   3. Consolidator.consolidate() → mCODE patient record         │   │   │
+│  │  │   4. StorageManager.save_*()    → JSON artifacts               │   │   │
+│  │  └─────────────────────────────────────────────────────────────────┘   │   │
+│  │                                                                         │   │
+│  │  Response: {session_id, status: "processing"}                           │   │
+│  │                                                                         │   │
+│  │  GET /status/{session_id}                                               │   │
+│  │  Response: {status, tagger_result, extraction_result, consolidation}    │   │
+│  │                                                                         │   │
+│  └─────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+| Tool | Version | Notes |
+|------|---------|-------|
+| Python | 3.10+ | Use `uv` for dependency management |
+| `uv` | latest | https://github.com/astral-sh/uv |
+| Docker | optional | Containerized deployment |
+
+### Quick Start
 
 ```bash
+# Clone and install
 git clone <repository-url>
 cd data_curation
-
-# Install dependencies with uv (no pip install)
 uv sync
-```
 
-#### Step 2: Get OpenRouter API Key
-
-1. Go to [OpenRouter.ai](https://openrouter.ai/)
-2. Sign up or log in to your account
-3. Navigate to [API Keys](https://openrouter.ai/keys) section
-4. Create a new API key (it will look like `sk-or-v1-...`)
-5. Copy your API key
-
-#### Step 3: Create Configuration File
-
-Create a `.env` file in the `config/` directory:
-
-**Option A: Copy from example (if available)**
-```bash
-# Create config directory if it doesn't exist
+# Configure
 mkdir -p config
-
-# Copy example file and edit with your API key
-cp config/.env.example config/.env
-# Then edit config/.env and replace the placeholder with your actual API key
-```
-
-**Option B: Create manually**
-```bash
-# Create config directory if it doesn't exist
-mkdir -p config
-
-# Create .env file
 cat > config/.env <<'EOF'
-# REQUIRED: OpenRouter API Key
-# Get your key from: https://openrouter.ai/keys
-OPENROUTER_API_KEY=sk-or-v1-your-actual-api-key-here
-
-# Optional: LLM Provider Settings
+OPENROUTER_API_KEY=sk-or-v1-your-key-here
 DEFAULT_LLM_PROVIDER=openai
-OPENROUTER_MODEL_OPENAI=openai/gpt-4o-mini
-OPENROUTER_MODEL_QWEN=openrouter/qwen/qwen3-8b
-OPENROUTER_REFERER=https://local.data-curation
-OPENROUTER_APP_TITLE=Data Curation Service
 EOF
-```
 
-**Important:** 
-- Replace `sk-or-v1-your-actual-api-key-here` with your actual OpenRouter API key from Step 2
-- The `.env` file must be in the `config/` directory (not the root directory)
-- Never commit your `.env` file to version control (it should be in `.gitignore`)
-
-#### Step 4: Launch the Service
-
-```bash
-# Launch API (development)
+# Run
 uv run python main.py
-# or
-uv run uvicorn src.main:app --reload
-
-# API will be available at http://localhost:8000
+# API at http://localhost:8000
 ```
 
-**Note:** If you see an error about missing `OPENROUTER_API_KEY`, make sure:
-- The `.env` file is in the `config/` directory (not the root directory)
-- The API key is correctly set (no extra spaces or quotes)
-- You've saved the file after editing
-
-### 2.3 Docker Workflow
-
-#### Step 1: Create Configuration File
-
-Before running Docker, you need to create the `.env` file with your OpenRouter API key:
+### Docker Workflow
 
 ```bash
-# Create config directory if it doesn't exist
-mkdir -p config
-
-# Create .env file with your OpenRouter API key
-cat > config/.env <<'EOF'
-OPENROUTER_API_KEY=sk-or-v1-your-actual-api-key-here
-DEFAULT_LLM_PROVIDER=openai
-OPENROUTER_MODEL_OPENAI=openai/gpt-4o-mini
-OPENROUTER_MODEL_QWEN=openrouter/qwen/qwen3-8b
-EOF
-```
-
-**Important:** Replace `sk-or-v1-your-actual-api-key-here` with your actual OpenRouter API key. See [Section 3.2](#32-getting-your-openrouter-api-key) for instructions on how to get one.
-
-#### Step 2: Build and Run
-
-```bash
-# Build & run
+# Create config/.env first (see above)
 ./run_docker.sh
 # or
 docker compose up --build
 ```
 
-**Note:** `docker-compose.yml` only runs the FastAPI container. All LLM calls are proxied through OpenRouter, so no local models are downloaded. The `.env` file from `config/.env` will be automatically mounted into the container.
+---
+
+## Output Artifacts
+
+| Stage | File Pattern | Contents |
+|-------|--------------|----------|
+| Tagger | `stage_tagger_<session>_sorted.json` | Chronologically sorted documents |
+| Extractor | `stage_extractor_<session>_extraction.json` | Document-level NAACCR fields |
+| Consolidator | `stage_consolidator_<session>_consolidation.json` | Patient-level mCODE records |
+| DocETL | `docetl_intermediate/` | Raw Map/Resolve/Reduce outputs |
 
 ---
 
-## 3. Configuration Reference
+## References
 
-### 3.1 Environment Variables
-
-All configuration is done through environment variables loaded from `config/.env`. The application will automatically load this file on startup.
-
-| Variable                  | Required | Description                                                                 | Example                      |
-| ------------------------- | -------- | --------------------------------------------------------------------------- | ---------------------------- |
-| `OPENROUTER_API_KEY`      | ✅ **Yes** | API key from [OpenRouter](https://openrouter.ai/keys)                       | `sk-or-v1-...`               |
-| `DEFAULT_LLM_PROVIDER`    | No       | Initial provider (`openai` or `qwen`)                                      | `openai`                     |
-| `OPENROUTER_MODEL_OPENAI` | No       | Model slug used when `llm_provider=openai`                                 | `openai/gpt-4o-mini`         |
-| `OPENROUTER_MODEL_QWEN`   | No       | Model slug used when `llm_provider=qwen`                                    | `openrouter/qwen/qwen3-8b`   |
-| `OPENROUTER_REFERER`      | No       | URL identifying your app (used to satisfy OpenRouter headers)               | `https://local.data-curation` |
-| `OPENROUTER_APP_TITLE`    | No       | Human-readable title sent to OpenRouter                                     | `Data Curation Service`      |
-| `OUTPUT_DIR`              | No       | JSON artifact root                                                          | `./data/output`              |
-| `LOG_DIR`                 | No       | Session log root                                                            | `./logs`                     |
-| `MAX_CONCURRENT_REQUESTS` | No       | Extractor semaphore                                                         | `30`                         |
-
-### 3.2 Getting Your OpenRouter API Key
-
-1. **Visit OpenRouter**: Go to [https://openrouter.ai/](https://openrouter.ai/)
-2. **Sign Up/Login**: Create an account or log in
-3. **Navigate to Keys**: Click on "Keys" in the navigation menu or go directly to [https://openrouter.ai/keys](https://openrouter.ai/keys)
-4. **Create API Key**: Click "Create Key" button
-5. **Copy Key**: Your API key will start with `sk-or-v1-`. Copy it immediately (you won't be able to see it again)
-6. **Add to .env**: Paste it into your `config/.env` file as `OPENROUTER_API_KEY=sk-or-v1-your-key-here`
-
-### 3.3 Configuration File Location
-
-The application looks for `.env` file in the following locations (in order):
-1. `config/.env` (recommended)
-2. `.env` (root directory)
-
-**Best Practice**: Always use `config/.env` to keep configuration organized.
-
-### 3.4 OpenRouter Integration
-
-> OpenRouter acts as a unified OpenAI-compatible gateway across many labs, so the backend just needs one API key and one base URL to reach both OpenAI GPT-4o-mini and Qwen models.[^openrouter] These values are automatically copied into the standard `OPENAI_API_KEY` / `OPENAI_API_BASE` environment variables at startup so DocETL/LiteLLM can authenticate without additional configuration. **If the key is missing, the app will fail fast with a clear error message.**
+- [DocETL Documentation](https://ucbepic.github.io/docetl/)
+- [OpenRouter API](https://openrouter.ai/)
+- [NAACCR Standards](https://www.naaccr.org/)
+- [mCODE (Minimal Common Oncology Data Elements)](https://confluence.hl7.org/display/COD/mCODE)
+- [ICD-O-3 Coding](https://www.who.int/standards/classifications/other-classifications/international-classification-of-diseases-for-oncology)
 
 ---
 
-## 4. API Usage
-
-### 4.1 Process Documents
-
-```bash
-curl -X POST "http://localhost:8000/api/v1/process" \
-  -H "Content-Type: application/json" \
-  -d '{
-        "patient_ids": ["p01"],
-        "process_all": false,
-        "llm_provider": "openai",
-        "llm_model": "openai/gpt-4o-mini"
-      }'
-```
-Switch `"llm_provider"` to `"qwen"` and `"llm_model"` to `"openrouter/qwen/qwen-2.5-7b-instruct"` to run the same request with Qwen.
-
-Response:
-
-```json
-{
-  "session_id": "238de31e-7e02-493e-9f1f-63815234c063",
-  "status": "processing",
-  "message": "Processing started"
-}
-```
-
-### 4.2 Check Status
-
-```bash
-curl "http://localhost:8000/api/v1/status/238de31e-7e02-493e-9f1f-63815234c063"
-```
-
-Returns the latest status plus any available `tagger_result`, `extraction_result`, and `consolidation_result`.
-
-### 4.3 Upload Files (optional)
-
-```bash
-curl -X POST "http://localhost:8000/api/v1/upload" \
-  -F "files=@input_patient_docs/jsl_p01_001_summary_doc.txt" \
-  -F "files=@input_patient_docs/jsl_p01_050_summary_doc.txt"
-```
-
----
-
-## 5. Automated Demo Flow
-
-`scripts/e2e_demo.py` drives the full workflow (upload → process → poll status → archive results).
-
-```bash
-uv run python scripts/e2e_demo.py \
-  --base-url http://localhost:8000 \
-  --patient-ids p01 \
-  --upload \
-  --num-docs 5 \
-  --llm-providers openai qwen \
-  --provider-models openai=openai/gpt-4o-mini \
-  --provider-models qwen=openrouter/qwen/qwen-2.5-7b-instruct \
-  --poll-timeout 900
-```
-
-Use additional `--provider-models PROVIDER=MODEL` flags to test alternative OpenRouter slugs per provider (e.g., `anthropic/claude-3.7-sonnet`). The script processes OpenAI first and then Qwen, storing artifacts under `demo_runs/<timestamp>/<idx>_<provider>/`.
-Providers run concurrently via asyncio, so overall runtime roughly matches the slowest provider rather than the sum of both runs.
-
-1. _(optional)_ Upload sample docs from `input_patient_docs/`.
-2. Trigger `/process` with the selected provider/model.
-3. Poll `/status/{session}` until `completed` (handles transient `httpx` errors with retries).
-4. Save:
-   - `01_upload_response.json`
-   - `02_process_response.json`
-   - `03_status_final.json`
-   - `tagger_result.json`
-   - `extraction_result.json`
-   - `consolidation_result.json`
-5. Aggregate log stream into `demo.log`.
-
-Artifacts live under `demo_runs/demo_run_<timestamp>/<idx>_<provider>/`.
-
----
-
-## 6. Output Artifacts
-
-| Stage        | File Pattern                                                     | Highlights                                                          |
-| ------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Tagger       | `data/output/<session>/stage_stage_tagger_<session>_sorted.json` | Chronologically sorted documents, confidence scores, split metadata |
-| Extractor    | `.../stage_stage_extractor_<session>_extraction.json`            | Document-level NAACCR fields with evidence, timestamps, confidence  |
-| DocETL raw   | `.../docetl_patient_results.json` + `docetl_intermediate/`       | Full Map/Resolve/Reduce payloads for replay + auditing              |
-| Consolidator | `.../stage_stage_consolidator_<session>_consolidation.json`      | Patient-level resolved values, provenance, consolidated reasoning   |
-
-### 6.1 Sample Outputs
-
-```1:34:output_samples/stage_extractor_48a759f7-2a79-4b98-86ff-dd8a4094e97b_extraction.json
-{
-  "session_id": "48a759f7-2a79-4b98-86ff-dd8a4094e97b",
-  "generated_timestamp": "2025-10-17T01:32:30.907927",
-  "stage": "stage_extractor",
-  "total_documents_processed": 2,
-  "document_results": [
-    {
-      "doc_id": "doc_001_jsl_p01_001_summary_doc",
-      "extracted_fields": [
-        {
-          "field_name": "file_name",
-          "category": "provenance",
-          "raw_value": "p01/jsl_p01_001_summary_doc.txt",
-          "normalized_value": "p01/jsl_p01_001_summary_doc.txt",
-          "...": "..."
-        }
-      ]
-    }
-  ]
-}
-```
-
-```1:38:output_samples/stage_consolidator_48a759f7-2a79-4b98-86ff-dd8a4094e97b_consolidation.json
-{
-  "session_id": "48a759f7-2a79-4b98-86ff-dd8a4094e97b",
-  "generated_timestamp": "2025-10-17T01:35:01.830776",
-  "stage": "stage_consolidator",
-  "consolidated_fields": [
-    {
-      "field_name": "mcode_patient_extraction",
-      "category": "mcode_registry",
-      "...": "..."
-    }
-  ]
-}
-```
-
-Each session also records:
-
-- `logs/<session>/stage_extractor.log`
-- `logs/<session>/stage_consolidator.log`
-
----
-
-## 7. Logging & Observability
-
-- Structured logger with timestamped lines per stage.
-- Full stack traces when LLM calls fail (e.g., connectivity, schema validation).
-- LLM prompts/responses saved in session logs for audit trails.
-- Automatic retry/backoff for `APIConnectionError`, `APITimeoutError`, `RateLimitError`.
-- Prompt captures:
-  - `logs/<session>/stage_extractor_prompts.log` → rendered DocETL Map prompts per document.
-  - `logs/<session>/stage_consolidator_prompts.log` → rendered Reduce prompts per patient (post-resolve inputs).
-
----
-
-## 8. Ontology & DocETL Integration
-
-### 8.1 DocETL Pipeline Architecture
-
-The service uses **DocETL** (https://github.com/ucbepic/docetl) to orchestrate the ETL pipeline:
-
-```
-Documents → Map (extract fields) → Unnest (explode arrays) → Resolve (deduplicate) → Reduce (patient-level)
-```
-
-**Operators Used:**
-- **Map**: Extracts all NAACCR fields from each document using LLM
-- **Unnest**: Expands the `extractions` array into individual field records
-- **Resolve**: Deduplicates and merges field values across documents for the same patient+field
-- **Reduce**: Aggregates resolved fields into patient-level summaries
-
-### 8.2 DocETL Configuration
-
-- **Source**: DocETL is installed from PyPI (`docetl>=0.2.5`)
-- **Dependency Management**: Declared in `pyproject.toml`, installed via `uv sync` / Docker build
-- **Pipeline Definition**: `src/pipeline/docetl_runner.py` builds the pipeline programmatically
-- **Outputs**: 
-  - Intermediate results: `data/output/<session>/docetl_intermediate/`
-  - Final results: `data/output/<session>/docetl_patient_results.json`
-
-### 8.3 Ontology Alignment
-
-- Ontology file: `data/ontology/cancer_registry_fields.yaml`
-- Extractor prompt dynamically enumerates every required NAACCR field
-- Consolidator merges doc-level entries into final patient summaries using DocETL Resolve + Reduce
-
----
-
-## 9. References & Further Reading
-
-- [DocETL documentation](https://ucbepic.github.io/docetl/)
-- [DocWrangler blog](https://data-people-group.github.io/blogs/2025/01/13/docwrangler/)
-- [NAACCR standards](https://www.naaccr.org/)
-- [ICD-O-3](https://www.who.int/standards/classifications/other-classifications/international-classification-of-diseases-for-oncology)
-
----
-
-## 10. Deliverables Checklist
+## Deliverables Checklist
 
 - [x] FastAPI service with DocETL integration
 - [x] Tagger → Extractor → Consolidator outputs
 - [x] Structured per-session logging
-- [x] Docker & Compose automation (including local Qwen)
+- [x] Docker & Compose automation
 - [x] End-to-end demo harness with reproducible artifacts
 - [x] Ontology-driven extraction conforming to NAACCR
+- [x] Blocking keys optimization for LLM call reduction
+- [x] Parallel patient processing
 
-[^openrouter]: OpenRouter provides a unified OpenAI-compatible endpoint across 60+ providers and 300+ models, simplifying multi-model routing behind a single API key (<https://openrouter.ai/>).
+[^openrouter]: OpenRouter provides a unified OpenAI-compatible endpoint across 60+ providers and 300+ models, simplifying multi-model routing behind a single API key (https://openrouter.ai/).
