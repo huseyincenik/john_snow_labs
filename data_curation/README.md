@@ -35,8 +35,31 @@ This repository contains a complete DocETL-powered **Data Curation Service** tha
 8. [Configuration Reference](#configuration-reference)
 9. [FastAPI Service Architecture](#fastapi-service-architecture)
 10. [Getting Started](#getting-started)
-11. [Output Artifacts](#output-artifacts)
-12. [References](#references)
+### Output Artifacts
+11. [References](#references)
+
+---
+
+## DocETL: The Engine Behind the Pipeline
+
+This project is built upon **DocETL**, a declarative framework for complex document processing tasks. Unlike traditional ETL tools that treat text as opaque blobs, DocETL is designed specifically for unstructured data, enabling semantic operations like "map", "resolve", and "reduce" powered by Large Language Models (LLMs).
+
+### Origins & Philosophy
+DocETL was developed by researchers at UC Berkeley to address the fragility of ad-hoc LLM scripts. It introduces a systematic way to optimize document processing pipelines, similar to how SQL query optimizers work for databases.
+
+*   **Declarative Definitions**: pipelines are defined by *what* they should do (e.g., "extract these fields", "resolve conflicts"), not *how* to loop over files.
+*   **LLM-Native Operators**: Built-in primitives for `Map` (Extraction), `Resolve` (Entity Resolution), and `Reduce` (Summarization) that handle prompt engineering and context management automatically.
+*   **Optimization**: The framework can automatically rewrite pipelines to reduce token usage and improve accuracy (e.g., by introducing blocking keys for resolution).
+
+### Why DocETL for Oncology?
+In this project, we adapt DocETL's general-purpose capabilities for the high-stakes domain of cancer registry curation:
+*   **Complex Resolution**: We leverage the `Resolve` operator to implement tiered logic (Pathology > Radiology > Clinical) for conflicting medical facts.
+*   **Schema Enforcement**: We use the `Map` operator with strict Pydantic schemas to ensure outputs match the NAACCR standard.
+*   **Traceability**: Every output decision can be traced back to efficient intermediate state representations (Unnested rows).
+
+> **Learn More**:
+> *   **Official Repository**: [ucb-epic/docetl](https://github.com/ucb-epic/docetl)
+> *   **Research Paper**: [DocETL: A Declarative System for LLM-Powered Document Processing](https://arxiv.org/abs/2407.11462) (arXiv)
 
 ---
 
