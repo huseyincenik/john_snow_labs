@@ -1254,6 +1254,42 @@ The bone scan clearly identifies the primary cancer being evaluated.
 }
 ```
 
+**Example 3: Histology (`naaccr_histology_cd`) from Doc 004**
+The Extraction logic leverages ontological mappings. It identifies "Gleason 3+4=7" as indicative of "Adenocarcinoma", mapping it to the ICD-O-3 code `8140/3`.
+```json
+{
+  "doc_id": "doc_004",
+  "extractions": [
+    {
+      "field_name": "naaccr_histology_cd",
+      "raw_value": "Gleason 3+4=7",
+      "normalized_value": "8140/3 - Adenocarcinoma, NOS",
+      "reasoning_excerpt": "new diagnosis of prostate cancer (Gleason 3+4=7)",
+      "confidence_score": 0.91,
+      "explanation": "Gleason scores are specific to Adenocarcinoma of the prostate."
+    }
+  ]
+}
+```
+
+**Example 4: ECOG Performance Status (`ecog`) from Doc 004**
+The logic infers performance status from clinical descriptions of activity.
+```json
+{
+  "doc_id": "doc_004",
+  "extractions": [
+    {
+      "field_name": "ecog",
+      "raw_value": "ambulatory",
+      "normalized_value": "0",
+      "reasoning_excerpt": "Patient is 60-year-old male... reluctant to undergo surgery... Proceed with CT simulation",
+      "confidence_score": 0.85,
+      "explanation": "Patient is active, ambulatory, and able to undergo complex treatment planning, implying fully active status."
+    }
+  ]
+}
+```
+
 ### Step 4: Unnest Operator
 *Output File Reference: `data/output/use_case/explode_field_records.json`*
 
