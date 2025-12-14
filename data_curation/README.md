@@ -74,31 +74,31 @@ In this project, we adapt DocETL's general-purpose capabilities for the high-sta
 ## High-Level Architecture
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#4CAF50', 'primaryTextColor': '#fff', 'primaryBorderColor': '#2E7D32', 'lineColor': '#FF9800', 'secondaryColor': '#2196F3', 'tertiaryColor': '#9C27B0'}}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#4CAF50', 'primaryTextColor': '#fff', 'lineColor': '#FF9800'}}}%%
 flowchart TB
-    subgraph INGESTION["🔵 INGESTION LAYER"]
+    subgraph INGESTION["🔵 INGESTION"]
         direction LR
-        API["🌐 REST API<br/>POST /process"]
-        UPLOAD["📤 File Upload<br/>POST /upload"]
-        DOCS["📁 Sample Documents<br/>TXT/PDF"]
+        API["🌐 REST API"]
+        UPLOAD["📤 Upload"]
+        DOCS["📁 Documents"]
         API --> UPLOAD --> DOCS
     end
 
     subgraph ENGINE["🟢 DocETL ENGINE"]
         direction LR
-        TAGGER["📋 TAGGER<br/>Chronology"]
-        MAP["🔍 MAP<br/>Extraction"]
-        UNNEST["📊 UNNEST<br/>Explode"]
-        RESOLVE["⚖️ RESOLVE<br/>Deduplicate"]
-        REDUCE["📦 REDUCE<br/>Patient-Level"]
+        TAGGER["📋 Tagger"]
+        MAP["🔍 Map"]
+        UNNEST["📊 Unnest"]
+        RESOLVE["⚖️ Resolve"]
+        REDUCE["📦 Reduce"]
         TAGGER --> MAP --> UNNEST --> RESOLVE --> REDUCE
     end
 
-    subgraph OUTPUTS["🟠 STRUCTURED OUTPUTS"]
+    subgraph OUTPUTS["🟠 OUTPUTS"]
         direction LR
-        JSON["📄 JSON Artifacts<br/>• tagger_result.json<br/>• extraction_result.json"]
-        LOGS["📝 Logs<br/>• stage_*.log<br/>• prompts.log"]
-        DEMO["🎯 Demo Artifacts<br/>• consolidation_result.json"]
+        JSON["📄 JSON"]
+        LOGS["📝 Logs"]
+        DEMO["🎯 Demo"]
     end
 
     INGESTION --> ENGINE --> OUTPUTS
@@ -122,49 +122,49 @@ flowchart TB
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#667eea', 'primaryTextColor': '#fff', 'lineColor': '#764ba2'}}}%%
 flowchart TB
-    subgraph INPUT["📥 INPUT DOCUMENTS"]
-        DOCS["📄 Raw Medical Documents<br/>Clinical Notes | Pathology | Radiology<br/><i>TXT/PDF</i>"]
+    subgraph INPUT["📥 INPUT"]
+        DOCS["📄 Medical Docs"]
     end
 
-    subgraph STAGE1["🏷️ STAGE 1: TAGGER"]
-        T1["Parse document metadata<br/><code>patient_id, doc_id, doc_type, doc_date</code>"]
-        T2["Sort chronologically per patient"]
-        T3["Calculate confidence scores via LLM"]
-        T4["📤 Output: TaggerResult"]
+    subgraph STAGE1["🏷️ TAGGER"]
+        T1["Parse metadata"]
+        T2["Sort by date"]
+        T3["LLM confidence"]
+        T4["📤 Result"]
         T1 --> T2 --> T3 --> T4
     end
 
-    subgraph STAGE2["🔍 STAGE 2: EXTRACTOR"]
-        subgraph MAP["🗺️ MAP OPERATOR"]
-            M1["LLM extracts ALL NAACCR fields"]
+    subgraph STAGE2["🔍 EXTRACTOR"]
+        subgraph MAP["🗺️ MAP"]
+            M1["Extract fields"]
         end
-        subgraph NORMALIZE["🔄 NORMALIZE OPERATOR"]
-            N1["Ensures valid list format<br/>Fixes malformed LLM outputs"]
+        subgraph NORMALIZE["🔄 NORM"]
+            N1["Fix format"]
         end
-        subgraph UNNEST["📊 UNNEST OPERATOR"]
-            U1["Flattens extractions to rows<br/>One row per field"]
+        subgraph UNNEST["📊 UNNEST"]
+            U1["Flatten rows"]
         end
         MAP --> NORMALIZE --> UNNEST
     end
 
-    subgraph STAGE3["⚖️ STAGE 3: CONSOLIDATOR"]
-        subgraph RESOLVE["🔗 RESOLVE OPERATOR"]
-            R1["Uses blocking_keys:<br/><code>[patient_id, field_name]</code>"]
-            R2["LLM pairwise matching"]
-            R3["Picks canonical value"]
+    subgraph STAGE3["⚖️ CONSOLIDATOR"]
+        subgraph RESOLVE["🔗 RESOLVE"]
+            R1["Block by key"]
+            R2["LLM match"]
+            R3["Pick value"]
             R1 --> R2 --> R3
         end
-        subgraph REDUCE["📦 REDUCE OPERATOR"]
-            RD1["Groups by patient_id"]
-            RD2["Generates mCODE registry"]
-            RD3["Creates patient_summary"]
+        subgraph REDUCE["📦 REDUCE"]
+            RD1["Group"]
+            RD2["mCODE"]
+            RD3["Summary"]
             RD1 --> RD2 --> RD3
         end
         RESOLVE --> REDUCE
     end
 
     subgraph OUTPUT["✅ OUTPUT"]
-        OUT["📋 mCODE Patient Record<br/>consolidated_fields | primary_cancers"]
+        OUT["📋 mCODE Record"]
     end
 
     INPUT --> STAGE1 --> STAGE2 --> STAGE3 --> OUTPUT
@@ -1526,29 +1526,29 @@ ResolveOp(
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#f44336', 'primaryTextColor': '#fff', 'lineColor': '#4CAF50'}}}%%
 flowchart TB
-    subgraph SCENARIO["📊 SCENARIO: 50 docs × 12 fields = 600 rows"]
+    subgraph SCENARIO["📊 50 docs × 12 fields"]
         direction TB
     end
 
-    subgraph WITHOUT["❌ WITHOUT BLOCKING KEYS"]
+    subgraph WITHOUT["❌ NO Blocking"]
         direction TB
-        W1["Compare EVERY row with EVERY other row"]
-        W2["C(600,2) = 600 × 599 / 2"]
-        W3["⚠️ 179,700 LLM calls!"]
-        W4["💰 Cost: ~$180 + Hours of processing"]
+        W1["Compare ALL rows"]
+        W2["C(600,2) = 179,700"]
+        W3["⚠️ 179K calls!"]
+        W4["💰 ~$180"]
         W1 --> W2 --> W3 --> W4
     end
 
-    subgraph WITH["✅ WITH BLOCKING KEYS"]
+    subgraph WITH["✅ WITH Blocking"]
         direction TB
-        B1["Group by: patient_id + field_name"]
-        subgraph GROUPS["📁 Example Groups for p01"]
-            G1["(p01, ca_site)<br/>50 docs → 1,225"]
-            G2["(p01, ca_stage)<br/>50 docs → 1,225"]
-            G3["(p01, diag_dt)<br/>50 docs → 1,225"]
+        B1["Group by key"]
+        subgraph GROUPS["📁 Groups"]
+            G1["ca_site: 1225"]
+            G2["ca_stage: 1225"]
+            G3["diag_dt: 1225"]
         end
-        B2["12 fields × 1,225 = 14,700 ✓"]
-        B3["🎉 92% fewer LLM calls!"]
+        B2["Total: 14,700 ✓"]
+        B3["🎉 92% less!"]
         B1 --> GROUPS --> B2 --> B3
     end
 
@@ -1615,44 +1615,42 @@ flowchart TB
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#009688', 'primaryTextColor': '#fff', 'lineColor': '#00BCD4'}}}%%
 flowchart TB
-    subgraph FASTAPI["🚀 FastAPI Background Workers"]
-        API["POST /api/v1/process"]
-        BG["BackgroundTasks.add_task()"]
+    subgraph FASTAPI["🚀 FastAPI Workers"]
+        API["POST /process"]
+        BG["BackgroundTask"]
         API --> BG
     end
 
-    subgraph PARALLEL["⚡ PARALLEL PATIENT PROCESSING"]
+    subgraph PARALLEL["⚡ Patient Processing"]
         direction LR
-        P1["👤 Patient p01"]
-        P2["👤 Patient p02"]
-        P3["👤 Patient p03"]
-        DOTS["..."]
-        POOL["ThreadPoolExecutor<br/>(max_workers=12)"]
+        P1["p01"]
+        P2["p02"]
+        P3["p03"]
+        POOL["ThreadPool<br/>max=12"]
         P1 --> POOL
         P2 --> POOL
         P3 --> POOL
-        DOTS --> POOL
     end
 
-    subgraph PIPELINE["🔄 DocETL Pipeline (per patient)"]
+    subgraph PIPELINE["🔄 DocETL Pipeline"]
         direction LR
-        MAP2["🗺️ Map"]
-        NORM["🔄 Normalize"]
-        UNN["📊 Unnest"]
-        RES["⚖️ Resolve"]
-        RED["📦 Reduce"]
+        MAP2["Map"]
+        NORM["Norm"]
+        UNN["Unnest"]
+        RES["Resolve"]
+        RED["Reduce"]
         MAP2 --> NORM --> UNN --> RES --> RED
     end
 
-    subgraph THREADS["🧵 max_threads=200"]
-        LLM["Parallel LLM calls per document"]
+    subgraph THREADS["🧵 LLM Threads"]
+        LLM["200 parallel calls"]
     end
 
-    subgraph SETTINGS["⚙️ CONCURRENCY SETTINGS"]
-        S1["max_concurrent_requests = 30"]
-        S2["max_workers = 150"]
-        S3["max_parallel_patients = 12"]
-        S4["docetl_max_threads = 200"]
+    subgraph SETTINGS["⚙️ Settings"]
+        S1["concurrent: 30"]
+        S2["workers: 150"]
+        S3["patients: 12"]
+        S4["threads: 200"]
     end
 
     FASTAPI --> PARALLEL --> PIPELINE --> THREADS
@@ -1938,29 +1936,29 @@ class Settings(BaseSettings):
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#059669', 'primaryTextColor': '#fff', 'lineColor': '#10B981'}}}%%
 flowchart TB
-    subgraph MAIN["📁 src/main.py"]
-        TITLE["FastAPI(title='Data Curation Service')"]
+    subgraph MAIN["📁 main.py"]
+        TITLE["FastAPI Service"]
         subgraph ENDPOINTS["🔗 Endpoints"]
-            E1["GET / → Root info"]
-            E2["GET /health → Health check"]
-            E3["POST /api/v1/process → Start processing"]
-            E4["GET /api/v1/status/{id} → Check status"]
-            E5["POST /api/v1/upload → Upload docs"]
+            E1["GET /"]
+            E2["GET /health"]
+            E3["POST /process"]
+            E4["GET /status"]
+            E5["POST /upload"]
         end
     end
 
-    subgraph PIPELINE["⚙️ Processing Pipeline"]
+    subgraph PIPELINE["⚙️ Pipeline"]
         POST["POST /process"]
-        subgraph BACKGROUND["🔄 Background Task"]
-            T1["1️⃣ Tagger.tag_documents()"]
-            T2["2️⃣ Extractor.extract()"]
-            T3["3️⃣ Consolidator.consolidate()"]
-            T4["4️⃣ StorageManager.save_*()"]
+        subgraph BACKGROUND["🔄 Background"]
+            T1["1️⃣ Tagger"]
+            T2["2️⃣ Extractor"]
+            T3["3️⃣ Consolidator"]
+            T4["4️⃣ Storage"]
             T1 --> T2 --> T3 --> T4
         end
-        RESP1["📤 Response: {session_id, status}"]
-        STATUS["GET /status/{session_id}"]
-        RESP2["📥 Response: {tagger, extraction, consolidation}"]
+        RESP1["📤 session_id"]
+        STATUS["GET /status"]
+        RESP2["📥 results"]
         POST --> BACKGROUND --> RESP1
         STATUS --> RESP2
     end
