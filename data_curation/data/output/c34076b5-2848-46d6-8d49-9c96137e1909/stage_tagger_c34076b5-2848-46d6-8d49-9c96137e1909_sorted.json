@@ -1,0 +1,40 @@
+{
+  "session_id": "c34076b5-2848-46d6-8d49-9c96137e1909",
+  "generated_timestamp": "2025-12-14T16:16:34.562980",
+  "stage": "stage_tagger",
+  "total_documents": 2,
+  "sorted_documents": [
+    {
+      "doc_id": "doc_003_jsl_p01_003_radiology_doc",
+      "filename": "jsl_p01_003_radiology_doc.txt",
+      "doc_type": "radiology",
+      "doc_date": "2015-10-01",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 003 =====\nPatient Id: p01\nDoc Id: 003\nFilename: p01/jsl_p01_003_radiology_doc.txt\nDoc Type: radiology\nDate: 2015-10-01\nTitle: NM BONE SCAN, WHOLE BODY\n---\nEXAMINATION: NM BONE SCAN, WHOLE BODY\nCLINICAL STATEMENT: Prostate cancer, Gleason score 7. Staging evaluation for osseous metastasis.\n\nTECHNIQUE: Following the intravenous injection of 20.1 mCi of Technetium-99m MDP, whole-body planar images were acquired.\n\nCOMPARISON: None.\n\nFINDINGS:\nThere is symmetric and homogeneous uptake of radiotracer throughout the axial and appendicular skeleton.\nNo focal areas of abnormally increased uptake are seen to suggest osteoblastic metastatic disease.\nMild degenerative changes are noted in the shoulders, hips, and spine.\nRenal excretion is symmetric. Activity is seen in the urinary bladder.\n\nIMPRESSION:\nNo scintigraphic evidence of osseous metastatic disease.\n\nElectronically Signed,\nDr. Wilson, MD\nJSL Medical Center, Department of Radiology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 239
+      }
+    },
+    {
+      "doc_id": "doc_004_jsl_p01_004_clinical_doc",
+      "filename": "jsl_p01_004_clinical_doc.txt",
+      "doc_type": "clinical",
+      "doc_date": "2015-10-15",
+      "type_confidence": 0.95,
+      "date_confidence": 0.9,
+      "content": "===== Document 004 =====\nPatient Id: p01\nDoc Id: 004\nFilename: p01/jsl_p01_004_clinical_doc.txt\nDoc Type: clinical\nDate: 2015-10-15\nTitle: Radiation Oncology Consultation Note\n---\nPATIENT: Patient\nID: p01\n\nREASON FOR CONSULTATION: Management of unfavorable intermediate-risk prostate cancer.\n\nHISTORY OF PRESENT ILLNESS: The patient is a 60-year-old male with a complex oncologic history, most notably rectal cancer in 1987 treated with neoadjuvant chemoradiation (30 Gy) and APR, and now a new diagnosis of prostate cancer (Gleason 3+4=7, PSA 15.7 ng/mL). He has known Lynch Syndrome. Staging workup (MRI, bone scan) is negative for metastatic disease, though local staging is limited by artifact. He is reluctant to undergo surgery.\n\nASSESSMENT:\nThe patient has unfavorable intermediate-risk prostate cancer. His prior pelvic radiation presents a significant challenge. The rectum is absent, precluding brachytherapy. The main options are radical prostatectomy or external beam radiation therapy (EBRT).\n\nDISCUSSION:\nWe discussed treatment options at length.\n1.  **Surgery (RP):** This remains a valid option, but the risks of urinary incontinence and erectile dysfunction are high, and the procedure is technically challenging given his prior APR and pelvic scarring.\n2.  **EBRT:** This is a feasible alternative. Given his unfavorable-risk features, treatment would be combined with androgen deprivation therapy (ADT) for 6 months. We discussed the increased risk of late GU and GI toxicity due to re-irradiation of the pelvis, even with modern techniques. The prior 30 Gy is a significant dose, and further radiation must be planned meticulously to minimize overlap and spare organs at risk, particularly the bladder. There is also a theoretical increased risk of a second malignancy (e.g., bladder cancer) in a patient with Lynch Syndrome receiving pelvic radiation, although the absolute risk is low.\n\nPLAN:\nAfter extensive discussion, the patient expresses his preference to proceed with EBRT and ADT. He understands the risks, including the potential for significant long-term urinary toxicity.\n1.  Initiate ADT (e.g., Leuprolide) for 6 months.\n2.  Proceed with CT simulation for radiation planning. We will plan for a dose of 75.6 Gy in 42 fractions to the prostate.\n3.  Place fiducial markers in the prostate for image guidance during treatment.\n4.  Continue multidisciplinary management with Urology and Medical Oncology.\n\nElectronically Signed,\nDr. Brown, MD\nJSL Medical Center, Department of Radiation Oncology",
+      "split_info": {
+        "is_split": false,
+        "split_number": 1,
+        "total_splits": 1,
+        "estimated_tokens": 631
+      }
+    }
+  ],
+  "processing_time_seconds": 3.239765167236328,
+  "timestamp": "2025-12-14T16:16:34.562996"
+}

@@ -1,0 +1,3 @@
+2025-12-14 16:19:29 - c34076b5-2848-46d6-8d49-9c96137e1909_stage_consolidator_ - INFO - Building patient-level objects from /app/data/output/c34076b5-2848-46d6-8d49-9c96137e1909/docetl_patient_results.json
+2025-12-14 16:19:29 - c34076b5-2848-46d6-8d49-9c96137e1909_stage_consolidator_ - DEBUG - Using 1 workers for consolidation processing
+2025-12-14 16:19:29 - c34076b5-2848-46d6-8d49-9c96137e1909_stage_consolidator_ - INFO - Consolidation complete: 1 consolidated patients, 0.01s

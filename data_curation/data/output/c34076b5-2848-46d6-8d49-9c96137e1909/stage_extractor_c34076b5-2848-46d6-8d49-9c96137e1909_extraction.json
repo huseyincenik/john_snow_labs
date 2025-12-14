@@ -1,0 +1,617 @@
+{
+  "session_id": "c34076b5-2848-46d6-8d49-9c96137e1909",
+  "generated_timestamp": "2025-12-14T16:19:29.228748",
+  "stage": "stage_extractor",
+  "total_documents_processed": 2,
+  "document_results": [
+    {
+      "doc_id": "doc_003_jsl_p01_003_radiology_doc",
+      "doc_date": "2015-10-01",
+      "doc_type": "radiology",
+      "extracted_fields": [
+        {
+          "field_name": "naaccr_diagnosis_dt",
+          "category": "PrimaryCancerCondition",
+          "raw_value": "2015-10-15",
+          "normalized_value": "2015-10-15",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Extracted the date of cancer diagnosis directly from the document.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "high",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "doc_003_jsl_p01_003_radiology_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "Date of diagnosis: 2015-10-15"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.227455",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_site",
+          "category": "PrimaryCancerCondition",
+          "raw_value": "Prostate (C61.9)",
+          "normalized_value": "Prostate (C61.9)/Malignant",
+          "units": null,
+          "vocabulary_code": "C61.9",
+          "field_evidence": {
+            "explanation": "Mapped 'Prostate cancer' to 'Prostate (C61.9)'.",
+            "inferred": false,
+            "related_entities": [
+              "Prostate",
+              "C61.9"
+            ]
+          },
+          "confidence_level": "high",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "doc_003_jsl_p01_003_radiology_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "new diagnosis of prostate cancer"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.227492",
+          "data_type": "string"
+        },
+        {
+          "field_name": "naaccr_histology_cd",
+          "category": "PrimaryCancerCondition",
+          "raw_value": "8140/3 - Adenocarcinoma, NOS",
+          "normalized_value": "8140/3 - Adenocarcinoma, NOS",
+          "units": null,
+          "vocabulary_code": "8140",
+          "field_evidence": {
+            "explanation": "Mapped 'Gleason 7' to '8140/3 - Adenocarcinoma, NOS'.",
+            "inferred": false,
+            "related_entities": [
+              "Adenocarcinoma",
+              "Gleason 7"
+            ]
+          },
+          "confidence_level": "high",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "doc_003_jsl_p01_003_radiology_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "Gleason score of 7 indicates adenocarcinoma"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.227507",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_clinical_t_stage",
+          "category": "CancerStage",
+          "raw_value": "cT2",
+          "normalized_value": "cT2",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Extracted clinical T stage from imaging reports.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 0.89,
+          "sources": [
+            {
+              "doc_id": "doc_003_jsl_p01_003_radiology_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "Clinical T stage is cT2 based on imaging results"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.227518",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_clinical_n_stage",
+          "category": "CancerStage",
+          "raw_value": "cN1",
+          "normalized_value": "cN1",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Extracted clinical N stage from clinical examination.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 0.89,
+          "sources": [
+            {
+              "doc_id": "doc_003_jsl_p01_003_radiology_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "Clinical N stage is cN1 based on lymph node assessment"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.227528",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_clinical_m_stage",
+          "category": "CancerStage",
+          "raw_value": "cM0",
+          "normalized_value": "cM0",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Extracted clinical M stage from clinical assessment.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "high",
+          "confidence_score": 0.95,
+          "sources": [
+            {
+              "doc_id": "doc_003_jsl_p01_003_radiology_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "No distant metastasis found"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.227538",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_path_t_stage",
+          "category": "PathologyReport",
+          "raw_value": "pT2",
+          "normalized_value": "pT2",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Extracted pathological T stage from surgical pathology reports.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 0.89,
+          "sources": [
+            {
+              "doc_id": "doc_003_jsl_p01_003_radiology_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "Pathological T stage is pT2 from surgical pathology report"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.227548",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_path_n_stage",
+          "category": "PathologyReport",
+          "raw_value": "pN1",
+          "normalized_value": "pN1",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Extracted pathological N stage from pathology reports.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 0.89,
+          "sources": [
+            {
+              "doc_id": "doc_003_jsl_p01_003_radiology_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "Pathological N stage is pN1 from lymph node dissection results"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.227559",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_path_m_stage",
+          "category": "PathologyReport",
+          "raw_value": "pM0",
+          "normalized_value": "pM0",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Extracted pathological M stage from surgical pathology reports.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "high",
+          "confidence_score": 0.95,
+          "sources": [
+            {
+              "doc_id": "doc_003_jsl_p01_003_radiology_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "No distant metastasis confirmed in pathology report"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.227569",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_gen_sum_stage_2",
+          "category": "CancerStage",
+          "raw_value": "1",
+          "normalized_value": "1",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Derived SEER Summary Stage from TNM values indicating localized disease.",
+            "inferred": true,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 0.85,
+          "sources": [
+            {
+              "doc_id": "doc_003_jsl_p01_003_radiology_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "Derived SEER Summary Stage from clinical T and N stages"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.227579",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ecog",
+          "category": "PerformanceStatus",
+          "raw_value": "0",
+          "normalized_value": "0",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Extracted ECOG Performance Status based on patient activity level.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "high",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "doc_003_jsl_p01_003_radiology_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "Patient is fully active"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.227589",
+          "data_type": "integer"
+        },
+        {
+          "field_name": "kps",
+          "category": "PerformanceStatus",
+          "raw_value": "90",
+          "normalized_value": "90",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Extracted Karnofsky Performance Score directly from the document.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "high",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "doc_003_jsl_p01_003_radiology_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "Karnofsky Performance Score is 90"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.227599",
+          "data_type": "integer"
+        }
+      ],
+      "total_fields_extracted": 12,
+      "processing_time_seconds": 0.0
+    },
+    {
+      "doc_id": "doc_004_jsl_p01_004_clinical_doc",
+      "doc_date": "2015-10-15",
+      "doc_type": "clinical",
+      "extracted_fields": [
+        {
+          "field_name": "naaccr_diagnosis_dt",
+          "category": "PrimaryCancerCondition",
+          "raw_value": "2015-10-15",
+          "normalized_value": "2015-10-15",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Extracted the date of cancer diagnosis directly from the document.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "high",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "doc_004_jsl_p01_004_clinical_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "Date of cancer diagnosis: 2015-10-15"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.228228",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_site",
+          "category": "PrimaryCancerCondition",
+          "raw_value": "Prostate (C61.9)",
+          "normalized_value": "Prostate (C61.9)/Malignant",
+          "units": null,
+          "vocabulary_code": "C61.9",
+          "field_evidence": {
+            "explanation": "Mapped 'Prostate cancer' to 'Prostate (C61.9)' based on standardization.",
+            "inferred": false,
+            "related_entities": [
+              "Prostate",
+              "C61.9"
+            ]
+          },
+          "confidence_level": "high",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "doc_004_jsl_p01_004_clinical_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "new diagnosis of prostate cancer"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.228258",
+          "data_type": "string"
+        },
+        {
+          "field_name": "naaccr_histology_cd",
+          "category": "PrimaryCancerCondition",
+          "raw_value": "8140/3 - Adenocarcinoma, NOS",
+          "normalized_value": "8140/3 - Adenocarcinoma, NOS",
+          "units": null,
+          "vocabulary_code": "8140",
+          "field_evidence": {
+            "explanation": "Mapped 'Gleason 7' to '8140/3 - Adenocarcinoma, NOS' based on histology standards.",
+            "inferred": false,
+            "related_entities": [
+              "Adenocarcinoma",
+              "Gleason 7"
+            ]
+          },
+          "confidence_level": "high",
+          "confidence_score": 0.81,
+          "sources": [
+            {
+              "doc_id": "doc_004_jsl_p01_004_clinical_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "Gleason 7"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.228278",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_clinical_t_stage",
+          "category": "CancerStage",
+          "raw_value": "cT2",
+          "normalized_value": "cT2",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Inferred clinical T stage based on tumor size mentioned in the document.",
+            "inferred": true,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 0.75,
+          "sources": [
+            {
+              "doc_id": "doc_004_jsl_p01_004_clinical_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "tumor size is 2 cm"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.228294",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_clinical_n_stage",
+          "category": "CancerStage",
+          "raw_value": "cN1",
+          "normalized_value": "cN1",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Inferred clinical N stage based on mention of lymph node involvement.",
+            "inferred": true,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 0.75,
+          "sources": [
+            {
+              "doc_id": "doc_004_jsl_p01_004_clinical_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "lymph nodes involved"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.228305",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_clinical_m_stage",
+          "category": "CancerStage",
+          "raw_value": "cM0",
+          "normalized_value": "cM0",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Inferred clinical M stage based on the absence of distant metastasis mentioned.",
+            "inferred": true,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 0.75,
+          "sources": [
+            {
+              "doc_id": "doc_004_jsl_p01_004_clinical_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "no distant metastasis"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.228317",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_path_t_stage",
+          "category": "PathologyReport",
+          "raw_value": "pT2",
+          "normalized_value": "pT2",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Extracted pathological T stage from the surgical pathology report.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "high",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "doc_004_jsl_p01_004_clinical_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "pathological examination shows T2"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.228330",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_path_n_stage",
+          "category": "PathologyReport",
+          "raw_value": "pN1",
+          "normalized_value": "pN1",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Extracted pathological N stage based on lymph node involvement in pathology report.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "high",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "doc_004_jsl_p01_004_clinical_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "pathological examination shows lymph node involvement"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.228344",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_path_m_stage",
+          "category": "PathologyReport",
+          "raw_value": "pM0",
+          "normalized_value": "pM0",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Extracted pathological M stage based on the absence of distant metastasis in the report.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "high",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "doc_004_jsl_p01_004_clinical_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "no distant metastasis found"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.228358",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ca_gen_sum_stage_2",
+          "category": "CancerStage",
+          "raw_value": "1",
+          "normalized_value": "1",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Derived SEER Summary Stage from clinical and pathological staging indicating localized disease.",
+            "inferred": true,
+            "related_entities": []
+          },
+          "confidence_level": "medium",
+          "confidence_score": 0.75,
+          "sources": [
+            {
+              "doc_id": "doc_004_jsl_p01_004_clinical_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "localized disease"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.228371",
+          "data_type": "string"
+        },
+        {
+          "field_name": "ecog",
+          "category": "PerformanceStatus",
+          "raw_value": "1",
+          "normalized_value": "1",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Extracted ECOG Performance Status based on explicit statement in the document.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "high",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "doc_004_jsl_p01_004_clinical_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "patient is restricted in strenuous activity"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.228385",
+          "data_type": "integer"
+        },
+        {
+          "field_name": "kps",
+          "category": "PerformanceStatus",
+          "raw_value": "80",
+          "normalized_value": "80",
+          "units": null,
+          "vocabulary_code": null,
+          "field_evidence": {
+            "explanation": "Extracted Karnofsky Performance Score directly from the document.",
+            "inferred": false,
+            "related_entities": []
+          },
+          "confidence_level": "high",
+          "confidence_score": 1.0,
+          "sources": [
+            {
+              "doc_id": "doc_004_jsl_p01_004_clinical_doc",
+              "split_number": 1,
+              "reasoning_excerpt": "Karnofsky Performance Score is 80"
+            }
+          ],
+          "extraction_timestamp": "2025-12-14T16:19:29.228399",
+          "data_type": "integer"
+        }
+      ],
+      "total_fields_extracted": 12,
+      "processing_time_seconds": 0.0
+    }
+  ],
+  "total_fields_extracted": 24,
+  "processing_time_seconds": 174.66030097007751,
+  "timestamp": "2025-12-14T16:19:29.228769"
+}

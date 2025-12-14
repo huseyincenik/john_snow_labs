@@ -1,0 +1,630 @@
+{
+  "session_id": "c34076b5-2848-46d6-8d49-9c96137e1909",
+  "generated_timestamp": "2025-12-14T16:19:29.241998",
+  "stage": "stage_consolidator",
+  "total_fields_consolidated": 1,
+  "consolidated_fields": [
+    {
+      "field_name": "mcode_patient_extraction",
+      "category": "mcode_registry",
+      "consolidated_value": {
+        "patient_id": "p01",
+        "mcode_extraction": {
+          "file_name": {
+            "final_value": "Not Reported",
+            "supporting_evidence": [],
+            "contradictory_evidence": []
+          },
+          "patient": {
+            "patient_id": {
+              "final_value": "Not Reported",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "patient_name": {
+              "final_value": "Not Reported",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "birth_date": {
+              "final_value": "Not Reported",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "gender": {
+              "final_value": "Not Reported",
+              "normalized_value": "",
+              "normalized_code": "",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "race": {
+              "final_value": "Not Reported",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "ethnicity": {
+              "final_value": "Not Reported",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            }
+          },
+          "health_assessment": {
+            "performance_status": {
+              "final_value": "ECOG 1",
+              "supporting_evidence": [
+                {
+                  "snippet": "Extracted ECOG Performance Status based on explicit statement in the document.",
+                  "explanation": "Extracted ECOG Performance Status based on explicit statement in the document.",
+                  "date": "2015-10-15",
+                  "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                  "confidence": 0.95,
+                  "span": null,
+                  "page": null
+                },
+                {
+                  "snippet": "Patient is fully active",
+                  "explanation": "Extracted ECOG Performance Status based on patient activity level.",
+                  "date": "2015-10-01",
+                  "source_file": "doc_003_jsl_p01_003_radiology_doc",
+                  "confidence": 1.0,
+                  "span": null,
+                  "page": null
+                },
+                {
+                  "snippet": "patient is restricted in strenuous activity",
+                  "explanation": "Extracted ECOG Performance Status based on explicit statement in the document.",
+                  "date": "2015-10-15",
+                  "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                  "confidence": 1.0,
+                  "span": null,
+                  "page": null
+                }
+              ],
+              "contradictory_evidence": [
+                {
+                  "snippet": "0",
+                  "explanation": "Extracted ECOG Performance Status based on patient activity level.",
+                  "date": "2015-10-01",
+                  "source_file": "doc_003_jsl_p01_003_radiology_doc",
+                  "confidence": 1.0,
+                  "span": null,
+                  "page": null
+                }
+              ]
+            },
+            "bmi": {
+              "final_value": "Not Reported",
+              "units": "",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "weight": {
+              "final_value": "Not Reported",
+              "units": "",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "height": {
+              "final_value": "Not Reported",
+              "units": "",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "kps": {
+              "final_value": "90",
+              "supporting_evidence": [
+                {
+                  "snippet": "Extracted Karnofsky Performance Score directly from the document.",
+                  "explanation": "Extracted Karnofsky Performance Score directly from the document.",
+                  "date": "2015-10-01",
+                  "source_file": "doc_003_jsl_p01_003_radiology_doc",
+                  "confidence": 0.95,
+                  "span": null,
+                  "page": null
+                },
+                {
+                  "snippet": "Karnofsky Performance Score is 90",
+                  "explanation": "Extracted Karnofsky Performance Score directly from the document.",
+                  "date": "2015-10-01",
+                  "source_file": "doc_003_jsl_p01_003_radiology_doc",
+                  "confidence": 1.0,
+                  "span": null,
+                  "page": null
+                },
+                {
+                  "snippet": "Karnofsky Performance Score is 80",
+                  "explanation": "Extracted Karnofsky Performance Score directly from the document.",
+                  "date": "2015-10-15",
+                  "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                  "confidence": 1.0,
+                  "span": null,
+                  "page": null
+                }
+              ],
+              "contradictory_evidence": [
+                {
+                  "snippet": "80",
+                  "explanation": "Extracted Karnofsky Performance Score directly from the document.",
+                  "date": "2015-10-15",
+                  "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                  "confidence": 1.0,
+                  "span": null,
+                  "page": null
+                }
+              ]
+            }
+          },
+          "primary_cancers": [
+            {
+              "cancer_id": "cancer_1",
+              "diagnosis_date": {
+                "final_value": "2015-10-15",
+                "supporting_evidence": [
+                  {
+                    "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                    "snippet": "2015-10-15",
+                    "date": "2015-10-15",
+                    "confidence": 0.9
+                  }
+                ],
+                "contradictory_evidence": [],
+                "supporting_evidence_count": 1,
+                "contradictory_evidence_count": 0,
+                "normalized_value": "2015-10-15",
+                "normalized_code": "doc_004_jsl_p01_004_clinical_doc"
+              },
+              "histology_morphology": {
+                "final_value": "8140/3 - Adenocarcinoma, NOS",
+                "supporting_evidence": [
+                  {
+                    "source_file": "doc_003_jsl_p01_003_radiology_doc",
+                    "snippet": "8140/3 - Adenocarcinoma, NOS",
+                    "date": "2015-10-01",
+                    "confidence": 0.9
+                  }
+                ],
+                "contradictory_evidence": [],
+                "supporting_evidence_count": 1,
+                "contradictory_evidence_count": 0,
+                "normalized_value": "8140/3 - Adenocarcinoma, NOS",
+                "normalized_code": "8140"
+              },
+              "body_site": {
+                "final_value": "Prostate (C61.9)/Malignant",
+                "supporting_evidence": [
+                  {
+                    "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                    "snippet": "Prostate (C61.9)",
+                    "date": "2015-10-15",
+                    "confidence": 0.9
+                  }
+                ],
+                "contradictory_evidence": [],
+                "supporting_evidence_count": 1,
+                "contradictory_evidence_count": 0,
+                "normalized_value": "Prostate (C61.9)/Malignant",
+                "normalized_code": "C61.9"
+              }
+            }
+          ],
+          "secondary_cancer_conditions": {
+            "metastasis_sites": {
+              "final_value": "Not Reported",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "metastasis_timing": {
+              "final_value": "Not Reported",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            }
+          },
+          "cancer_stage": {
+            "timeline": [
+              {
+                "date": "2015-10-01",
+                "tnm_t": "Not Reported",
+                "tnm_n": "Not Reported",
+                "tnm_m": "Not Reported",
+                "stage_group": "Not Reported",
+                "staging_basis": "Not Reported",
+                "source_file": "doc_003_jsl_p01_003_radiology_doc",
+                "evidence_snippet": "Extracted clinical T stage from imaging reports."
+              },
+              {
+                "date": "2015-10-15",
+                "tnm_t": "Not Reported",
+                "tnm_n": "Not Reported",
+                "tnm_m": "Not Reported",
+                "stage_group": "Not Reported",
+                "staging_basis": "Not Reported",
+                "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                "evidence_snippet": "Extracted pathological M stage based on the absence of distant metastasis in the report."
+              }
+            ],
+            "final_stage": {
+              "tnm_t_pathologic": {
+                "final_value": "pT2",
+                "supporting_evidence": [
+                  {
+                    "snippet": "Extracted pathological T stage from surgical pathology reports.",
+                    "explanation": "Extracted pathological T stage from surgical pathology reports.",
+                    "date": "2015-10-01",
+                    "source_file": "doc_003_jsl_p01_003_radiology_doc",
+                    "confidence": 0.85,
+                    "span": null,
+                    "page": null
+                  },
+                  {
+                    "snippet": "Pathological T stage is pT2 from surgical pathology report",
+                    "explanation": "Extracted pathological T stage from surgical pathology reports.",
+                    "date": "2015-10-01",
+                    "source_file": "doc_003_jsl_p01_003_radiology_doc",
+                    "confidence": 0.89,
+                    "span": null,
+                    "page": null
+                  },
+                  {
+                    "snippet": "pathological examination shows T2",
+                    "explanation": "Extracted pathological T stage from the surgical pathology report.",
+                    "date": "2015-10-15",
+                    "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                    "confidence": 1.0,
+                    "span": null,
+                    "page": null
+                  }
+                ],
+                "contradictory_evidence": []
+              },
+              "tnm_n_pathologic": {
+                "final_value": "pN1",
+                "supporting_evidence": [
+                  {
+                    "snippet": "Extracted pathological N stage based on lymph node involvement in pathology report.",
+                    "explanation": "Extracted pathological N stage based on lymph node involvement in pathology report.",
+                    "date": "2015-10-15",
+                    "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                    "confidence": 0.95,
+                    "span": null,
+                    "page": null
+                  },
+                  {
+                    "snippet": "Pathological N stage is pN1 from lymph node dissection results",
+                    "explanation": "Extracted pathological N stage from pathology reports.",
+                    "date": "2015-10-01",
+                    "source_file": "doc_003_jsl_p01_003_radiology_doc",
+                    "confidence": 0.89,
+                    "span": null,
+                    "page": null
+                  },
+                  {
+                    "snippet": "pathological examination shows lymph node involvement",
+                    "explanation": "Extracted pathological N stage based on lymph node involvement in pathology report.",
+                    "date": "2015-10-15",
+                    "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                    "confidence": 1.0,
+                    "span": null,
+                    "page": null
+                  }
+                ],
+                "contradictory_evidence": []
+              },
+              "tnm_m_pathologic": {
+                "final_value": "pM0",
+                "supporting_evidence": [
+                  {
+                    "snippet": "Extracted pathological M stage from surgical pathology reports.",
+                    "explanation": "Extracted pathological M stage from surgical pathology reports.",
+                    "date": "2015-10-01",
+                    "source_file": "doc_003_jsl_p01_003_radiology_doc",
+                    "confidence": 0.9,
+                    "span": null,
+                    "page": null
+                  },
+                  {
+                    "snippet": "No distant metastasis confirmed in pathology report",
+                    "explanation": "Extracted pathological M stage from surgical pathology reports.",
+                    "date": "2015-10-01",
+                    "source_file": "doc_003_jsl_p01_003_radiology_doc",
+                    "confidence": 0.95,
+                    "span": null,
+                    "page": null
+                  },
+                  {
+                    "snippet": "no distant metastasis found",
+                    "explanation": "Extracted pathological M stage based on the absence of distant metastasis in the report.",
+                    "date": "2015-10-15",
+                    "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                    "confidence": 1.0,
+                    "span": null,
+                    "page": null
+                  }
+                ],
+                "contradictory_evidence": []
+              },
+              "tnm_t_clinical": {
+                "final_value": "cT2",
+                "supporting_evidence": [
+                  {
+                    "snippet": "Inferred clinical T stage based on tumor size mentioned in the document.",
+                    "explanation": "Inferred clinical T stage based on tumor size mentioned in the document.",
+                    "date": "2015-10-15",
+                    "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                    "confidence": 0.75,
+                    "span": null,
+                    "page": null
+                  },
+                  {
+                    "snippet": "Clinical T stage is cT2 based on imaging results",
+                    "explanation": "Extracted clinical T stage from imaging reports.",
+                    "date": "2015-10-01",
+                    "source_file": "doc_003_jsl_p01_003_radiology_doc",
+                    "confidence": 0.89,
+                    "span": null,
+                    "page": null
+                  },
+                  {
+                    "snippet": "tumor size is 2 cm",
+                    "explanation": "Inferred clinical T stage based on tumor size mentioned in the document.",
+                    "date": "2015-10-15",
+                    "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                    "confidence": 0.75,
+                    "span": null,
+                    "page": null
+                  }
+                ],
+                "contradictory_evidence": []
+              },
+              "tnm_n_clinical": {
+                "final_value": "cN1",
+                "supporting_evidence": [
+                  {
+                    "snippet": "Extracted clinical N stage from clinical examination.",
+                    "explanation": "Extracted clinical N stage from clinical examination.",
+                    "date": "2015-10-01",
+                    "source_file": "doc_003_jsl_p01_003_radiology_doc",
+                    "confidence": 0.85,
+                    "span": null,
+                    "page": null
+                  },
+                  {
+                    "snippet": "Clinical N stage is cN1 based on lymph node assessment",
+                    "explanation": "Extracted clinical N stage from clinical examination.",
+                    "date": "2015-10-01",
+                    "source_file": "doc_003_jsl_p01_003_radiology_doc",
+                    "confidence": 0.89,
+                    "span": null,
+                    "page": null
+                  },
+                  {
+                    "snippet": "lymph nodes involved",
+                    "explanation": "Inferred clinical N stage based on mention of lymph node involvement.",
+                    "date": "2015-10-15",
+                    "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                    "confidence": 0.75,
+                    "span": null,
+                    "page": null
+                  }
+                ],
+                "contradictory_evidence": []
+              },
+              "tnm_m_clinical": {
+                "final_value": "cM0",
+                "supporting_evidence": [
+                  {
+                    "snippet": "Extracted clinical M stage from clinical assessment.",
+                    "explanation": "Extracted clinical M stage from clinical assessment.",
+                    "date": "2015-10-01",
+                    "source_file": "doc_003_jsl_p01_003_radiology_doc",
+                    "confidence": 0.9,
+                    "span": null,
+                    "page": null
+                  },
+                  {
+                    "snippet": "No distant metastasis found",
+                    "explanation": "Extracted clinical M stage from clinical assessment.",
+                    "date": "2015-10-01",
+                    "source_file": "doc_003_jsl_p01_003_radiology_doc",
+                    "confidence": 0.95,
+                    "span": null,
+                    "page": null
+                  },
+                  {
+                    "snippet": "no distant metastasis",
+                    "explanation": "Inferred clinical M stage based on the absence of distant metastasis mentioned.",
+                    "date": "2015-10-15",
+                    "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                    "confidence": 0.75,
+                    "span": null,
+                    "page": null
+                  }
+                ],
+                "contradictory_evidence": []
+              },
+              "stage_group": {
+                "final_value": "1",
+                "supporting_evidence": [
+                  {
+                    "snippet": "Derived SEER Summary Stage from clinical and pathological staging indicating localized disease.",
+                    "explanation": "Derived SEER Summary Stage from clinical and pathological staging indicating localized disease.",
+                    "date": "2015-10-15",
+                    "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                    "confidence": 0.75,
+                    "span": null,
+                    "page": null
+                  },
+                  {
+                    "snippet": "Derived SEER Summary Stage from clinical T and N stages",
+                    "explanation": "Derived SEER Summary Stage from TNM values indicating localized disease.",
+                    "date": "2015-10-01",
+                    "source_file": "doc_003_jsl_p01_003_radiology_doc",
+                    "confidence": 0.85,
+                    "span": null,
+                    "page": null
+                  },
+                  {
+                    "snippet": "localized disease",
+                    "explanation": "Derived SEER Summary Stage from clinical and pathological staging indicating localized disease.",
+                    "date": "2015-10-15",
+                    "source_file": "doc_004_jsl_p01_004_clinical_doc",
+                    "confidence": 0.75,
+                    "span": null,
+                    "page": null
+                  }
+                ],
+                "contradictory_evidence": []
+              },
+              "staging_system": {
+                "final_value": "Not Reported",
+                "supporting_evidence": [],
+                "contradictory_evidence": []
+              }
+            },
+            "consolidation_notes": ""
+          },
+          "biomarkers": {
+            "positive_markers": {
+              "final_value": [],
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "negative_markers": {
+              "final_value": [],
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "genomic_variants": {
+              "final_value": "Not Reported",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "tumor_markers": {
+              "final_value": [],
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            }
+          },
+          "cancer_treatment": {
+            "surgery_procedures": {
+              "final_value": "Not Reported",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "radiation_therapy": {
+              "final_value": "Not Reported",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "systemic_therapy": {
+              "final_value": "Not Reported",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            }
+          },
+          "disease_status": {
+            "timeline": [],
+            "final_status": {
+              "disease_status": {
+                "final_value": "Not Reported",
+                "supporting_evidence": [],
+                "contradictory_evidence": []
+              },
+              "treatment_response": {
+                "final_value": "Not Reported",
+                "supporting_evidence": [],
+                "contradictory_evidence": []
+              },
+              "recurrence_indicator": {
+                "final_value": "Not Reported",
+                "supporting_evidence": [],
+                "contradictory_evidence": []
+              },
+              "recurrence_date": {
+                "final_value": "Not Reported",
+                "supporting_evidence": [],
+                "contradictory_evidence": []
+              }
+            }
+          },
+          "outcome_follow_up": {
+            "vital_status": {
+              "final_value": "Not Reported",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "date_of_death": {
+              "final_value": "Not Reported",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "cause_of_death": {
+              "final_value": "Not Reported",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "last_follow_up_date": {
+              "final_value": "Not Reported",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "disease_free_interval": {
+              "final_value": "Not Reported",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            }
+          },
+          "extensions": {
+            "margin_status": {
+              "final_value": "Not Reported",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "lymphovascular_invasion": {
+              "final_value": "Not Reported",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "perineural_invasion": {
+              "final_value": "Not Reported",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "tumor_size": {
+              "final_value": "Not Reported",
+              "units": "",
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            },
+            "comorbidities": {
+              "final_value": [],
+              "supporting_evidence": [],
+              "contradictory_evidence": []
+            }
+          }
+        },
+        "metadata": {
+          "total_documents": 2,
+          "source_files": [
+            "doc_003_jsl_p01_003_radiology_doc",
+            "doc_004_jsl_p01_004_clinical_doc"
+          ],
+          "extraction_date": "2025-12-14",
+          "consolidation_summary": "Synthesized 24 registry fields across 2 documents for patient p01."
+        }
+      },
+      "all_values": [],
+      "units": null,
+      "vocabulary_code": null,
+      "confidence_score": 0.98,
+      "source_documents": [
+        "doc_003_jsl_p01_003_radiology_doc",
+        "doc_004_jsl_p01_004_clinical_doc"
+      ],
+      "consolidation_reasoning": "mCODE v4.0.0 patient-level extraction with 2 documents (Pydantic validated)",
+      "data_type": "object"
+    }
+  ],
+  "processing_time_seconds": 0.005162715911865234,
+  "timestamp": "2025-12-14T16:19:29.242022"
+}
