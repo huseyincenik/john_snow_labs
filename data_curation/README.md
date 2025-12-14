@@ -1969,6 +1969,75 @@ class Settings(BaseSettings):
 
 ---
 
+## API Usage Examples
+
+### Process Endpoint Parameters
+
+The `/api/v1/process` endpoint accepts the following parameters to select which documents to process:
+
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `process_all` | `boolean` | Process **all** `.txt` files in `data/input/` | `true` |
+| `filenames` | `string[]` | Process specific files by **exact filename** | `["report.txt", "scan.txt"]` |
+| `doc_ids` | `string[]` | Match files containing this pattern | `["003", "004"]` |
+| `patient_ids` | `string[]` | Match files containing patient ID | `["p01"]` |
+| `max_documents` | `integer` | Limit number of documents | `10` |
+| `llm_provider` | `string` | LLM provider (`openai` or `qwen`) | `"openai"` |
+| `llm_model` | `string` | Override model name | `"gpt-4o-mini"` |
+
+### Usage Examples (Swagger UI: http://localhost:8000/docs)
+
+**1. Process All Documents:**
+```json
+{
+  "process_all": true,
+  "llm_provider": "openai",
+  "llm_model": "gpt-4o-mini"
+}
+```
+
+**2. Process Specific Files by Name (Recommended):**
+Use `filenames` when you know the exact file names:
+```json
+{
+  "filenames": ["jsl_p01_003_radiology_doc.txt", "jsl_p01_004_clinical_doc.txt"],
+  "llm_provider": "openai",
+  "llm_model": "gpt-4o-mini"
+}
+```
+> **Note:** `.txt` extension is optional - `["my_report", "scan_results"]` also works.
+
+**3. Process Files by Pattern (doc_ids):**
+Matches any file containing the pattern (e.g., `*003*.txt`):
+```json
+{
+  "doc_ids": ["003", "004"],
+  "llm_provider": "openai",
+  "llm_model": "gpt-4o-mini"
+}
+```
+
+**4. Process All Documents for a Patient:**
+```json
+{
+  "patient_ids": ["p01"],
+  "max_documents": 5,
+  "llm_provider": "openai",
+  "llm_model": "gpt-4o-mini"
+}
+```
+
+### Parameter Priority
+
+Parameters are evaluated in this order (first match wins):
+
+1. `process_all: true` → Processes all files, ignores other filters
+2. `filenames` → Exact filename matching
+3. `patient_ids` → Pattern matching with `*{patient_id}*.txt`
+4. `doc_ids` → Pattern matching with `*{doc_id}*.txt`
+
+---
+
 ## Getting Started
 
 ### Prerequisites

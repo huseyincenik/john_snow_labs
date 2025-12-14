@@ -160,6 +160,7 @@ class ProcessingRequest(BaseModel):
 
     patient_ids: Optional[List[str]] = None
     doc_ids: Optional[List[str]] = None
+    filenames: Optional[List[str]] = None  # Exact filenames to process
     process_all: bool = False
     llm_provider: Optional[Literal["openai", "qwen"]] = None
     llm_model: Optional[str] = None

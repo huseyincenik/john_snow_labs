@@ -118,6 +118,17 @@ async def load_documents(request: ProcessingRequest) -> List[DocumentMetadata]:
 
     if request.process_all:
         file_paths = sorted(input_dir.glob("*.txt"))
+    elif request.filenames:
+        # Exact filename matching
+        for filename in request.filenames:
+            file_path = input_dir / filename
+            if file_path.exists():
+                file_paths.append(file_path)
+            else:
+                # Try with .txt extension if not provided
+                file_path_txt = input_dir / f"{filename}.txt"
+                if file_path_txt.exists():
+                    file_paths.append(file_path_txt)
     elif request.patient_ids:
         for patient_id in request.patient_ids:
             file_paths.extend(sorted(input_dir.glob(f"*{patient_id}*.txt")))
