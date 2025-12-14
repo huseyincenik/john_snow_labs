@@ -73,35 +73,44 @@ In this project, we adapt DocETL's general-purpose capabilities for the high-sta
 
 ## High-Level Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                      INGESTION LAYER                                        │
-│  ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────────────────────────────┐ │
-│  │  REST API       │    │  File Upload     │    │  Sample Documents (TXT/PDF)            │ │
-│  │  POST /process  │───▶│  POST /upload    │───▶│  input_patient_docs/*.txt              │ │
-│  └─────────────────┘    └──────────────────┘    └─────────────────────────────────────────┘ │
-└───────────────────────────────────────┬─────────────────────────────────────────────────────┘
-                                        ▼
-┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                    DocETL ENGINE                                            │
-│  ┌────────────┐   ┌────────────┐   ┌────────────┐   ┌────────────┐   ┌────────────────────┐ │
-│  │  TAGGER    │──▶│    MAP     │──▶│  UNNEST    │──▶│  RESOLVE   │──▶│      REDUCE        │ │
-│  │ Chronology │   │ Extraction │   │  Explode   │   │ Deduplicate│   │ Patient-Level      │ │
-│  └────────────┘   └────────────┘   └────────────┘   └────────────┘   └────────────────────┘ │
-│        │                │                │                │                    │            │
-│        ▼                ▼                ▼                ▼                    ▼            │
-│   Sorted Docs      Field JSON       Row per Field    Canonical Value    Patient Summary    │
-└───────────────────────────────────────┬─────────────────────────────────────────────────────┘
-                                        ▼
-┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│                              STRUCTURED OUTPUTS & OBSERVABILITY                             │
-│  ┌─────────────────────────────┐  ┌─────────────────────┐  ┌──────────────────────────────┐ │
-│  │  JSON Artifacts             │  │  Logs               │  │  Demo Artifacts              │ │
-│  │  • tagger_result.json       │  │  • stage_*.log      │  │  • extraction_result.json    │ │
-│  │  • extraction_result.json   │  │  • prompts.log      │  │  • consolidation_result.json │ │
-│  │  • consolidation_result.json│  └─────────────────────┘  └──────────────────────────────┘ │
-│  └─────────────────────────────┘                                                            │
-└─────────────────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#4CAF50', 'primaryTextColor': '#fff', 'primaryBorderColor': '#2E7D32', 'lineColor': '#FF9800', 'secondaryColor': '#2196F3', 'tertiaryColor': '#9C27B0'}}}%%
+flowchart TB
+    subgraph INGESTION["🔵 INGESTION LAYER"]
+        direction LR
+        API["🌐 REST API<br/>POST /process"]
+        UPLOAD["📤 File Upload<br/>POST /upload"]
+        DOCS["📁 Sample Documents<br/>TXT/PDF"]
+        API --> UPLOAD --> DOCS
+    end
+
+    subgraph ENGINE["🟢 DocETL ENGINE"]
+        direction LR
+        TAGGER["📋 TAGGER<br/>Chronology"]
+        MAP["🔍 MAP<br/>Extraction"]
+        UNNEST["📊 UNNEST<br/>Explode"]
+        RESOLVE["⚖️ RESOLVE<br/>Deduplicate"]
+        REDUCE["📦 REDUCE<br/>Patient-Level"]
+        TAGGER --> MAP --> UNNEST --> RESOLVE --> REDUCE
+    end
+
+    subgraph OUTPUTS["🟠 STRUCTURED OUTPUTS"]
+        direction LR
+        JSON["📄 JSON Artifacts<br/>• tagger_result.json<br/>• extraction_result.json"]
+        LOGS["📝 Logs<br/>• stage_*.log<br/>• prompts.log"]
+        DEMO["🎯 Demo Artifacts<br/>• consolidation_result.json"]
+    end
+
+    INGESTION --> ENGINE --> OUTPUTS
+
+    style INGESTION fill:#1565C0,stroke:#0D47A1,color:#fff
+    style ENGINE fill:#2E7D32,stroke:#1B5E20,color:#fff
+    style OUTPUTS fill:#E65100,stroke:#BF360C,color:#fff
+    style TAGGER fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style MAP fill:#66BB6A,stroke:#388E3C,color:#fff
+    style UNNEST fill:#81C784,stroke:#43A047,color:#fff
+    style RESOLVE fill:#A5D6A7,stroke:#4CAF50,color:#000
+    style REDUCE fill:#C8E6C9,stroke:#66BB6A,color:#000
 ```
 
 ---
@@ -110,78 +119,66 @@ In this project, we adapt DocETL's general-purpose capabilities for the high-sta
 
 ### Pipeline Flow Schematic
 
-```
-┌──────────────────────────────────────────────────────────────────────────────────────────┐
-│                           COMPLETE DocETL PIPELINE FLOW                                  │
-├──────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                          │
-│  ┌─────────────────┐                                                                     │
-│  │ INPUT DOCUMENTS │  ← Raw medical documents (clinical notes, pathology, radiology)    │
-│  │ (TXT/PDF)       │                                                                     │
-│  └────────┬────────┘                                                                     │
-│           │                                                                              │
-│           ▼                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────────────────────┐│
-│  │ STAGE 1: TAGGER (Chronological Ordering)                                            ││
-│  │ ┌─────────────────────────────────────────────────────────────────────────────────┐ ││
-│  │ │ • Parse document metadata (patient_id, doc_id, doc_type, doc_date)              │ ││
-│  │ │ • Sort documents chronologically per patient                                     │ ││
-│  │ │ • Calculate confidence scores via LLM (type_confidence, date_confidence)        │ ││
-│  │ │ • Output: TaggerResult with sorted TaggedDocument list                          │ ││
-│  │ └─────────────────────────────────────────────────────────────────────────────────┘ ││
-│  └────────┬────────────────────────────────────────────────────────────────────────────┘│
-│           │                                                                              │
-│           ▼                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────────────────────┐│
-│  │ STAGE 2: EXTRACTOR (DocETL Map + Normalize + Unnest)                                ││
-│  │ ┌───────────────────────────────────────────────────────────────────────────────┐   ││
-│  │ │ MAP OPERATOR: extract_clinical_fields                                         │   ││
-│  │ │ • LLM extracts ALL NAACCR fields from each document                          │   ││
-│  │ │ • Output: {extractions: [{field_name, raw_value, normalized_value, ...}]}    │   ││
-│  │ └───────────────────────────────────────────────────────────────────────────────┘   ││
-│  │                              ▼                                                       ││
-│  │ ┌───────────────────────────────────────────────────────────────────────────────┐   ││
-│  │ │ NORMALIZE OPERATOR: normalize_extractions (code_map)                          │   ││
-│  │ │ • Ensures 'extractions' is always a valid list                                │   ││
-│  │ │ • Handles JSON string parsing from tool calls                                 │   ││
-│  │ │ • Fixes malformed LLM outputs                                                 │   ││
-│  │ └───────────────────────────────────────────────────────────────────────────────┘   ││
-│  │                              ▼                                                       ││
-│  │ ┌───────────────────────────────────────────────────────────────────────────────┐   ││
-│  │ │ UNNEST OPERATOR: explode_field_records                                        │   ││
-│  │ │ • Flattens extractions array into individual rows                             │   ││
-│  │ │ • Each row: one field with patient_id, doc_id, evidence                       │   ││
-│  │ │ • Enables field-level resolution in next stage                                │   ││
-│  │ └───────────────────────────────────────────────────────────────────────────────┘   ││
-│  └────────┬────────────────────────────────────────────────────────────────────────────┘│
-│           │                                                                              │
-│           ▼                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────────────────────┐│
-│  │ STAGE 3: CONSOLIDATOR (DocETL Resolve + Reduce)                                     ││
-│  │ ┌───────────────────────────────────────────────────────────────────────────────┐   ││
-│  │ │ RESOLVE OPERATOR: resolve_patient_fields                                      │   ││
-│  │ │ • Uses blocking_keys: [patient_id, field_name] to group records               │   ││
-│  │ │ • Compares values via comparison_prompt (LLM pairwise matching)               │   ││
-│  │ │ • Resolves conflicts via resolution_prompt (picks canonical value)            │   ││
-│  │ │ • Output: One resolved value per (patient_id, field_name) pair                │   ││
-│  │ └───────────────────────────────────────────────────────────────────────────────┘   ││
-│  │                              ▼                                                       ││
-│  │ ┌───────────────────────────────────────────────────────────────────────────────┐   ││
-│  │ │ REDUCE OPERATOR: reduce_patient_summary                                       │   ││
-│  │ │ • Groups all resolved fields by patient_id                                    │   ││
-│  │ │ • Generates mCODE-compliant patient registry                                  │   ││
-│  │ │ • Creates patient_summary narrative                                           │   ││
-│  │ │ • Identifies primary_cancers with site, histology, date                       │   ││
-│  │ └───────────────────────────────────────────────────────────────────────────────┘   ││
-│  └────────┬────────────────────────────────────────────────────────────────────────────┘│
-│           │                                                                              │
-│           ▼                                                                              │
-│  ┌─────────────────┐                                                                     │
-│  │ OUTPUT: mCODE   │  → Patient-level JSON with consolidated_fields, primary_cancers    │
-│  │ Patient Record  │                                                                     │
-│  └─────────────────┘                                                                     │
-│                                                                                          │
-└──────────────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#667eea', 'primaryTextColor': '#fff', 'lineColor': '#764ba2'}}}%%
+flowchart TB
+    subgraph INPUT["📥 INPUT DOCUMENTS"]
+        DOCS["📄 Raw Medical Documents<br/>Clinical Notes | Pathology | Radiology<br/><i>TXT/PDF</i>"]
+    end
+
+    subgraph STAGE1["🏷️ STAGE 1: TAGGER"]
+        T1["Parse document metadata<br/><code>patient_id, doc_id, doc_type, doc_date</code>"]
+        T2["Sort chronologically per patient"]
+        T3["Calculate confidence scores via LLM"]
+        T4["📤 Output: TaggerResult"]
+        T1 --> T2 --> T3 --> T4
+    end
+
+    subgraph STAGE2["🔍 STAGE 2: EXTRACTOR"]
+        subgraph MAP["🗺️ MAP OPERATOR"]
+            M1["LLM extracts ALL NAACCR fields"]
+        end
+        subgraph NORMALIZE["🔄 NORMALIZE OPERATOR"]
+            N1["Ensures valid list format<br/>Fixes malformed LLM outputs"]
+        end
+        subgraph UNNEST["📊 UNNEST OPERATOR"]
+            U1["Flattens extractions to rows<br/>One row per field"]
+        end
+        MAP --> NORMALIZE --> UNNEST
+    end
+
+    subgraph STAGE3["⚖️ STAGE 3: CONSOLIDATOR"]
+        subgraph RESOLVE["🔗 RESOLVE OPERATOR"]
+            R1["Uses blocking_keys:<br/><code>[patient_id, field_name]</code>"]
+            R2["LLM pairwise matching"]
+            R3["Picks canonical value"]
+            R1 --> R2 --> R3
+        end
+        subgraph REDUCE["📦 REDUCE OPERATOR"]
+            RD1["Groups by patient_id"]
+            RD2["Generates mCODE registry"]
+            RD3["Creates patient_summary"]
+            RD1 --> RD2 --> RD3
+        end
+        RESOLVE --> REDUCE
+    end
+
+    subgraph OUTPUT["✅ OUTPUT"]
+        OUT["📋 mCODE Patient Record<br/>consolidated_fields | primary_cancers"]
+    end
+
+    INPUT --> STAGE1 --> STAGE2 --> STAGE3 --> OUTPUT
+
+    style INPUT fill:#3F51B5,stroke:#303F9F,color:#fff
+    style STAGE1 fill:#00BCD4,stroke:#0097A7,color:#fff
+    style STAGE2 fill:#FF9800,stroke:#F57C00,color:#fff
+    style STAGE3 fill:#9C27B0,stroke:#7B1FA2,color:#fff
+    style OUTPUT fill:#4CAF50,stroke:#388E3C,color:#fff
+    style MAP fill:#FFB74D,stroke:#FF9800,color:#000
+    style NORMALIZE fill:#FFCC80,stroke:#FFB74D,color:#000
+    style UNNEST fill:#FFE0B2,stroke:#FFCC80,color:#000
+    style RESOLVE fill:#CE93D8,stroke:#9C27B0,color:#000
+    style REDUCE fill:#E1BEE7,stroke:#CE93D8,color:#000
 ```
 
 ### Pipeline Stage Details with Examples
@@ -1526,40 +1523,44 @@ ResolveOp(
 
 ### Comparison: With vs Without Blocking Keys
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                    LLM CALL OPTIMIZATION WITH BLOCKING KEYS                     │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                 │
-│  SCENARIO: 50 documents × 12 fields = 600 total extraction rows                │
-│                                                                                 │
-│  ┌───────────────────────────────────────────────────────────────────────────┐ │
-│  │ WITHOUT BLOCKING KEYS (Naive Approach)                                    │ │
-│  │                                                                           │ │
-│  │ Compare EVERY row with EVERY other row:                                   │ │
-│  │ Comparisons = C(600, 2) = 600 × 599 / 2 = 179,700 LLM calls! ❌           │ │
-│  │                                                                           │ │
-│  │ Cost: ~$180 (at $0.001/call) + Hours of processing time                   │ │
-│  └───────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                 │
-│  ┌───────────────────────────────────────────────────────────────────────────┐ │
-│  │ WITH BLOCKING KEYS: [patient_id, field_name]                              │ │
-│  │                                                                           │ │
-│  │ Only compare rows WITHIN same (patient_id, field_name) group:             │ │
-│  │                                                                           │ │
-│  │ Example groups for patient p01:                                           │ │
-│  │ ┌─────────────────────┬───────────────────────────────────────┐          │ │
-│  │ │ (p01, ca_site)      │ 50 docs → C(50,2) = 1,225 comparisons │          │ │
-│  │ │ (p01, ca_stage)     │ 50 docs → C(50,2) = 1,225 comparisons │          │ │
-│  │ │ (p01, diagnosis_dt) │ 50 docs → C(50,2) = 1,225 comparisons │          │ │
-│  │ │ ... × 12 fields     │                                      │          │ │
-│  │ └─────────────────────┴───────────────────────────────────────┘          │ │
-│  │                                                                           │ │
-│  │ Total: 12 fields × 1,225 = 14,700 comparisons ✓                          │ │
-│  │ Reduction: 92% fewer LLM calls!                                           │ │
-│  └───────────────────────────────────────────────────────────────────────────┘ │
-│                                                                                 │
-└─────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#f44336', 'primaryTextColor': '#fff', 'lineColor': '#4CAF50'}}}%%
+flowchart TB
+    subgraph SCENARIO["📊 SCENARIO: 50 docs × 12 fields = 600 rows"]
+        direction TB
+    end
+
+    subgraph WITHOUT["❌ WITHOUT BLOCKING KEYS"]
+        direction TB
+        W1["Compare EVERY row with EVERY other row"]
+        W2["C(600,2) = 600 × 599 / 2"]
+        W3["⚠️ 179,700 LLM calls!"]
+        W4["💰 Cost: ~$180 + Hours of processing"]
+        W1 --> W2 --> W3 --> W4
+    end
+
+    subgraph WITH["✅ WITH BLOCKING KEYS"]
+        direction TB
+        B1["Group by: patient_id + field_name"]
+        subgraph GROUPS["📁 Example Groups for p01"]
+            G1["(p01, ca_site)<br/>50 docs → 1,225"]
+            G2["(p01, ca_stage)<br/>50 docs → 1,225"]
+            G3["(p01, diag_dt)<br/>50 docs → 1,225"]
+        end
+        B2["12 fields × 1,225 = 14,700 ✓"]
+        B3["🎉 92% fewer LLM calls!"]
+        B1 --> GROUPS --> B2 --> B3
+    end
+
+    SCENARIO --> WITHOUT
+    SCENARIO --> WITH
+
+    style WITHOUT fill:#FFCDD2,stroke:#F44336,color:#B71C1C
+    style WITH fill:#C8E6C9,stroke:#4CAF50,color:#1B5E20
+    style SCENARIO fill:#E3F2FD,stroke:#2196F3,color:#0D47A1
+    style GROUPS fill:#FFF9C4,stroke:#FFC107,color:#F57F17
+    style W3 fill:#F44336,stroke:#B71C1C,color:#fff
+    style B3 fill:#4CAF50,stroke:#2E7D32,color:#fff
 ```
 
 ### Optimization Impact Table
@@ -1573,90 +1574,95 @@ ResolveOp(
 
 ### Visual: Blocking Key Grouping
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                         BLOCKING KEY GROUPING VISUAL                            │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                 │
-│  ALL UNNESTED ROWS (600 total):                                                 │
-│  ┌──────────────────────────────────────────────────────────────────────────┐  │
-│  │ Row1: p01/ca_site/doc001    Row2: p01/ca_stage/doc001   ...              │  │
-│  │ Row3: p01/ca_site/doc002    Row4: p01/ca_stage/doc002   ...              │  │
-│  │ ...                                                                      │  │
-│  └──────────────────────────────────────────────────────────────────────────┘  │
-│                                                                                 │
-│  AFTER BLOCKING BY (patient_id, field_name):                                    │
-│                                                                                 │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐                 │
-│  │ GROUP 1         │  │ GROUP 2         │  │ GROUP 3         │                 │
-│  │ (p01, ca_site)  │  │ (p01, ca_stage) │  │ (p01, diag_dt)  │                 │
-│  │ ┌─────────────┐ │  │ ┌─────────────┐ │  │ ┌─────────────┐ │                 │
-│  │ │ doc001      │ │  │ │ doc001      │ │  │ │ doc001      │ │                 │
-│  │ │ doc002      │ │  │ │ doc002      │ │  │ │ doc002      │ │                 │
-│  │ │ doc003      │ │  │ │ doc005      │ │  │ │ doc003      │ │                 │
-│  │ │ ...         │ │  │ │ ...         │ │  │ │ ...         │ │                 │
-│  │ └─────────────┘ │  │ └─────────────┘ │  │ └─────────────┘ │                 │
-│  │                 │  │                 │  │                 │                 │
-│  │ Compare ONLY    │  │ Compare ONLY    │  │ Compare ONLY    │                 │
-│  │ within group    │  │ within group    │  │ within group    │                 │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘                 │
-│                                                                                 │
-│  ❌ NO cross-group comparisons needed!                                          │
-│                                                                                 │
-└─────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#673AB7', 'primaryTextColor': '#fff'}}}%%
+flowchart TB
+    subgraph BEFORE["📦 ALL UNNESTED ROWS (600 total)"]
+        RAW["Row1: p01/ca_site/doc001 | Row2: p01/ca_stage/doc001<br/>Row3: p01/ca_site/doc002 | Row4: p01/ca_stage/doc002<br/>..."]
+    end
+
+    BEFORE -->|"BLOCKING BY<br/>(patient_id, field_name)"| AFTER
+
+    subgraph AFTER["🗂️ AFTER BLOCKING"]
+        direction LR
+        subgraph G1["🟢 GROUP 1<br/>(p01, ca_site)"]
+            D1["doc001<br/>doc002<br/>doc003"]
+        end
+        subgraph G2["🟠 GROUP 2<br/>(p01, ca_stage)"]
+            D2["doc001<br/>doc002<br/>doc005"]
+        end
+        subgraph G3["🔵 GROUP 3<br/>(p01, diag_dt)"]
+            D3["doc001<br/>doc002<br/>doc003"]
+        end
+    end
+
+    NOTE["❌ NO cross-group comparisons needed!<br/>✅ Compare ONLY within each group"]
+
+    AFTER --> NOTE
+
+    style BEFORE fill:#ECEFF1,stroke:#607D8B,color:#37474F
+    style AFTER fill:#E8F5E9,stroke:#4CAF50,color:#1B5E20
+    style G1 fill:#A5D6A7,stroke:#4CAF50,color:#1B5E20
+    style G2 fill:#FFCC80,stroke:#FF9800,color:#E65100
+    style G3 fill:#90CAF9,stroke:#2196F3,color:#0D47A1
+    style NOTE fill:#FFF3E0,stroke:#FF9800,color:#E65100
 ```
 
 ---
 
 ## Parallel Processing Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                       PARALLEL PROCESSING ARCHITECTURE                          │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │                        FastAPI Background Workers                        │   │
-│  │                                                                         │   │
-│  │   POST /api/v1/process                                                  │   │
-│  │         │                                                               │   │
-│  │         ▼                                                               │   │
-│  │   ┌─────────────────────────────────────────────────────────────────┐   │   │
-│  │   │ BackgroundTasks.add_task(process_documents_task)                │   │   │
-│  │   │                                                                 │   │   │
-│  │   │   ┌───────────────────────────────────────────────────────┐     │   │   │
-│  │   │   │ PARALLEL PATIENT PROCESSING                           │     │   │   │
-│  │   │   │                                                       │     │   │   │
-│  │   │   │  Patient p01 ─┐                                       │     │   │   │
-│  │   │   │  Patient p02 ─┼─→ ThreadPoolExecutor(max_workers=12)  │     │   │   │
-│  │   │   │  Patient p03 ─┤   (max_parallel_patients setting)     │     │   │   │
-│  │   │   │  ...          ─┘                                       │     │   │   │
-│  │   │   │                                                       │     │   │   │
-│  │   │   └───────────────────────────────────────────────────────┘     │   │   │
-│  │   │                                                                 │   │   │
-│  │   │   Each patient runs DocETL pipeline independently:              │   │   │
-│  │   │   ┌─────────────────────────────────────────────────────────┐   │   │   │
-│  │   │   │ DocETL Pipeline (per patient)                           │   │   │   │
-│  │   │   │                                                         │   │   │   │
-│  │   │   │   Map ─→ Normalize ─→ Unnest ─→ Resolve ─→ Reduce       │   │   │   │
-│  │   │   │    │          │          │          │           │       │   │   │   │
-│  │   │   │    ▼          ▼          ▼          ▼           ▼       │   │   │   │
-│  │   │   │ max_threads=200 (docetl_max_threads setting)            │   │   │   │
-│  │   │   │ Parallel LLM calls per document                         │   │   │   │
-│  │   │   └─────────────────────────────────────────────────────────┘   │   │   │
-│  │   └─────────────────────────────────────────────────────────────────┘   │   │
-│  │                                                                         │   │
-│  └─────────────────────────────────────────────────────────────────────────┘   │
-│                                                                                 │
-│  CONCURRENCY SETTINGS (settings.py):                                           │
-│  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │ max_concurrent_requests = 30   # LLM API semaphore                      │   │
-│  │ max_workers = 150              # Total thread pool workers              │   │
-│  │ max_parallel_patients = 12     # Patients processed in parallel         │   │
-│  │ docetl_max_threads = 200       # DocETL internal parallelism            │   │
-│  └─────────────────────────────────────────────────────────────────────────┘   │
-│                                                                                 │
-└─────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#009688', 'primaryTextColor': '#fff', 'lineColor': '#00BCD4'}}}%%
+flowchart TB
+    subgraph FASTAPI["🚀 FastAPI Background Workers"]
+        API["POST /api/v1/process"]
+        BG["BackgroundTasks.add_task()"]
+        API --> BG
+    end
+
+    subgraph PARALLEL["⚡ PARALLEL PATIENT PROCESSING"]
+        direction LR
+        P1["👤 Patient p01"]
+        P2["👤 Patient p02"]
+        P3["👤 Patient p03"]
+        DOTS["..."]
+        POOL["ThreadPoolExecutor<br/>(max_workers=12)"]
+        P1 --> POOL
+        P2 --> POOL
+        P3 --> POOL
+        DOTS --> POOL
+    end
+
+    subgraph PIPELINE["🔄 DocETL Pipeline (per patient)"]
+        direction LR
+        MAP2["🗺️ Map"]
+        NORM["🔄 Normalize"]
+        UNN["📊 Unnest"]
+        RES["⚖️ Resolve"]
+        RED["📦 Reduce"]
+        MAP2 --> NORM --> UNN --> RES --> RED
+    end
+
+    subgraph THREADS["🧵 max_threads=200"]
+        LLM["Parallel LLM calls per document"]
+    end
+
+    subgraph SETTINGS["⚙️ CONCURRENCY SETTINGS"]
+        S1["max_concurrent_requests = 30"]
+        S2["max_workers = 150"]
+        S3["max_parallel_patients = 12"]
+        S4["docetl_max_threads = 200"]
+    end
+
+    FASTAPI --> PARALLEL --> PIPELINE --> THREADS
+
+    style FASTAPI fill:#009688,stroke:#00796B,color:#fff
+    style PARALLEL fill:#FF5722,stroke:#E64A19,color:#fff
+    style PIPELINE fill:#3F51B5,stroke:#303F9F,color:#fff
+    style THREADS fill:#9C27B0,stroke:#7B1FA2,color:#fff
+    style SETTINGS fill:#607D8B,stroke:#455A64,color:#fff
+    style POOL fill:#FF7043,stroke:#FF5722,color:#fff
 ```
 
 ---
@@ -1845,35 +1851,40 @@ Preserve every supporting document entry so downstream reducers can trace proven
 
 ### OpenRouter as Unified Gateway
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                         OPENROUTER INTEGRATION                                  │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │                        Single API Key                                   │   │
-│  │                             │                                           │   │
-│  │                             ▼                                           │   │
-│  │  ┌───────────────────────────────────────────────────────────────────┐ │   │
-│  │  │              OpenRouter Gateway (https://openrouter.ai/api/v1)    │ │   │
-│  │  │                                                                   │ │   │
-│  │  │   ┌─────────────────┐     ┌─────────────────┐                    │ │   │
-│  │  │   │ OpenAI Models   │     │ Open Source     │                    │ │   │
-│  │  │   │ ┌─────────────┐ │     │ ┌─────────────┐ │                    │ │   │
-│  │  │   │ │ GPT-4o-mini │ │     │ │ Qwen 3 8B   │ │                    │ │   │
-│  │  │   │ └─────────────┘ │     │ └─────────────┘ │                    │ │   │
-│  │  │   └─────────────────┘     └─────────────────┘                    │ │   │
-│  │  └───────────────────────────────────────────────────────────────────┘ │   │
-│  │                                                                         │   │
-│  └─────────────────────────────────────────────────────────────────────────┘   │
-│                                                                                 │
-│  BENEFITS:                                                                      │
-│  ✓ Single API key for 60+ providers, 300+ models                               │
-│  ✓ Automatic failover between providers                                         │
-│  ✓ Unified billing and rate limiting                                            │
-│  ✓ OpenAI-compatible API (works with LiteLLM)                                   │
-│                                                                                 │
-└─────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#6366F1', 'primaryTextColor': '#fff', 'lineColor': '#8B5CF6'}}}%%
+flowchart TB
+    subgraph KEY["🔑 Single API Key"]
+        APIKEY["OPENROUTER_API_KEY"]
+    end
+
+    subgraph GATEWAY["🌐 OpenRouter Gateway"]
+        URL["https://openrouter.ai/api/v1"]
+        subgraph PROVIDERS["Available Providers"]
+            direction LR
+            subgraph OPENAI["🟢 OpenAI Models"]
+                GPT["GPT-4o-mini"]
+            end
+            subgraph OPENSOURCE["🟠 Open Source"]
+                QWEN["Qwen 3 8B"]
+            end
+        end
+    end
+
+    subgraph BENEFITS["✅ BENEFITS"]
+        B1["🔗 60+ providers, 300+ models"]
+        B2["🔄 Automatic failover"]
+        B3["💰 Unified billing"]
+        B4["🔧 OpenAI-compatible API"]
+    end
+
+    KEY --> GATEWAY --> BENEFITS
+
+    style KEY fill:#6366F1,stroke:#4F46E5,color:#fff
+    style GATEWAY fill:#8B5CF6,stroke:#7C3AED,color:#fff
+    style OPENAI fill:#10B981,stroke:#059669,color:#fff
+    style OPENSOURCE fill:#F59E0B,stroke:#D97706,color:#fff
+    style BENEFITS fill:#E0E7FF,stroke:#6366F1,color:#3730A3
 ```
 
 ### Supported Models
@@ -1924,47 +1935,46 @@ class Settings(BaseSettings):
 
 ## FastAPI Service Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                          FASTAPI SERVICE ARCHITECTURE                           │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │                              src/main.py                                │   │
-│  │  FastAPI(title="Data Curation Service")                                 │   │
-│  │                                                                         │   │
-│  │  Endpoints:                                                             │   │
-│  │  ┌─────────────────────────────────────────────────────────────────┐   │   │
-│  │  │ GET  /              → Root info + docs link                     │   │   │
-│  │  │ GET  /health        → Health check                              │   │   │
-│  │  │ POST /api/v1/process→ Start document processing                 │   │   │
-│  │  │ GET  /api/v1/status/{session_id} → Check processing status      │   │   │
-│  │  │ POST /api/v1/upload → Upload documents                          │   │   │
-│  │  └─────────────────────────────────────────────────────────────────┘   │   │
-│  └─────────────────────────────────────────────────────────────────────────┘   │
-│                                                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │                         Processing Pipeline                             │   │
-│  │                                                                         │   │
-│  │  POST /process                                                          │   │
-│  │       │                                                                 │   │
-│  │       ▼                                                                 │   │
-│  │  ┌─────────────────────────────────────────────────────────────────┐   │   │
-│  │  │ Background Task:                                                │   │   │
-│  │  │   1. Tagger.tag_documents()     → sorted, confidence-scored    │   │   │
-│  │  │   2. Extractor.extract()        → DocETL Map/Unnest/Resolve    │   │   │
-│  │  │   3. Consolidator.consolidate() → mCODE patient record         │   │   │
-│  │  │   4. StorageManager.save_*()    → JSON artifacts               │   │   │
-│  │  └─────────────────────────────────────────────────────────────────┘   │   │
-│  │                                                                         │   │
-│  │  Response: {session_id, status: "processing"}                           │   │
-│  │                                                                         │   │
-│  │  GET /status/{session_id}                                               │   │
-│  │  Response: {status, tagger_result, extraction_result, consolidation}    │   │
-│  │                                                                         │   │
-│  └─────────────────────────────────────────────────────────────────────────┘   │
-│                                                                                 │
-└─────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#059669', 'primaryTextColor': '#fff', 'lineColor': '#10B981'}}}%%
+flowchart TB
+    subgraph MAIN["📁 src/main.py"]
+        TITLE["FastAPI(title='Data Curation Service')"]
+        subgraph ENDPOINTS["🔗 Endpoints"]
+            E1["GET / → Root info"]
+            E2["GET /health → Health check"]
+            E3["POST /api/v1/process → Start processing"]
+            E4["GET /api/v1/status/{id} → Check status"]
+            E5["POST /api/v1/upload → Upload docs"]
+        end
+    end
+
+    subgraph PIPELINE["⚙️ Processing Pipeline"]
+        POST["POST /process"]
+        subgraph BACKGROUND["🔄 Background Task"]
+            T1["1️⃣ Tagger.tag_documents()"]
+            T2["2️⃣ Extractor.extract()"]
+            T3["3️⃣ Consolidator.consolidate()"]
+            T4["4️⃣ StorageManager.save_*()"]
+            T1 --> T2 --> T3 --> T4
+        end
+        RESP1["📤 Response: {session_id, status}"]
+        STATUS["GET /status/{session_id}"]
+        RESP2["📥 Response: {tagger, extraction, consolidation}"]
+        POST --> BACKGROUND --> RESP1
+        STATUS --> RESP2
+    end
+
+    MAIN --> PIPELINE
+
+    style MAIN fill:#059669,stroke:#047857,color:#fff
+    style ENDPOINTS fill:#10B981,stroke:#059669,color:#fff
+    style PIPELINE fill:#0EA5E9,stroke:#0284C7,color:#fff
+    style BACKGROUND fill:#38BDF8,stroke:#0EA5E9,color:#000
+    style T1 fill:#A7F3D0,stroke:#10B981,color:#065F46
+    style T2 fill:#BAE6FD,stroke:#0EA5E9,color:#0C4A6E
+    style T3 fill:#DDD6FE,stroke:#8B5CF6,color:#5B21B6
+    style T4 fill:#FED7AA,stroke:#F97316,color:#9A3412
 ```
 
 ---
