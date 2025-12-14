@@ -1,0 +1,57 @@
+# Interview preparation files (personal)
+MULAKAT_HAZIRLIK.html
+MULAKAT_HAZIRLIK.md
+**/MULAKAT_HAZIRLIK.html
+**/MULAKAT_HAZIRLIK.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+*.env
+config/.env
+
+# Logs
+*.log
+logs/
+
+# Docker
+.docker/
+
+# Jupyter
+.ipynb_checkpoints/
