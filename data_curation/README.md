@@ -1381,33 +1381,51 @@ This stage resolves conflicts or confirms agreement between multiple sources.
 ### Step 6: Reduce Operator (Consolidation)
 *Output File Reference: `data/output/use_case/final_output.json`*
 
-The details are merged into the final mCODE compliant Schema.
+The details are merged into a final schema that preserves **evidence lineage** for auditability. Unlike standard mCODE which only stores the value, this system retains the source snippets, confidence scores, and document references for every single field.
 
-**Final Patient Record Snippet:**
+**Final Patient Record Snippet (Auditable View):**
 ```json
 {
   "patient_id": "p01",
-  "primary_cancers": [
-    {
-      "site": {
-        "code": "C61.9",
-        "display": "Prostate"
-      },
-      "diagnosis_date": "2015-10-15",
-      "staging": {
-        "clinical_t": "cT2",
-        "clinical_n": "cN1",
-        "clinical_m": "cM0"
-      },
-      "histology": {
-        "code": "8140/3",
-        "display": "Adenocarcinoma, NOS"
+  "mcode_extraction": {
+    "primary_cancers": [
+      {
+        "body_site": {
+          "final_value": "Prostate (C61.9)",
+          "supporting_evidence": [
+            {
+              "source_file": "doc_003_radiology_doc",
+              "snippet": "Statement: Prostate cancer, Gleason score 7",
+              "confidence": 0.95
+            },
+            {
+              "source_file": "doc_004_clinical_doc",
+              "snippet": "Management of unfavorable ... prostate cancer",
+              "confidence": 0.95
+            }
+          ]
+        },
+        "diagnosis_date": {
+          "final_value": "2015-10-15",
+          "supporting_evidence": [
+            {
+              "source_file": "doc_004_clinical_doc",
+              "snippet": "new diagnosis ... on 2015-10-15",
+              "confidence": 0.95
+            }
+          ]
+        },
+        "histology_morphology": {
+          "final_value": "8140/3 - Adenocarcinoma, NOS",
+          "normalized_code": "8140/3"
+        }
       }
-    }
-  ],
-  "job_metadata": {
-    "generated_at": "2025-12-14",
-    "input_doc_count": 2
+    ]
+  },
+  "metadata": {
+    "total_documents": 2,
+    "extraction_date": "2025-12-14",
+    "consolidation_summary": "Synthesized 24 registry fields across 2 documents."
   }
 }
 ```
