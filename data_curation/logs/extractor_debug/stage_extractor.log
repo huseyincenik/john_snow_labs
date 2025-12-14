@@ -628,3 +628,111 @@
 2025-12-13 22:13:22 - extractor_debug_stage_extractor_ - DEBUG - Record 1: type=dict, value=dict
 2025-12-13 22:13:22 - extractor_debug_stage_extractor_ - DEBUG - Record 0 (doc_id=doc_003_jsl_p01_003_radiology_doc): extractions type=list
 2025-12-13 22:13:22 - extractor_debug_stage_extractor_ - DEBUG - Record 1 (doc_id=doc_004_jsl_p01_004_clinical_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - INFO - Processing 50 map records in parallel
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Using 50 workers for map record processing
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 0: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 1: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 0 (doc_id=doc_001_jsl_p01_001_summary_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 2: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 3: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 1 (doc_id=doc_002_jsl_p01_002_radiology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 4: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 5: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 6: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 7: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 8: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 2 (doc_id=doc_003_jsl_p01_003_radiology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 9: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 10: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 3 (doc_id=doc_004_jsl_p01_004_clinical_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 11: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 12: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 13: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 14: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 15: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 4 (doc_id=doc_005_jsl_p01_005_operative_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 16: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 17: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 5 (doc_id=doc_006_jsl_p01_006_clinical_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 18: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 19: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 20: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 6 (doc_id=doc_007_jsl_p01_007_clinical_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 21: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 22: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 7 (doc_id=doc_008_jsl_p01_008_radiology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 23: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 24: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 8 (doc_id=doc_009_jsl_p01_009_pathology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 25: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 26: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 27: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 28: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 9 (doc_id=doc_010_jsl_p01_010_operative_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 29: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 30: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 10 (doc_id=doc_011_jsl_p01_011_pathology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 31: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 32: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 33: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 34: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 11 (doc_id=doc_012_jsl_p01_012_consult_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 35: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 36: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 12 (doc_id=doc_013_jsl_p01_013_pathology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 37: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 38: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 13 (doc_id=doc_014_jsl_p01_014_operative_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 39: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 40: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 14 (doc_id=doc_015_jsl_p01_015_pathology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 41: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 42: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 15 (doc_id=doc_016_jsl_p01_016_clinical_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 43: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 44: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 45: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 46: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 16 (doc_id=doc_017_jsl_p01_017_pathology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 47: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 48: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 17 (doc_id=doc_018_jsl_p01_018_clinical_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 49: type=dict, value=dict
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 18 (doc_id=doc_019_jsl_p01_019_radiology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 19 (doc_id=doc_020_jsl_p01_020_operative_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 20 (doc_id=doc_021_jsl_p01_021_pathology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 21 (doc_id=doc_022_jsl_p01_022_clinical_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 22 (doc_id=doc_023_jsl_p01_023_radiology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 23 (doc_id=doc_024_jsl_p01_024_radiology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 24 (doc_id=doc_025_jsl_p01_025_clinical_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 25 (doc_id=doc_026_jsl_p01_026_radiology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 26 (doc_id=doc_027_jsl_p01_027_operative_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 27 (doc_id=doc_028_jsl_p01_028_pathology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 28 (doc_id=doc_029_jsl_p01_029_clinical_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 29 (doc_id=doc_030_jsl_p01_030_radiology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 30 (doc_id=doc_031_jsl_p01_031_summary_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 31 (doc_id=doc_032_jsl_p01_032_clinical_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 32 (doc_id=doc_034_jsl_p01_034_pathology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 33 (doc_id=doc_033_jsl_p01_033_clinical_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 34 (doc_id=doc_035_jsl_p01_035_radiology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 35 (doc_id=doc_036_jsl_p01_036_clinical_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 36 (doc_id=doc_037_jsl_p01_037_consult_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 37 (doc_id=doc_038_jsl_p01_038_clinical_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 38 (doc_id=doc_039_jsl_p01_039_radiology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 39 (doc_id=doc_040_jsl_p01_040_clinical_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 40 (doc_id=doc_041_jsl_p01_041_operative_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 41 (doc_id=doc_042_jsl_p01_042_clinical_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 42 (doc_id=doc_043_jsl_p01_043_radiology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 43 (doc_id=doc_044_jsl_p01_044_clinical_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 44 (doc_id=doc_045_jsl_p01_045_pathology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 45 (doc_id=doc_046_jsl_p01_046_clinical_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 46 (doc_id=doc_047_jsl_p01_047_radiology_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 47 (doc_id=doc_048_jsl_p01_048_clinical_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 48 (doc_id=doc_049_jsl_p01_049_clinical_doc): extractions type=list
+2025-12-14 16:10:26 - extractor_debug_stage_extractor_ - DEBUG - Record 49 (doc_id=doc_050_jsl_p01_050_summary_doc): extractions type=list
+2025-12-14 16:19:29 - extractor_debug_stage_extractor_ - INFO - Processing 2 map records in parallel
+2025-12-14 16:19:29 - extractor_debug_stage_extractor_ - DEBUG - Using 2 workers for map record processing
+2025-12-14 16:19:29 - extractor_debug_stage_extractor_ - DEBUG - Record 0: type=dict, value=dict
+2025-12-14 16:19:29 - extractor_debug_stage_extractor_ - DEBUG - Record 0 (doc_id=doc_003_jsl_p01_003_radiology_doc): extractions type=list
+2025-12-14 16:19:29 - extractor_debug_stage_extractor_ - DEBUG - Record 1: type=dict, value=dict
+2025-12-14 16:19:29 - extractor_debug_stage_extractor_ - DEBUG - Record 1 (doc_id=doc_004_jsl_p01_004_clinical_doc): extractions type=list
